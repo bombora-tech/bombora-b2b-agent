@@ -110,8 +110,8 @@ class ZG_B2B_Address_Checkout {
 		self::option( 'new', __( 'Jiná adresa', 'zg-b2b' ), '', false );
 
 		echo '<div class="zg-b2b-addr-picker__save" hidden>';
-		echo '<label class="zg-b2b-addr-picker__save-check"><input type="checkbox" name="zg_b2b_addr_save_new" value="1" checked> ' . esc_html__( 'Uložit adresu do mých doručovacích adres', 'zg-b2b' ) . '</label>';
-		echo '<input type="text" class="input-text" name="zg_b2b_addr_new_label" maxlength="100" placeholder="' . esc_attr__( 'Název adresy (např. název pobočky)', 'zg-b2b' ) . '">';
+		echo '<label class="zg-b2b-addr-picker__save-check zg-b2b-addr-check"><input type="checkbox" name="zg_b2b_addr_save_new" value="1" checked> <span>' . esc_html__( 'Uložit adresu do mých doručovacích adres', 'zg-b2b' ) . '</span></label>';
+		echo '<input type="text" class="input-text" name="zg_b2b_addr_new_label" maxlength="100" placeholder="' . esc_attr__( 'Název pobočky', 'zg-b2b' ) . '">';
 		echo '</div>';
 
 		echo '<p class="zg-b2b-addr-picker__manage"><a href="' . esc_url( ZG_B2B_Address_Account::url() ) . '">' . esc_html__( 'Spravovat doručovací adresy', 'zg-b2b' ) . '</a></p>';

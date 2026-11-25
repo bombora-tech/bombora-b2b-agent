@@ -251,23 +251,24 @@ class ZG_B2B_Address_Account {
 
 		woocommerce_form_field( 'zg_b2b_addr_label', array(
 			'type'        => 'text',
-			'label'       => __( 'Název adresy (např. název pobočky)', 'zg-b2b' ),
+			'label'       => __( 'Název pobočky', 'zg-b2b' ),
 			'placeholder' => __( 'např. Restaurace Vinohrady', 'zg-b2b' ),
+			'description' => __( 'Uvede se i jako název firmy v doručovací adrese.', 'zg-b2b' ),
 			'class'       => array( 'form-row-wide' ),
-			'required'    => false,
+			'required'    => true,
 			'priority'    => 1, // wc-address-i18n řadí pole podle priority.
 		), $label );
 
 		foreach ( ZG_B2B_Address_Book::field_definitions( $country ) as $key => $def ) {
+			if ( 'company' === $key ) {
+				continue; // Název firmy = název pobočky.
+			}
 			woocommerce_form_field( 'shipping_' . $key, $def, isset( $fields_values[ $key ] ) ? $fields_values[ $key ] : ( 'country' === $key ? $country : '' ) );
 		}
 
-		woocommerce_form_field( 'zg_b2b_addr_default', array(
-			'type'  => 'checkbox',
-			'label'    => __( 'Použít jako výchozí doručovací adresu', 'zg-b2b' ),
-			'class'    => array( 'form-row-wide' ),
-			'priority' => 1000,
-		), ( $address && ! empty( $address['default'] ) ) ? 1 : 0 );
+		$is_default = ( $address && ! empty( $address['default'] ) ) || ( isset( $_POST['zg_b2b_addr_default'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		echo '<p class="form-row form-row-wide zg-b2b-addr-check-row" id="zg_b2b_addr_default_field" data-priority="1000">';
+		echo '<label class="zg-b2b-addr-check"><input type="checkbox" name="zg_b2b_addr_default" id="zg_b2b_addr_default" value="1"' . checked( $is_default, true, false ) . '> <span>' . esc_html__( 'Použít jako výchozí doručovací adresu', 'zg-b2b' ) . '</span></label></p>';
 
 		echo '</div></div>';
 		wp_nonce_field( 'zg_b2b_addr_save', '_zg_b2b_addr_nonce' );
@@ -348,6 +349,13 @@ class ZG_B2B_Address_Account {
 		$defs    = ZG_B2B_Address_Book::field_definitions( $country );
 		$values  = array();
 		$ok      = true;
+
+		if ( '' === trim( isset( $_POST['zg_b2b_addr_label'] ) ? sanitize_text_field( wp_unslash( $_POST['zg_b2b_addr_label'] ) ) : '' ) ) {
+			/* translators: %s: field label */
+			wc_add_notice( sprintf( __( '%s je povinné pole.', 'zg-b2b' ), '<strong>' . esc_html__( 'Název pobočky', 'zg-b2b' ) . '</strong>' ), 'error' );
+			$ok = false;
+		}
+		unset( $defs['company'] ); // Název firmy = název pobočky.
 
 		foreach ( $defs as $key => $def ) {
 			$value          = isset( $_POST[ 'shipping_' . $key ] ) ? wc_clean( wp_unslash( $_POST[ 'shipping_' . $key ] ) ) : '';

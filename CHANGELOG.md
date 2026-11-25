@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2026-11-26
+
+### Změněno
+- Doručovací adresa: **Název pobočky** je povinný a slouží zároveň jako název firmy v doručovací adrese (`shipping_company`, i u dříve uložených adres); pole „Název firmy“ z formuláře odstraněno.
+- Výběr země v pop-upech ve stylu webu (selectWoo), zaškrtávací pole „Použít jako výchozí“ / „Uložit adresu“ ve stylu webu.
+- Zákazník může odebrat i schválenou další firmu (bez schválení administrátorem).
+- Pokladna: údaje, které zákazník nemůže změnit (název firmy, IČO, DIČ a při více firmách i sídlo), se nezobrazují jako pole – jsou v kartě firmy nad formulářem (u jedné firmy jen souhrn bez volby).
+- Seznam objednávek (Můj účet i administrace): sloupce **Firma** (fakturace) a **Doručení** (název pobočky / doručovací adresy).
+
 ## [1.6.1] - 2026-11-26
 
 ### Přidáno

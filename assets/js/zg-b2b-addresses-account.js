@@ -35,6 +35,7 @@
 		function openCm() {
 			$cm.prop( 'hidden', false );
 			$( 'html' ).addClass( 'zg-b2b-addr-modal-open' );
+			$( document.body ).trigger( 'country_to_state_changed' );
 			toggleCountry();
 			window.setTimeout( function () { $cf.find( '[name="zg_company_ico"]' ).trigger( 'focus' ); }, 30 );
 		}
@@ -155,6 +156,7 @@
 		}
 		$modal.prop( 'hidden', false );
 		$( 'html' ).addClass( 'zg-b2b-addr-modal-open' );
+		$( document.body ).trigger( 'country_to_state_changed' ); // selectWoo pro výběr země (jen viditelná pole).
 		window.setTimeout( function () {
 			$form.find( '[name="zg_b2b_addr_label"]' ).trigger( 'focus' );
 		}, 30 );

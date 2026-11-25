@@ -456,3 +456,53 @@ html.zg-b2b-addr-modal-open body {
 	border-top: 0;
 	border-bottom: 0.8px solid var(--zg-addr-border);
 }
+
+/* ---------- Zaškrtávací pole ve stylu webu (nativní, tyrkysový akcent) ---------- */
+.zg-b2b-addr-check-row {
+	margin-top: 6px !important;
+}
+.zg-b2b-addr-check {
+	display: inline-flex !important;
+	gap: 10px;
+	align-items: center;
+	margin: 0 !important;
+	font-size: 15px !important;
+	font-weight: 400 !important;
+	line-height: 1.4;
+	color: var(--zg-addr-text);
+	cursor: pointer;
+}
+.zg-b2b-addr-check input[type="checkbox"] {
+	flex: 0 0 18px;
+	width: 18px !important;
+	height: 18px !important;
+	margin: 0 !important;
+	accent-color: var(--zg-addr-teal);
+	cursor: pointer;
+}
+
+/* Výběr země v pop-upu (selectWoo) přes celou šířku a nad oknem. */
+.zg-b2b-addr-modal .select2-container {
+	width: 100% !important;
+}
+body > .select2-container--open {
+	z-index: 100001;
+}
+
+/* ---------- Pokladna: firma ---------- */
+.zg-b2b-hidden-field {
+	display: none !important;
+}
+.zg-b2b-company-picker--single .zg-b2b-addr-option {
+	cursor: default;
+	border-color: var(--zg-addr-border);
+	box-shadow: none;
+}
+.zg-b2b-company-picker__note {
+	margin: 6px 0 0;
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-muted {
+	color: var(--zg-addr-muted);
+}

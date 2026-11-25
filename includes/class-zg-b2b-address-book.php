@@ -81,6 +81,12 @@ class ZG_B2B_Address_Book {
 			}
 		}
 
+		// Název pobočky = název firmy v doručovací adrese (i u adres uložených před 1.6.2).
+		foreach ( $list as $i => $a ) {
+			if ( isset( $a['label'], $a['fields'] ) && is_array( $a['fields'] ) ) {
+				$list[ $i ]['fields']['company'] = $a['label'];
+			}
+		}
 		return array_values( $list );
 	}
 
@@ -122,6 +128,8 @@ class ZG_B2B_Address_Book {
 		if ( '' === $address['label'] ) {
 			$address['label'] = self::fallback_label( $address['fields'] );
 		}
+		// Název pobočky = název firmy v doručovací adrese (štítek pro dopravce / WMS).
+		$address['fields']['company'] = $address['label'];
 
 		$found = false;
 		foreach ( $list as $i => $existing ) {
@@ -241,14 +249,16 @@ class ZG_B2B_Address_Book {
 	}
 
 	/** HTML formatted address (one per line). */
-	public static function format( array $fields ) {
+	public static function format( array $fields, $with_company = false ) {
+		if ( ! $with_company ) {
+			unset( $fields['company'] ); // Název pobočky se zobrazuje jako nadpis.
+		}
 		return WC()->countries->get_formatted_address( $fields );
 	}
 
 	/** Single-line address for the checkout picker. */
 	public static function format_inline( array $fields ) {
 		$parts = array_filter( array(
-			isset( $fields['company'] ) ? $fields['company'] : '',
 			isset( $fields['address_1'] ) ? $fields['address_1'] : '',
 			trim( ( isset( $fields['postcode'] ) ? $fields['postcode'] : '' ) . ' ' . ( isset( $fields['city'] ) ? $fields['city'] : '' ) ),
 			( isset( $fields['country'] ) && WC()->countries->get_base_country() !== $fields['country'] && isset( WC()->countries->countries[ $fields['country'] ] ) )
@@ -265,7 +275,7 @@ class ZG_B2B_Address_Book {
 			$v = remove_accents( (string) $v );
 			return strtolower( preg_replace( '/[\s\.,\-]+/', '', $v ) );
 		};
-		foreach ( array( 'address_1', 'postcode', 'city', 'country', 'company' ) as $key ) {
+		foreach ( array( 'address_1', 'postcode', 'city', 'country' ) as $key ) {
 			$a = isset( $fields[ $key ] ) ? $norm( $fields[ $key ] ) : '';
 			$b = isset( $billing[ $key ] ) ? $norm( $billing[ $key ] ) : '';
 			if ( $a !== $b ) {

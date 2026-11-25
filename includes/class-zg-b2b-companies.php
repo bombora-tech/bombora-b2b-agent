@@ -36,6 +36,7 @@ class ZG_B2B_Companies {
 
 		// Pokladna.
 		add_action( 'woocommerce_before_checkout_billing_form', array( __CLASS__, 'render_checkout_picker' ), 5 );
+		add_filter( 'woocommerce_checkout_fields', array( __CLASS__, 'hide_fixed_fields' ), 1001 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'checkout_assets' ), 20 );
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'checkout_prefill' ), 30, 2 );
 		add_filter( 'woocommerce_checkout_posted_data', array( __CLASS__, 'checkout_posted_data' ), 1000 );
@@ -43,6 +44,15 @@ class ZG_B2B_Companies {
 		add_action( 'woocommerce_checkout_update_customer', array( __CLASS__, 'protect_profile' ), 999, 2 );
 		add_action( 'woocommerce_checkout_update_user_meta', array( __CLASS__, 'protect_user_meta' ), 999 );
 		add_action( 'woocommerce_checkout_create_order', array( __CLASS__, 'store_on_order' ), 10, 2 );
+
+		// Seznam objednávek: název doručovací adresy + firma pro fakturaci.
+		add_filter( 'woocommerce_my_account_my_orders_columns', array( __CLASS__, 'account_order_columns' ) );
+		add_action( 'woocommerce_my_account_my_orders_column_zg-delivery', array( __CLASS__, 'account_col_delivery' ) );
+		add_action( 'woocommerce_my_account_my_orders_column_zg-company', array( __CLASS__, 'account_col_company' ) );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( __CLASS__, 'admin_order_columns' ), 20 );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( __CLASS__, 'admin_order_column' ), 10, 2 );
+		add_filter( 'manage_edit-shop_order_columns', array( __CLASS__, 'admin_order_columns' ), 20 );
+		add_action( 'manage_shop_order_posts_custom_column', array( __CLASS__, 'admin_order_column_legacy' ), 10, 2 );
 
 		// Zobrazení firmy u objednávky.
 		add_action( 'woocommerce_admin_order_data_after_billing_address', array( __CLASS__, 'admin_order_label' ) );
@@ -243,17 +253,15 @@ class ZG_B2B_Companies {
 			echo ' <span class="zg-b2b-addr-badge zg-b2b-company-badge--' . esc_attr( $st ) . '">' . esc_html( self::statuses()[ $st ] ) . '</span></h3></div>';
 			echo '<address class="zg-b2b-addr-card__address">' . implode( '<br>', array_map( 'esc_html', self::format_lines( $c ) ) ) . '</address>';
 			echo '<div class="zg-b2b-addr-card__actions">';
-			if ( 'approved' === $st ) {
+			echo '<form method="post" class="zg-b2b-addr-inline-form">';
+			wp_nonce_field( 'zg_b2b_company_remove_' . $c['id'], '_zg_b2b_company_nonce' );
+			echo '<input type="hidden" name="zg_b2b_company_action" value="remove"><input type="hidden" name="zg_b2b_company_id" value="' . esc_attr( $c['id'] ) . '">';
+			echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html( 'pending' === $st ? __( 'Zrušit žádost', 'zg-b2b' ) : __( 'Odebrat', 'zg-b2b' ) ) . '</button>';
+			echo '</form>';
+			if ( 'pending' === $st ) {
+				echo '<span class="zg-b2b-company-note">' . esc_html__( 'Firmu po kontrole schválíme a pošleme vám e-mail.', 'zg-b2b' ) . '</span>';
+			} elseif ( 'approved' === $st ) {
 				echo '<span class="zg-b2b-company-note">' . esc_html__( 'Údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</span>';
-			} else {
-				echo '<form method="post" class="zg-b2b-addr-inline-form">';
-				wp_nonce_field( 'zg_b2b_company_remove_' . $c['id'], '_zg_b2b_company_nonce' );
-				echo '<input type="hidden" name="zg_b2b_company_action" value="remove"><input type="hidden" name="zg_b2b_company_id" value="' . esc_attr( $c['id'] ) . '">';
-				echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html( 'pending' === $st ? __( 'Zrušit žádost', 'zg-b2b' ) : __( 'Odebrat', 'zg-b2b' ) ) . '</button>';
-				echo '</form>';
-				if ( 'pending' === $st ) {
-					echo '<span class="zg-b2b-company-note">' . esc_html__( 'Firmu po kontrole schválíme a pošleme vám e-mail.', 'zg-b2b' ) . '</span>';
-				}
 			}
 			echo '</div></div>';
 		}
@@ -283,8 +291,9 @@ class ZG_B2B_Companies {
 			'type'     => 'select',
 			'label'    => __( 'Země sídla', 'zg-b2b' ),
 			'required' => true,
-			'options'  => self::country_options(),
-			'class'    => array( 'form-row-wide' ),
+			'options'     => self::country_options(),
+			'class'       => array( 'form-row-wide' ),
+			'input_class' => array( 'country_select' ), // selectWoo jako ostatní výběry zemí na webu.
 		), $country );
 
 		echo '<p class="form-row form-row-wide zg-b2b-company-ico-row" id="zg_company_ico_field"><label for="zg_company_ico">' . esc_html__( 'IČO', 'zg-b2b' ) . ' <abbr class="required zg-b2b-company-cz-only" title="required">*</abbr></label>';
@@ -338,12 +347,15 @@ class ZG_B2B_Companies {
 		if ( 'remove' === $action ) {
 			$list = self::get_all( $user_id );
 			foreach ( $list as $i => $c ) {
-				// Schválenou firmu může odebrat jen administrátor.
-				if ( $c['id'] === $id && 'approved' !== $c['status'] ) {
+				// Zákazník může odebrat jakoukoli svou další firmu (bez schválení).
+				if ( $c['id'] === $id ) {
 					unset( $list[ $i ] );
 				}
 			}
 			self::save_all( $user_id, $list );
+			if ( get_user_meta( $user_id, self::META_LAST, true ) === $id ) {
+				delete_user_meta( $user_id, self::META_LAST );
+			}
 			wc_add_notice( __( 'Firma byla odebrána.', 'zg-b2b' ) );
 			wp_safe_redirect( ZG_B2B_Address_Account::url() );
 			exit;
@@ -435,8 +447,50 @@ class ZG_B2B_Companies {
 	 * Pokladna
 	 * =================================================================== */
 
+	/** Výběr / souhrn firmy v pokladně – pro přihlášené zákazníky s vyplněnou firmou. */
 	private static function checkout_active() {
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+		$p = self::primary( get_current_user_id() );
+		return '' !== $p['company'] || count( self::billable( get_current_user_id() ) ) > 1;
+	}
+
+	private static function has_choice() {
 		return is_user_logged_in() && count( self::billable( get_current_user_id() ) ) > 1;
+	}
+
+	/**
+	 * Pole, která zákazník v pokladně nemůže změnit, se nezobrazují (údaje jsou v kartě firmy).
+	 * Skryjí se: zamčená pole s hodnotou a – při více firmách – i adresa sídla (řídí ji výběr firmy).
+	 */
+	public static function hide_fixed_fields( $fields ) {
+		if ( ! self::checkout_active() || empty( $fields['billing'] ) ) {
+			return $fields;
+		}
+		$user_id = get_current_user_id();
+		$company = self::get( $user_id, self::initial_company( $user_id ) );
+		$hide    = class_exists( 'ZG_B2B_Account' ) ? ZG_B2B_Account::locked_keys() : array();
+		if ( self::has_choice() ) {
+			$hide = array_merge( $hide, array_keys( self::field_map() ) );
+		}
+		$map = self::field_map();
+		foreach ( array_unique( $hide ) as $key ) {
+			if ( ! isset( $fields['billing'][ $key ] ) ) {
+				continue;
+			}
+			$value = isset( $map[ $key ] ) && $company ? self::company_value( $company, $map[ $key ] ) : (string) get_user_meta( $user_id, $key, true );
+			// Prázdné povinné pole necháme viditelné, aby šlo objednávku dokončit.
+			if ( '' === $value && ! empty( $fields['billing'][ $key ]['required'] ) ) {
+				continue;
+			}
+			$fields['billing'][ $key ]['type']        = 'hidden';
+			$fields['billing'][ $key ]['label']       = '';
+			$fields['billing'][ $key ]['description'] = '';
+			$fields['billing'][ $key ]['required']    = false;
+			$fields['billing'][ $key ]['class']       = array( 'form-row-wide', 'zg-b2b-hidden-field' );
+		}
+		return $fields;
 	}
 
 	/** Firma předvybraná v pokladně (naposledy použitá, pokud je stále schválená). */
@@ -472,17 +526,25 @@ class ZG_B2B_Companies {
 		$user_id = get_current_user_id();
 		$current = self::initial_company( $user_id );
 
-		echo '<div class="zg-b2b-addr-picker zg-b2b-company-picker" id="zg-b2b-company-picker">';
-		echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
+		$choice = self::has_choice();
+		echo '<div class="zg-b2b-addr-picker zg-b2b-company-picker' . ( $choice ? '' : ' zg-b2b-company-picker--single' ) . '" id="zg-b2b-company-picker">';
+		if ( $choice ) {
+			echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
+		}
 		foreach ( self::billable( $user_id ) as $id => $c ) {
 			$checked = ( $id === $current );
 			echo '<label class="zg-b2b-addr-option' . ( $checked ? ' is-selected' : '' ) . '">';
-			echo '<input type="radio" name="zg_b2b_company" value="' . esc_attr( $id ) . '"' . checked( $checked, true, false ) . '>';
+			if ( $choice ) {
+				echo '<input type="radio" name="zg_b2b_company" value="' . esc_attr( $id ) . '"' . checked( $checked, true, false ) . '>';
+			} else {
+				echo '<input type="hidden" name="zg_b2b_company" value="' . esc_attr( $id ) . '">';
+			}
 			echo '<span class="zg-b2b-addr-option__text"><strong>' . esc_html( $c['company'] ) . '</strong>';
 			$detail = array_filter( array( $c['ico'] ? __( 'IČO', 'zg-b2b' ) . ' ' . $c['ico'] : '', $c['dic'] ? __( 'DIČ', 'zg-b2b' ) . ' ' . $c['dic'] : '', trim( $c['address_1'] . ', ' . $c['postcode'] . ' ' . $c['city'], ', ' ) ) );
 			echo '<span class="zg-b2b-addr-option__detail">' . esc_html( implode( ' · ', $detail ) ) . '</span>';
 			echo '</span></label>';
 		}
+		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
 		echo '</div>';
 	}
 
@@ -491,6 +553,9 @@ class ZG_B2B_Companies {
 			return;
 		}
 		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
+		if ( ! self::has_choice() ) {
+			return;
+		}
 		wp_enqueue_script( 'zg-b2b-companies-checkout', ZG_B2B_URL . 'assets/js/zg-b2b-companies-checkout.js', array( 'jquery', 'wc-checkout' ), ZG_B2B_VERSION, true );
 		$data = array();
 		foreach ( self::billable( get_current_user_id() ) as $id => $c ) {
@@ -589,6 +654,75 @@ class ZG_B2B_Companies {
 			$order->update_meta_data( self::ORDER_LABEL, self::short_label( $c ) );
 			update_user_meta( $user_id, self::META_LAST, self::$checkout_company );
 		}
+	}
+
+	/** Název doručovací adresy objednávky (pobočka, jinak firma / město z doručovací adresy). */
+	public static function order_delivery_name( $order ) {
+		$label = (string) $order->get_meta( '_bombora_shipping_address_label' );
+		if ( '' !== $label ) {
+			return $label;
+		}
+		if ( $order->has_shipping_address() ) {
+			return trim( $order->get_shipping_company() ? $order->get_shipping_company() : $order->get_shipping_city() );
+		}
+		return '';
+	}
+
+	public static function order_company_name( $order ) {
+		return (string) $order->get_billing_company();
+	}
+
+	private static function insert_after( array $cols, $after, array $add ) {
+		$out = array();
+		foreach ( $cols as $k => $v ) {
+			$out[ $k ] = $v;
+			if ( $k === $after ) {
+				$out += $add;
+			}
+		}
+		return count( $out ) === count( $cols ) ? $cols + $add : $out;
+	}
+
+	public static function account_order_columns( $cols ) {
+		return self::insert_after( $cols, 'order-date', array(
+			'zg-company'  => __( 'Firma', 'zg-b2b' ),
+			'zg-delivery' => __( 'Doručení', 'zg-b2b' ),
+		) );
+	}
+
+	public static function account_col_delivery( $order ) {
+		$name = self::order_delivery_name( $order );
+		echo $name ? esc_html( $name ) : '<span class="zg-b2b-muted">' . esc_html__( 'fakturační adresa', 'zg-b2b' ) . '</span>';
+	}
+
+	public static function account_col_company( $order ) {
+		echo esc_html( self::order_company_name( $order ) );
+	}
+
+	public static function admin_order_columns( $cols ) {
+		return self::insert_after( $cols, 'order_number', array(
+			'zg_company'  => 'Firma (faktura)',
+			'zg_delivery' => 'Doručení',
+		) );
+	}
+
+	public static function admin_order_column( $col, $order ) {
+		if ( ! $order instanceof WC_Order ) {
+			$order = wc_get_order( $order );
+		}
+		if ( ! $order ) {
+			return;
+		}
+		if ( 'zg_company' === $col ) {
+			echo esc_html( self::order_company_name( $order ) );
+		} elseif ( 'zg_delivery' === $col ) {
+			$name = self::order_delivery_name( $order );
+			echo $name ? esc_html( $name ) : '<span style="color:#787c82">fakturační adresa</span>';
+		}
+	}
+
+	public static function admin_order_column_legacy( $col, $post_id ) {
+		self::admin_order_column( $col, wc_get_order( $post_id ) );
 	}
 
 	public static function admin_order_label( $order ) {
