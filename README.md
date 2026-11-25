@@ -4,7 +4,7 @@
 1. Instalace a aktualizace přes **Bombora → Moduly** (Bombora Manager ≥ 1.3.1, repo `bombora-tech/bombora-b2b-agent`, složka `bombora-b2b-agent`).
    - Přechod ze starého `zg-b2b`: Bombora → Moduly → **Převést a aktualizovat** (stará složka se tiše deaktivuje a smaže bez uninstall – nastavení, B2B účty i objednávky zůstanou). Oba najednou aktivní být nesmí.
    - Vydání nové verze: zvýšit `Version` + `ZG_B2B_VERSION`, doplnit `CHANGELOG.md`, push do `main` → GitHub Actions vytvoří release s `bombora-b2b-agent.zip`.
-2. WooCommerce → **Bombora B2B**:
+2. **Bombora → B2B Agent**:
    - zkontrolujte předvybrané kategorie (pivo, lihoviny…) → **Uložit nastavení** (štítek se přiřadí při uložení),
    - vyberte stránku registrace a VOP,
    - ověřte meta klíče IČO/DIČ (musí odpovídat polím v pokladně, výchozí `billing_ic` / `billing_dic`).
@@ -38,7 +38,7 @@ Upravte proměnné v `assets/css/zg-b2b.css` (`--zg-b2b-primary` atd.) nebo je p
 
 ## Platba na fakturu (proforma z Eurofaktury) – v1.1
 1. V Eurofaktuře založte **samostatného API uživatele** pro web (API nepovoluje souběžné požadavky jednoho uživatele – nesdílejte ho se synchronizací skladu).
-2. WooCommerce → Bombora B2B → sekce 3: API URL (ověřte v API konzoli Eurofaktury), uživatel, secret key, token. Bezpečněji v `wp-config.php`:
+2. Bombora → B2B Agent → sekce 3: API URL (ověřte v API konzoli Eurofaktury), uživatel, secret key, token. Bezpečněji v `wp-config.php`:
    `define('ZG_EF_USERNAME','…'); define('ZG_EF_SECRET','…'); define('ZG_EF_TOKEN','…'); define('ZG_EF_ENDPOINT','…');`
 3. Tlačítkem **Zavolat API** (např. `SalesQuoteList`) ověřte přihlášení.
 4. WooCommerce → Nastavení → Platby → **Platba na fakturu (B2B proforma)**: zapnout, splatnost, číslo účtu/IBAN, zdroj VS.

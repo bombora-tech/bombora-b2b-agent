@@ -1,6 +1,6 @@
 <?php
 /**
- * Nastavení: WooCommerce → Bombora B2B.
+ * Nastavení: Bombora → B2B Agent.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -14,8 +14,14 @@ class ZG_B2B_Settings {
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 	}
 
+	/**
+	 * Nastavení pod menu „Bombora“ (Bombora Manager). Bez Manageru jako záloha
+	 * pod WooCommerce. Slug `zg-b2b` zůstává (odkazy admin.php?page=zg-b2b).
+	 */
 	public static function menu() {
-		add_submenu_page( 'woocommerce', 'Bombora B2B', 'Bombora B2B', 'manage_woocommerce', 'zg-b2b', array( __CLASS__, 'render' ) );
+		global $admin_page_hooks;
+		$parent = isset( $admin_page_hooks['bombora'] ) ? 'bombora' : 'woocommerce';
+		add_submenu_page( $parent, 'Bombora B2B Agent', 'B2B Agent', 'manage_woocommerce', 'zg-b2b', array( __CLASS__, 'render' ) );
 	}
 
 	public static function register() {
@@ -166,7 +172,7 @@ class ZG_B2B_Settings {
 		$activated = (int) get_option( 'zg_b2b_activated' );
 		?>
 		<div class="wrap">
-			<h1>Bombora B2B</h1>
+			<h1>Bombora B2B Agent</h1>
 
 			<?php if ( false !== $assigned ) : ?>
 				<div class="notice notice-success"><?php foreach ( (array) $assigned as $m ) : ?><p><?php echo esc_html( $m ); ?></p><?php endforeach; ?></div>

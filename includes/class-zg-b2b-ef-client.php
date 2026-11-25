@@ -63,7 +63,7 @@ class ZG_B2B_EF_Client {
 	 */
 	public static function call( $method, $parameters = array(), $timeout = 30 ) {
 		if ( ! self::configured() ) {
-			return new WP_Error( 'zg_ef_config', 'Eurofaktura API není nastavené (WooCommerce → Bombora B2B).' );
+			return new WP_Error( 'zg_ef_config', 'Eurofaktura API není nastavené (Bombora → B2B Agent).' );
 		}
 		$c    = self::credentials();
 		$body = array(

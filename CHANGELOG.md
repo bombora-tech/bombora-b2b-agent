@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.3] - 2026-11-25
+
+### Změněno
+- Nastavení přesunuto z menu WooCommerce pod **Bombora → B2B Agent** (bez Bombora Manageru zůstává pod WooCommerce). Adresa stránky `admin.php?page=zg-b2b` beze změny.
+
 ## [1.5.2] - 2026-11-25
 
 ### Opraveno
