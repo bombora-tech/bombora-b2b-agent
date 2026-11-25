@@ -506,3 +506,8 @@ body > .select2-container--open {
 .zg-b2b-muted {
 	color: var(--zg-addr-muted);
 }
+/* IČO je skryté (pevné údaje firmy) → skrýt i tlačítko „Načíst údaje z ARESu“ (WPify). */
+form.checkout:has(#billing_ic_field.zg-b2b-hidden-field) .wpify-woo-ic-dic__company_field,
+form.checkout:has(#billing_ic_field.zg-b2b-hidden-field) #wpify-woo-icdic__ares-autofill-button {
+	display: none !important;
+}

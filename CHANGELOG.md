@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.3] - 2026-11-26
+
+### Opraveno
+- Pokladna: při skrytém IČO se skryje i tlačítko „Načíst údaje z ARESu“ (WPify).
+
 ## [1.6.2] - 2026-11-26
 
 ### Změněno
