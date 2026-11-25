@@ -1,0 +1,8 @@
+<wpml-config>
+	<admin-texts>
+		<key name="zg_b2b_settings">
+			<key name="notice_title" />
+			<key name="notice_text" />
+		</key>
+	</admin-texts>
+</wpml-config>

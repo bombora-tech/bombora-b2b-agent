@@ -1,0 +1,646 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Bombora B2B\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%1$s doručujeme pouze do: %3$s. Zvolená země doručení je %2$s – změňte doručovací adresu, nebo produkty odeberte z košíku."
+msgstr "We deliver %1$s only to: %3$s. The selected delivery country is %2$s – change the delivery address or remove these products from the cart."
+
+msgid "%1$s doručujeme pouze na adresy v zemích: %2$s."
+msgstr "We deliver %1$s only to addresses in: %2$s."
+
+msgid "Adresa"
+msgstr "Address"
+
+msgid "Alespoň 8 znaků."
+msgstr "At least 8 characters."
+
+msgid "Ceny po přihlášení"
+msgstr "Prices after login"
+
+msgid "Ceny po schválení účtu"
+msgstr "Prices after account approval"
+
+msgid "DIČ"
+msgstr "VAT ID"
+
+msgid "DIČ / IČ DPH"
+msgstr "VAT ID"
+
+msgid "DIČ má neplatný formát (např. CZ12345678)."
+msgstr "The VAT ID has an invalid format (e.g. CZ12345678)."
+
+msgid "DIČ má neplatný formát."
+msgstr "The VAT ID has an invalid format."
+
+msgid "DIČ není ve VIES vedeno jako platné. Zkontrolujte ho, případně pokračujte – údaje ověříme ručně."
+msgstr "This VAT ID is not listed as valid in VIES. Please check it, or continue – we will verify your details manually."
+
+msgid "DIČ ověřeno ve VIES"
+msgstr "VAT ID verified in VIES"
+
+msgid "Daňový doklad k objednávce."
+msgstr "Tax invoice for the order."
+
+msgid "Dobrý den, %s,"
+msgstr "Hello %s,"
+
+msgid "Dobrý den, v příloze posíláme proforma fakturu č. %1$s k objednávce č. %2$s."
+msgstr "Hello, please find attached proforma invoice no. %1$s for order no. %2$s."
+
+msgid "Doklad není k dispozici. Přihlaste se prosím ke svému účtu."
+msgstr "The document is not available. Please log in to your account."
+
+msgid "Doklady"
+msgstr "Documents"
+
+msgid "Doprava: %s"
+msgstr "Shipping: %s"
+
+msgid "Doručení"
+msgstr "Delivery"
+
+msgid "Doručení pouze v ČR"
+msgstr "Delivery in the Czech Republic only"
+
+msgid "Doručovací adresa"
+msgstr "Delivery address"
+
+msgid "Dotazy: %s"
+msgstr "Questions: %s"
+
+msgid "Děkujeme, registrace je odeslaná"
+msgstr "Thank you, your registration has been sent"
+
+msgid "E-mail"
+msgstr "E-mail"
+
+msgid "E-mail (přihlášení)"
+msgstr "E-mail (login)"
+
+msgid "Faktura"
+msgstr "Invoice"
+
+msgid "Faktura (PDF)"
+msgstr "Invoice (PDF)"
+
+msgid "Faktura č. %s"
+msgstr "Invoice no. %s"
+
+msgid "Fakturační e-mail"
+msgstr "Billing e-mail"
+
+msgid "Fakturační údaje"
+msgstr "Billing details"
+
+msgid "Fakturační údaje se předvyplní v pokladně"
+msgstr "Billing details are prefilled at checkout"
+
+msgid "Firemní dárky / vlastní spotřeba"
+msgstr "Corporate gifts / own consumption"
+
+msgid "Firemní údaje"
+msgstr "Company details"
+
+msgid "Firma"
+msgstr "Company"
+
+msgid "Formulář se nepodařilo ověřit. Obnovte prosím stránku a odešlete ho znovu."
+msgstr "The form could not be verified. Please reload the page and submit it again."
+
+msgid "Heslo"
+msgstr "Password"
+
+msgid "Heslo musí mít alespoň 8 znaků."
+msgstr "The password must be at least 8 characters long."
+
+msgid "IČO"
+msgstr "Company ID (IČO)"
+
+msgid "IČO jsme v registru ARES nenašli."
+msgstr "We could not find this company ID in the ARES register."
+
+msgid "IČO musí mít 8 číslic."
+msgstr "The company ID must have 8 digits."
+
+msgid "IČO není platné – zkontrolujte číslice."
+msgstr "The company ID is not valid – please check the digits."
+
+msgid "Jakmile bude účet aktivní, pošleme vám další e-mail. Poté se přihlásíte svým e-mailem a heslem a uvidíte velkoobchodní ceny."
+msgstr "Once your account is active, we will send you another e-mail. You can then log in with your e-mail and password and see wholesale prices."
+
+msgid "Jiné"
+msgstr "Other"
+
+msgid "Jméno"
+msgstr "Name"
+
+msgid "Jste přihlášeni a váš velkoobchodní účet je aktivní."
+msgstr "You are logged in and your wholesale account is active."
+
+msgid "Kontaktní osoba"
+msgstr "Contact person"
+
+msgid "Lihoviny a pivo doručujeme pouze na adresy v ČR. Na zahraniční adresu můžete objednat víno a ostatní sortiment."
+msgstr "We deliver spirits and beer only to addresses in the Czech Republic. Wine and other products can be ordered to addresses abroad."
+
+msgid "Lihoviny do zvolené země neprodáváme. Do košíku je můžete přidat jen s doručením v České republice."
+msgstr "We do not sell spirits to the selected country. You can add them to the cart only with delivery in the Czech Republic."
+
+msgid "Lihoviny jsme odebrali z košíku"
+msgstr "Spirits have been removed from your cart"
+
+msgid "Lihoviny prodáváme pouze v České republice. Protože jste zvolili doručení do země %s, odebrali jsme z košíku:"
+msgstr "We sell spirits only within the Czech Republic. Because you selected delivery to %s, we removed the following from your cart:"
+
+msgid "Lihoviny prodáváme pouze v České republice. V košíku máte zvolenou zemi doručení %s – změňte ji na Českou republiku."
+msgstr "We sell spirits only within the Czech Republic. Your cart has the delivery country %s – please change it to the Czech Republic."
+
+msgid "Lihoviny prodáváme pouze v České republice. Vyberte zemi, kam chcete zboží doručit."
+msgstr "We sell spirits only within the Czech Republic. Choose where you want the goods delivered."
+
+msgid "Mění velkoobchod"
+msgstr "Changed by the wholesaler"
+
+msgid "Město"
+msgstr "City"
+
+msgid "Např. o jaký sortiment máte zájem nebo odhad odběru"
+msgstr "E.g. which products you are interested in or expected order volume"
+
+msgid "Načíst z ARES"
+msgstr "Load from ARES"
+
+msgid "Načítám údaje…"
+msgstr "Loading details…"
+
+msgid "Nemáte ještě velkoobchodní účet?"
+msgstr "Don't have a wholesale account yet?"
+
+msgid "Neschválený"
+msgstr "Not approved"
+
+msgid "Název firmy"
+msgstr "Company name"
+
+msgid "Něco se nepovedlo. Zkuste to prosím znovu."
+msgstr "Something went wrong. Please try again."
+
+msgid "O schválení vás informujeme e-mailem"
+msgstr "We will notify you by e-mail once approved"
+
+msgid "Objednávku expedujeme po připsání platby. Po úhradě vystavíme fakturu (daňový doklad) – najdete ji v sekci Můj účet → Objednávky."
+msgstr "We will ship the order once the payment has been received. After payment we will issue an invoice (tax document) – you will find it in My account → Orders."
+
+msgid "Objednávku expedujeme po připsání platby. Proformu najdete také v sekci Můj účet → Objednávky."
+msgstr "We will ship the order once the payment has been received. You can also find the proforma invoice in My account → Orders."
+
+msgid "Objednávku nelze odeslat: %1$s doručujeme pouze do: %3$s (zvolená země doručení: %2$s). Změňte doručovací adresu, nebo produkty odeberte z košíku."
+msgstr "The order cannot be placed: we deliver %1$s only to: %3$s (selected delivery country: %2$s). Change the delivery address or remove these products from the cart."
+
+msgid "Odeslat registraci"
+msgstr "Submit registration"
+
+msgid "Odesílám…"
+msgstr "Sending…"
+
+msgid "Osobní údaje zpracováváme podle <a href=\"%s\" target=\"_blank\" rel=\"noopener\">zásad ochrany osobních údajů</a>."
+msgstr "We process personal data in accordance with our <a href=\"%s\" target=\"_blank\" rel=\"noopener\">privacy policy</a>."
+
+msgid "Ověřeno v registru ARES"
+msgstr "Verified in the ARES register"
+
+msgid "Ověřit ve VIES"
+msgstr "Verify in VIES"
+
+msgid "PDF se teď nepodařilo načíst. Zkuste to prosím za chvíli."
+msgstr "The PDF could not be loaded right now. Please try again in a moment."
+
+msgid "PSČ"
+msgstr "Postcode"
+
+msgid "PSČ má neplatný formát."
+msgstr "The postcode has an invalid format."
+
+msgid "Platba na fakturu"
+msgstr "Payment by invoice"
+
+msgid "Platební údaje"
+msgstr "Payment details"
+
+msgid "Po připsání platby ji nahradí faktura (daňový doklad)."
+msgstr "It will be replaced by an invoice (tax document) once the payment is received."
+
+msgid "Po schválení účtu uvidíte velkoobchodní ceny bez DPH i s DPH a můžete objednávat. Každou registraci ověřujeme ručně."
+msgstr "Once your account is approved, you will see wholesale prices excl. and incl. VAT and can place orders. We review every registration manually."
+
+msgid "Pokračovat"
+msgstr "Continue"
+
+msgid "Pokud je chcete objednat, zvolte doručení v České republice a přidejte je znovu."
+msgstr "To order them, choose delivery in the Czech Republic and add them again."
+
+msgid "Pouze ČR"
+msgstr "CZ only"
+
+msgid "Poznámka"
+msgstr "Note"
+
+msgid "Pro registraci je nutný souhlas s obchodními podmínkami."
+msgstr "You must accept the terms and conditions to register."
+
+msgid "Produkty %1$s nelze doručit do země %2$s – lihoviny a pivo doručujeme pouze do: %3$s. Zvolte doručovací adresu v ČR, nebo produkty odeberte z košíku."
+msgstr "Products %1$s cannot be delivered to %2$s – we deliver spirits and beer only to: %3$s. Choose a delivery address in the Czech Republic or remove these products from the cart."
+
+msgid "Proforma"
+msgstr "Proforma"
+
+msgid "Proforma (PDF)"
+msgstr "Proforma (PDF)"
+
+msgid "Proforma faktura"
+msgstr "Proforma invoice"
+
+msgid "Proforma faktura k objednávce č. %s"
+msgstr "Proforma invoice for order no. %s"
+
+msgid "Proforma faktura č. %s"
+msgstr "Proforma invoice no. %s"
+
+msgid "Proformu faktury najdete v příloze tohoto e-mailu a také v sekci Můj účet. Objednávku expedujeme po připsání platby."
+msgstr "The proforma invoice is attached to this e-mail and is also available in My account. We will ship the order once the payment has been received."
+
+msgid "Proformu faktury vám pošleme samostatným e-mailem a najdete ji také v sekci Můj účet. Objednávku expedujeme po připsání platby."
+msgstr "We will send you the proforma invoice in a separate e-mail; it will also be available in My account. We will ship the order once the payment has been received."
+
+msgid "Proformu připravujeme – během několika minut vám ji pošleme e-mailem a objeví se zde."
+msgstr "We are preparing your proforma invoice – within a few minutes we will e-mail it to you and it will appear here."
+
+msgid "Provozovna / příjemce"
+msgstr "Premises / recipient"
+
+msgid "Přejít do katalogu"
+msgstr "Go to catalogue"
+
+msgid "Přihlaste se"
+msgstr "Log in"
+
+msgid "Přihlaste se, nebo si zaregistrujte firemní účet. Po schválení uvidíte ceny bez DPH i s DPH a můžete objednávat."
+msgstr "Log in or register a company account. Once approved, you will see prices excl. and incl. VAT and can place orders."
+
+msgid "Přihlašovací jméno je váš e-mail:"
+msgstr "Your username is your e-mail:"
+
+msgid "Přihlásit se"
+msgstr "Log in"
+
+msgid "Přihlásit se do velkoobchodu"
+msgstr "Log in to the wholesale shop"
+
+msgid "Příjmení"
+msgstr "Surname"
+
+msgid "Příliš mnoho dotazů. Vyplňte prosím údaje ručně."
+msgstr "Too many requests. Please fill in the details manually."
+
+msgid "Příliš mnoho pokusů. Zkuste to prosím za hodinu, nebo nám napište."
+msgstr "Too many attempts. Please try again in an hour or write to us."
+
+msgid "Přístup do velkoobchodu"
+msgstr "Wholesale account access"
+
+msgid "Registr ARES teď neodpovídá. Vyplňte prosím údaje ručně."
+msgstr "The ARES register is not responding. Please fill in the details manually."
+
+msgid "Registrace"
+msgstr "Registration"
+
+msgid "Registrace do velkoobchodu přijata"
+msgstr "Wholesale registration received"
+
+msgid "Registrace přijata"
+msgstr "Registration received"
+
+msgid "Registrace velkoobchodních partnerů probíhá přes <a href=\"%s\">registrační formulář</a>."
+msgstr "Wholesale partners register via the <a href=\"%s\">registration form</a>."
+
+msgid "Registrace velkoobchodního partnera"
+msgstr "Wholesale partner registration"
+
+msgid "Registraci se nepodařilo schválit. Kontaktujte nás prosím na %s."
+msgstr "Your registration could not be approved. Please contact us at %s."
+
+msgid "Registrovat firmu"
+msgstr "Register your company"
+
+msgid "Restaurace, bar, hotel (HoReCa)"
+msgstr "Restaurant, bar, hotel (HoReCa)"
+
+msgid "Rozumím"
+msgstr "OK"
+
+msgid "Schválený velkoobchodní účet"
+msgstr "Approved wholesale account"
+
+msgid "Skrýt heslo"
+msgstr "Hide password"
+
+msgid "Slouží zároveň jako přihlašovací jméno."
+msgstr "Also used as your username."
+
+msgid "Souhlasím s <a href=\"%s\" target=\"_blank\" rel=\"noopener\">obchodními podmínkami pro velkoobchod</a>"
+msgstr "I agree to the <a href=\"%s\" target=\"_blank\" rel=\"noopener\">wholesale terms and conditions</a>"
+
+msgid "Souhlasím s obchodními podmínkami pro velkoobchod"
+msgstr "I agree to the wholesale terms and conditions"
+
+msgid "Splatnost"
+msgstr "Due date"
+
+msgid "Stav účtu"
+msgstr "Account status"
+
+msgid "Stáhnout PDF"
+msgstr "Download PDF"
+
+msgid "Systém VIES teď neodpovídá. Vyplňte prosím údaje ručně."
+msgstr "The VIES system is not responding. Please fill in the details manually."
+
+msgid "Sídlo"
+msgstr "Registered address"
+
+msgid "Telefon"
+msgstr "Phone"
+
+msgid "Tento doklad už není k dispozici – stáhněte si prosím fakturu."
+msgstr "This document is no longer available – please download the invoice."
+
+msgid "Tuto objednávku nelze doručit"
+msgstr "This order cannot be delivered"
+
+msgid "Typ podnikání"
+msgstr "Business type"
+
+msgid "U firem mimo ČR a SK vyplňte DIČ (VAT ID)."
+msgstr "Companies outside the Czech Republic and Slovakia must enter a VAT ID."
+
+msgid "U firem z jiných zemí EU je DIČ povinné."
+msgstr "Required for companies from other EU countries."
+
+msgid "Ulice a číslo"
+msgstr "Street and number"
+
+msgid "Upravit adresy"
+msgstr "Edit addresses"
+
+msgid "Upravit jméno, e-mail a heslo"
+msgstr "Edit name, e-mail and password"
+
+msgid "Už máte účet?"
+msgstr "Already have an account?"
+
+msgid "Variabilní symbol"
+msgstr "Payment reference (VS)"
+
+msgid "Vaše doručovací adresa je v zemi %1$s. Tento produkt doručujeme pouze do: %2$s, proto ho nelze objednat. Pro doručení na českou adresu nás kontaktujte na %3$s."
+msgstr "Your delivery address is in %1$s. We deliver this product only to: %2$s, so it cannot be ordered. For delivery to a Czech address, contact us at %3$s."
+
+msgid "Velkoobchod vo.zgruzie.cz"
+msgstr "vo.zgruzie.cz wholesale"
+
+msgid "Velkoobchodní ceny a objednávky se zpřístupní po schválení účtu. Dotazy: %s"
+msgstr "Wholesale prices and ordering become available once your account is approved. Questions: %s"
+
+msgid "Velkoobchodní ceny pro registrované partnery"
+msgstr "Wholesale prices for registered partners"
+
+msgid "Vinotéka, prodejna, e-shop"
+msgstr "Wine shop, store, e-shop"
+
+msgid "Vyberte typ podnikání."
+msgstr "Select your business type."
+
+msgid "Vyberte zemi doručení."
+msgstr "Select the delivery country."
+
+msgid "Vyberte zemi sídla."
+msgstr "Select the country of your registered address."
+
+msgid "Vyplňte IČO."
+msgstr "Enter your company ID."
+
+msgid "Vyplňte PSČ."
+msgstr "Enter the postcode."
+
+msgid "Vyplňte jméno."
+msgstr "Enter your first name."
+
+msgid "Vyplňte město."
+msgstr "Enter the city."
+
+msgid "Vyplňte název firmy."
+msgstr "Enter the company name."
+
+msgid "Vyplňte příjmení."
+msgstr "Enter your surname."
+
+msgid "Vyplňte telefon."
+msgstr "Enter your phone number."
+
+msgid "Vyplňte ulici a číslo."
+msgstr "Enter the street and number."
+
+msgid "Váš velkoobchodní účet je schválený"
+msgstr "Your wholesale account has been approved"
+
+msgid "Váš velkoobchodní účet čeká na schválení. Jakmile ho schválíme, pošleme vám e-mail."
+msgstr "Your wholesale account is awaiting approval. We will e-mail you as soon as it is approved."
+
+msgid "Váš účet zatím není schválen"
+msgstr "Your account has not been approved yet"
+
+msgid "Váš účet čeká na schválení. Po schválení vám pošleme e-mail."
+msgstr "Your account is awaiting approval. We will e-mail you once it is approved."
+
+msgid "Zadejte IČO – název, sídlo a DIČ doplníme z registru ARES."
+msgstr "Enter your company ID – we will fill in the name, address and VAT ID from the ARES register."
+
+msgid "Zadejte platný e-mail."
+msgstr "Enter a valid e-mail address."
+
+msgid "Zadejte telefon včetně předvolby."
+msgstr "Enter your phone number including the country code."
+
+msgid "Zavřít"
+msgstr "Close"
+
+msgid "Zboží doručovat na adresu sídla"
+msgstr "Deliver goods to the registered address"
+
+msgid "Země doručení"
+msgstr "Delivery country"
+
+msgid "Země doručení se změní i v košíku a pokladně."
+msgstr "The delivery country will also be updated in the cart and at checkout."
+
+msgid "Země sídla"
+msgstr "Country of registered address"
+
+msgid "Zkontrolujte prosím označená pole."
+msgstr "Please check the highlighted fields."
+
+msgid "Změna firemních údajů"
+msgstr "Change of company details"
+
+msgid "Změnu provede velkoobchod – napište nám."
+msgstr "Changes are made by the wholesaler – please write to us."
+
+msgid "Zobrazit heslo"
+msgstr "Show password"
+
+msgid "Zrušit"
+msgstr "Cancel"
+
+msgid "Zvolte zemi doručení"
+msgstr "Choose the delivery country"
+
+msgid "děkujeme za registraci firmy %s do velkoobchodu vo.zgruzie.cz. Údaje nyní zkontrolujeme a účet ručně schválíme."
+msgstr "thank you for registering %s with the vo.zgruzie.cz wholesale shop. We will now review your details and approve your account manually."
+
+msgid "např. Restaurace U Tbilisi"
+msgstr "e.g. Tbilisi Restaurant"
+
+msgid "název firmy"
+msgstr "company name"
+
+msgid "pouze %s"
+msgstr "%s only"
+
+msgid "sídlo"
+msgstr "registered address"
+
+msgid "uveden na proformě"
+msgstr "stated on the proforma"
+
+msgid "velkoobchodní účet firmy %s je schválený. Po přihlášení uvidíte velkoobchodní ceny a můžete objednávat."
+msgstr "the wholesale account of %s has been approved. After logging in, you will see wholesale prices and can place orders."
+
+msgid "Údaje %1$s může změnit pouze velkoobchod. Pošlete nám požadovanou změnu na %2$s. Jméno, kontakty a doručovací adresu můžete upravit sami."
+msgstr "Only the wholesaler can change: %1$s. Send us the requested change at %2$s. You can edit your name, contacts and delivery address yourself."
+
+msgid "Údaje firmy %1$s nyní zkontrolujeme a účet ručně schválíme. Po schválení vám přijde e-mail a uvidíte velkoobchodní ceny. Dotazy: %2$s"
+msgstr "We will now review the details of %1$s and approve the account manually. Once approved, you will receive an e-mail and see wholesale prices. Questions: %2$s"
+
+msgid "Údaje firmy doplníme z ARES"
+msgstr "Company details filled in from ARES"
+
+msgid "Účet s tímto e-mailem už existuje. Přihlaste se, nebo si obnovte heslo."
+msgstr "An account with this e-mail already exists. Log in or reset your password."
+
+msgid "Účet schválen"
+msgstr "Account approved"
+
+msgid "Čeká na schválení"
+msgstr "Awaiting approval"
+
+msgid "Částka"
+msgstr "Amount"
+
+msgid "Číslo účtu"
+msgstr "Account number"
+
+msgid "— vyberte —"
+msgstr "— select —"
+
+# Doručovací adresy (1.5.0)
+msgid "Adresa nebyla nalezena."
+msgstr "Address not found."
+
+msgid "Do této země nedoručujeme."
+msgstr "We do not deliver to this country."
+
+msgid "Doručovací adresa byla smazána."
+msgstr "Delivery address deleted."
+
+msgid "Doručovací adresa byla uložena."
+msgstr "Delivery address saved."
+
+msgid "Doručovací adresy"
+msgstr "Delivery addresses"
+
+msgid "Dosáhli jste maximálního počtu doručovacích adres."
+msgstr "Maximum number of delivery addresses reached."
+
+msgid "Jiná adresa"
+msgstr "Another address"
+
+msgid "Nastavit jako výchozí"
+msgstr "Set as default"
+
+msgid "Nová doručovací adresa"
+msgstr "New delivery address"
+
+msgid "Název adresy (např. název pobočky)"
+msgstr "Address name (e.g. branch name)"
+
+msgid "Platnost odkazu vypršela, zkuste to prosím znovu."
+msgstr "The link has expired, please try again."
+
+msgid "Pobočka / adresa"
+msgstr "Branch / address"
+
+msgid "Použít jako výchozí doručovací adresu"
+msgstr "Use as default delivery address"
+
+msgid "Přidat doručovací adresu"
+msgstr "Add delivery address"
+
+msgid "Smazat"
+msgstr "Delete"
+
+msgid "Smazat tuto doručovací adresu?"
+msgstr "Delete this delivery address?"
+
+msgid "Spravovat doručovací adresy"
+msgstr "Manage delivery addresses"
+
+msgid "Stejná jako fakturační adresa"
+msgstr "Same as billing address"
+
+msgid "Telefon pro doručení"
+msgstr "Delivery phone"
+
+msgid "Uložit adresu"
+msgstr "Save address"
+
+msgid "Uložit adresu do mých doručovacích adres"
+msgstr "Save this address to my delivery addresses"
+
+msgid "Uložte si doručovací adresy svých provozoven. V pokladně pak jen vyberete provozovnu a adresa se doplní."
+msgstr "Save the delivery addresses of your branches. At checkout you only pick the branch and the address is filled in."
+
+msgid "Upravit"
+msgstr "Edit"
+
+msgid "Upravit doručovací adresu"
+msgstr "Edit delivery address"
+
+msgid "Vybraná doručovací adresa již neexistuje. Zvolte prosím jinou."
+msgstr "The selected delivery address no longer exists. Please choose another one."
+
+msgid "Výchozí"
+msgstr "Default"
+
+msgid "Výchozí doručovací adresa byla změněna."
+msgstr "Default delivery address changed."
+
+msgid "Zatím nemáte uloženou žádnou doručovací adresu."
+msgstr "You have no saved delivery address yet."
+
+msgid "např. Restaurace Vinohrady"
+msgstr "e.g. Restaurant Vinohrady"
+

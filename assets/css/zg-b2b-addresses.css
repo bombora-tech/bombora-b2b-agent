@@ -1,0 +1,239 @@
+/* Bombora B2B – doručovací adresy (vo.zgruzie.cz design tokens) */
+:root {
+	--zg-addr-text: #13232f;
+	--zg-addr-muted: #44535d;
+	--zg-addr-teal: #0b6e66;
+	--zg-addr-border: #e4e9ec;
+	--zg-addr-input: #cfd8dd;
+	--zg-addr-soft: #eef3f4;
+}
+
+/* ---------- Pokladna: výběr adresy (styl jako platební metody) ---------- */
+.zg-b2b-addr-picker {
+	margin: 20px 0 0;
+	padding: 20px 0 0;
+	border-top: 0.8px solid var(--zg-addr-border);
+	color: var(--zg-addr-text);
+}
+.zg-b2b-addr-picker__title {
+	margin: 0 0 12px;
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.3;
+}
+.zg-b2b-addr-option {
+	display: flex;
+	gap: 14px;
+	align-items: center;
+	margin: 0 0 5px;
+	padding: 14px 18px;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-border);
+	border-radius: 12px;
+	cursor: pointer;
+	transition: border-color .15s, box-shadow .15s;
+}
+.zg-b2b-addr-option:hover {
+	border-color: var(--zg-addr-input);
+}
+.zg-b2b-addr-option.is-selected {
+	border-color: var(--zg-addr-teal);
+	box-shadow: inset 0 0 0 1px var(--zg-addr-teal);
+}
+.zg-b2b-addr-option input[type="radio"] {
+	flex: 0 0 18px;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--zg-addr-teal);
+}
+.zg-b2b-addr-option__text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+.zg-b2b-addr-option__text strong {
+	font-size: 15px;
+	font-weight: 700;
+	line-height: 1.3;
+}
+.zg-b2b-addr-option__detail {
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+	line-height: 1.35;
+}
+.zg-b2b-addr-picker__save {
+	margin: 5px 0 0;
+	padding: 14px 18px;
+	background: var(--zg-addr-soft);
+	border-radius: 12px;
+}
+.zg-b2b-addr-picker__save[hidden] {
+	display: none;
+}
+.zg-b2b-addr-picker__save-check {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin: 0 0 10px;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.zg-b2b-addr-picker__save-check input {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--zg-addr-teal);
+}
+.zg-b2b-addr-picker__save .input-text {
+	width: 100%;
+	padding: 8px 12px;
+	font-size: 15px;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-input);
+	border-radius: 10px;
+}
+.zg-b2b-addr-picker__manage {
+	margin: 10px 0 0;
+	font-size: 13px;
+}
+.zg-b2b-addr-picker__manage a {
+	color: var(--zg-addr-teal);
+	font-weight: 700;
+	text-decoration: none;
+}
+.zg-b2b-addr-picker__manage a:hover {
+	text-decoration: underline;
+}
+/* Výběr nahrazuje nativní „Doručit na jinou adresu?“ */
+form.checkout.zg-b2b-addr-active #ship-to-different-address {
+	display: none;
+}
+
+/* ---------- Můj účet: Doručovací adresy ---------- */
+.zg-b2b-addr {
+	color: var(--zg-addr-text);
+}
+.zg-b2b-addr-intro,
+.zg-b2b-addr-empty {
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-addr-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+.zg-b2b-addr-card {
+	display: flex;
+	flex-direction: column;
+	padding: 20px;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-border);
+	border-radius: 14px;
+}
+.zg-b2b-addr-card--default {
+	border-color: var(--zg-addr-teal);
+	box-shadow: inset 0 0 0 1px var(--zg-addr-teal);
+}
+.zg-b2b-addr-card__head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 12px;
+}
+.zg-b2b-addr-card__label {
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.3;
+}
+.zg-b2b-addr-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 22px;
+	padding: 0 10px;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--zg-addr-teal);
+	background: var(--zg-addr-soft);
+	border-radius: 11px;
+}
+.zg-b2b-addr-card__address {
+	flex: 1 1 auto;
+	margin: 0 0 16px;
+	font-size: 15px;
+	font-style: normal;
+	line-height: 1.75;
+}
+.zg-b2b-addr-card__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+.zg-b2b-addr-inline-form {
+	display: inline-flex;
+	margin: 0;
+}
+/* Sekundární tlačítko – stejné jako „Upravit“ u Adres */
+.zg-b2b-addr-link {
+	display: inline-flex;
+	align-items: center;
+	height: 36px;
+	padding: 0 14px;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--zg-addr-text);
+	background: transparent;
+	border: 0.8px solid var(--zg-addr-input);
+	border-radius: 18px;
+	text-decoration: none;
+	cursor: pointer;
+}
+.zg-b2b-addr-link:hover {
+	border-color: var(--zg-addr-text);
+}
+.zg-b2b-addr-delete {
+	color: #c8102e;
+}
+.zg-b2b-addr-delete:hover {
+	border-color: #c8102e;
+}
+/* Primární tlačítko – tmavá pilulka jako aktivní položka menu */
+.zg-b2b-addr .button,
+.zg-b2b-addr-form .button {
+	display: inline-flex;
+	align-items: center;
+	height: 38px;
+	padding: 0 18px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #fff;
+	background: var(--zg-addr-text);
+	border: 0.8px solid var(--zg-addr-text);
+	border-radius: 19px;
+	text-decoration: none;
+}
+.zg-b2b-addr .button:hover,
+.zg-b2b-addr-form .button:hover {
+	color: #fff;
+	background: var(--zg-addr-teal);
+	border-color: var(--zg-addr-teal);
+}
+.zg-b2b-addr-form {
+	max-width: 760px;
+	padding: 20px;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-border);
+	border-radius: 14px;
+}
+.zg-b2b-addr-form__buttons {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin: 16px 0 0;
+}
