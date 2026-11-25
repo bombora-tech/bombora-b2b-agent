@@ -551,13 +551,6 @@ class ZG_B2B_Companies {
 		$choice = self::has_choice();
 		echo '<div class="zg-b2b-addr-picker zg-b2b-company-picker' . ( $choice ? '' : ' zg-b2b-company-picker--single' ) . '" id="zg-b2b-company-picker">';
 
-		// Souhrn (sbalený stav): firma + kontaktní údaje, tlačítko „Změnit údaje“ (JS).
-		echo '<div class="zg-b2b-sum" data-zg-sum="billing" hidden>';
-		echo '<div class="zg-b2b-sum__body"><div class="zg-b2b-sum__main"></div><div class="zg-b2b-sum__contact"></div></div>';
-		echo '<button type="button" class="zg-b2b-sum__toggle" aria-expanded="false" data-open="' . esc_attr__( 'Změnit údaje', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Hotovo', 'zg-b2b' ) . '">' . esc_html__( 'Změnit údaje', 'zg-b2b' ) . '</button>';
-		echo '</div>';
-
-		echo '<div class="zg-b2b-sum__edit">';
 		if ( $choice ) {
 			echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
 		}
@@ -575,7 +568,15 @@ class ZG_B2B_Companies {
 			echo '</span></label>';
 		}
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
+		self::contact_line( 'billing' );
 		echo '</div>';
+	}
+
+	/** Řádek „Kontaktní osoba: jméno · telefon · e-mail“ + „Změnit údaje“ (JS rozbalí pole). */
+	public static function contact_line( $type ) {
+		echo '<div class="zg-b2b-contact" data-zg-contact="' . esc_attr( $type ) . '" hidden>';
+		echo '<div class="zg-b2b-contact__body"><span class="zg-b2b-contact__label">' . esc_html__( 'Kontaktní osoba', 'zg-b2b' ) . '</span> <span class="zg-b2b-contact__text"></span></div>';
+		echo '<button type="button" class="zg-b2b-sum__toggle" aria-expanded="false" data-open="' . esc_attr__( 'Změnit údaje', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Hotovo', 'zg-b2b' ) . '">' . esc_html__( 'Změnit údaje', 'zg-b2b' ) . '</button>';
 		echo '</div>';
 	}
 

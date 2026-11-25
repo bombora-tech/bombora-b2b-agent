@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.0] - 2026-11-26
+
+### Přidáno
+- **B2B Dashboard** (Bombora → B2B Dashboard, oprávnění `manage_woocommerce`): přehled zákazníků (WP_List_Table) – stav účtu, hlavní a další firmy, doručovací adresy, počet objednávek / poslední objednávka / útrata, platba na fakturu, registrace; filtry (registrace / firmy ke schválení, schválení, zamítnutí), vyhledávání (jméno, e-mail, telefon, firma, IČO, DIČ), počet na stránku. Souhrnné dlaždice: registrace a firmy ke schválení, schválení partneři, proformy čekající na úhradu. Počet čekajících v bublině menu.
+- **Detail zákazníka** na jedné stránce: stav účtu (rychlé schválení / zamítnutí), platba na fakturu, interní poznámka, kontaktní osoba, hlavní firma, další firmy (schválení, faktura, úpravy), doručovací adresy (úpravy, výchozí, smazání, přidání), posledních 15 objednávek s firmou a doručením. Odkaz „B2B detail“ v seznamu uživatelů.
+
+### Změněno
+- Pokladna: výběr firem i doručovacích adres je vždy vidět; pod ním řádek **Kontaktní osoba** (jméno · telefon · e-mail, u doručení jméno · telefon) s tlačítkem „Změnit údaje“, které rozbalí pole pro úpravu.
+
 ## [1.7.0] - 2026-11-26
 
 ### Přidáno

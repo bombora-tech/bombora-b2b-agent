@@ -562,7 +562,7 @@ form.checkout:has(#billing_ic_field.zg-b2b-hidden-field) #wpify-woo-icdic__ares-
 .zg-b2b-addr-picker:not(.is-collapsed) .zg-b2b-sum__body {
 	display: none;
 }
-form.checkout .zg-b2b-sum .zg-b2b-sum__toggle {
+form.checkout .zg-b2b-sum__toggle {
 	flex: 0 0 auto;
 	display: inline-flex !important;
 	align-items: center;
@@ -580,7 +580,7 @@ form.checkout .zg-b2b-sum .zg-b2b-sum__toggle {
 	box-shadow: none !important;
 	cursor: pointer;
 }
-form.checkout .zg-b2b-sum .zg-b2b-sum__toggle:hover {
+form.checkout .zg-b2b-sum__toggle:hover {
 	border-color: var(--zg-addr-text) !important;
 }
 .zg-b2b-collapsed {
@@ -589,4 +589,39 @@ form.checkout .zg-b2b-sum .zg-b2b-sum__toggle:hover {
 .zg-b2b-company-picker.is-collapsed {
 	padding-bottom: 0;
 	border-bottom: 0;
+}
+
+/* Řádek kontaktních údajů pod výběrem firmy / adresy. */
+.zg-b2b-contact {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+	margin: 10px 0 0;
+	padding: 12px 18px;
+	background: var(--zg-addr-soft);
+	border-radius: 12px;
+}
+.zg-b2b-contact[hidden] {
+	display: none !important;
+}
+.zg-b2b-contact__body {
+	min-width: 0;
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--zg-addr-text);
+}
+.zg-b2b-contact__label {
+	display: block;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-contact.is-open {
+	background: transparent;
+	padding-left: 0;
+	padding-right: 0;
+}
+.zg-b2b-contact.is-open .zg-b2b-contact__body {
+	visibility: hidden;
 }

@@ -1,4 +1,4 @@
-/* Bombora B2B Agent – pokladna: firma pro fakturaci + sbalené kontaktní údaje */
+/* Bombora B2B Agent – pokladna: firma pro fakturaci + kontaktní údaje (řádek se „Změnit údaje“) */
 ( function ( $ ) {
 	'use strict';
 	var $picker = $( '#zg-b2b-company-picker' );
@@ -6,37 +6,26 @@
 		return;
 	}
 	var companies = ( typeof zgB2bCompanies !== 'undefined' && zgB2bCompanies.companies ) || {};
-	var contactRows = '#billing_first_name_field, #billing_last_name_field, #billing_phone_field, #billing_email_field';
-	var $sum = $picker.find( '[data-zg-sum="billing"]' );
-	var $edit = $picker.find( '.zg-b2b-sum__edit' );
-	var $toggle = $sum.find( '.zg-b2b-sum__toggle' );
+	var rows = '#billing_first_name_field, #billing_last_name_field, #billing_phone_field, #billing_email_field';
+	var $line = $picker.find( '[data-zg-contact="billing"]' );
+	var $toggle = $line.find( '.zg-b2b-sum__toggle' );
 
 	function val( id ) {
 		return $.trim( $( '#' + id ).val() || '' );
 	}
-
-	function contactComplete() {
+	function complete() {
 		return !! ( val( 'billing_first_name' ) && val( 'billing_last_name' ) && val( 'billing_phone' ) && val( 'billing_email' ) );
 	}
-
-	function renderSummary() {
-		var $opt = $picker.find( 'input[name="zg_b2b_company"]:checked' ).closest( '.zg-b2b-addr-option' );
-		if ( ! $opt.length ) {
-			$opt = $picker.find( '.zg-b2b-addr-option' ).first();
-		}
-		$sum.find( '.zg-b2b-sum__main' ).html( $opt.find( '.zg-b2b-addr-option__text' ).html() || '' );
-		var contact = [ $.trim( val( 'billing_first_name' ) + ' ' + val( 'billing_last_name' ) ), val( 'billing_phone' ), val( 'billing_email' ) ].filter( Boolean );
-		$sum.find( '.zg-b2b-sum__contact' ).text( contact.join( ' · ' ) );
+	function renderLine() {
+		$line.find( '.zg-b2b-contact__text' ).text(
+			[ $.trim( val( 'billing_first_name' ) + ' ' + val( 'billing_last_name' ) ), val( 'billing_phone' ), val( 'billing_email' ) ].filter( Boolean ).join( ' · ' )
+		);
 	}
-
 	function setOpen( open ) {
-		$picker.toggleClass( 'is-collapsed', ! open );
-		$edit.prop( 'hidden', ! open );
-		$( contactRows ).toggleClass( 'zg-b2b-collapsed', ! open );
+		$( rows ).toggleClass( 'zg-b2b-collapsed', ! open );
+		$line.toggleClass( 'is-open', open );
 		$toggle.attr( 'aria-expanded', open ? 'true' : 'false' ).text( open ? $toggle.data( 'close' ) : $toggle.data( 'open' ) );
-		if ( ! open ) {
-			renderSummary();
-		}
+		renderLine();
 	}
 
 	function fill( id ) {
@@ -62,25 +51,21 @@
 		$picker.find( '.zg-b2b-addr-option' ).removeClass( 'is-selected' );
 		$( this ).closest( '.zg-b2b-addr-option' ).addClass( 'is-selected' );
 		fill( this.value );
-		renderSummary();
 	} );
 
 	$toggle.on( 'click', function () {
-		var open = $picker.hasClass( 'is-collapsed' );
-		if ( ! open && ! contactComplete() ) {
-			return; // Neúplné kontaktní údaje nejdřív doplnit.
+		var open = ! $line.hasClass( 'is-open' );
+		if ( ! open && ! complete() ) {
+			return; // Nejdřív doplnit chybějící údaje.
 		}
 		setOpen( open );
 	} );
 
-	// Chyba při odeslání → vše rozbalit, aby byla vidět chybná pole.
+	$( document.body ).on( 'input change', '#billing_first_name, #billing_last_name, #billing_phone, #billing_email', renderLine );
 	$( document.body ).on( 'checkout_error', function () {
-		if ( $picker.hasClass( 'is-collapsed' ) ) {
-			setOpen( true );
-		}
+		setOpen( true );
 	} );
 
-	// Výchozí stav: sbaleno, pokud jsou kontaktní údaje vyplněné.
-	$sum.prop( 'hidden', false );
-	setOpen( ! contactComplete() );
+	$line.prop( 'hidden', false );
+	setOpen( ! complete() );
 } )( jQuery );

@@ -15,10 +15,9 @@
 	var $form = $( 'form.checkout' );
 	var shipToSelector = '#ship-to-different-address-checkbox, #ship-to-different-address input[type="checkbox"]';
 	var syncing = false;
-	var collapsed = false;
-	var $sum = $picker.find( '[data-zg-sum="shipping"]' );
-	var $edit = $picker.find( '.zg-b2b-sum__edit' );
-	var $toggle = $sum.find( '.zg-b2b-sum__toggle' );
+	var fieldsOpen = false;
+	var $line = $picker.find( '[data-zg-contact="shipping"]' );
+	var $toggle = $line.find( '.zg-b2b-sum__toggle' );
 
 	$form.addClass( 'zg-b2b-addr-active' );
 
@@ -33,7 +32,7 @@
 			syncing = false;
 		}
 		// WooCommerce toggles via slideToggle; enforce the final state.
-		$( 'div.shipping_address' ).toggle( checked && ! collapsed );
+		updateFields();
 	}
 
 	function setField( key, value ) {
@@ -66,26 +65,17 @@
 		return $picker.find( 'input[name="zg_b2b_addr_choice"]:checked' ).val() || 'billing';
 	}
 
-	function renderSummary() {
+	/* Pole doručovací adresy: u uložené adresy skrytá za řádkem kontaktu („Změnit údaje“),
+	   u „Jiná adresa“ vždy vidět, u fakturační adresy skrytá. */
+	function updateFields() {
 		var choice = currentChoice();
-		var $opt = $picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' );
-		$sum.find( '.zg-b2b-sum__main' ).html( $opt.find( '.zg-b2b-addr-option__text' ).html() || '' );
-		var contact = '';
-		if ( choice !== 'billing' ) {
-			contact = [ $.trim( ( $( '#shipping_first_name' ).val() || '' ) + ' ' + ( $( '#shipping_last_name' ).val() || '' ) ), $.trim( $( '#shipping_phone' ).val() || '' ) ].filter( Boolean ).join( ' · ' );
-		}
-		$sum.find( '.zg-b2b-sum__contact' ).text( contact );
-	}
-
-	function setCollapsed( state ) {
-		collapsed = state;
-		$picker.toggleClass( 'is-collapsed', state );
-		$edit.prop( 'hidden', state );
-		$toggle.attr( 'aria-expanded', state ? 'false' : 'true' ).text( state ? $toggle.data( 'open' ) : $toggle.data( 'close' ) );
-		$( 'div.shipping_address' ).toggle( currentChoice() !== 'billing' && ! state );
-		if ( state ) {
-			renderSummary();
-		}
+		var show = choice === 'new' || ( choice !== 'billing' && fieldsOpen );
+		$( 'div.shipping_address' ).toggle( show );
+		$line.prop( 'hidden', choice === 'billing' || choice === 'new' || ! $line.length );
+		var text = [ $.trim( ( $( '#shipping_first_name' ).val() || '' ) + ' ' + ( $( '#shipping_last_name' ).val() || '' ) ), $.trim( $( '#shipping_phone' ).val() || '' ) ].filter( Boolean ).join( ' · ' );
+		$line.find( '.zg-b2b-contact__text' ).text( text );
+		$line.toggleClass( 'is-open', fieldsOpen );
+		$toggle.attr( 'aria-expanded', fieldsOpen ? 'true' : 'false' ).text( fieldsOpen ? $toggle.data( 'close' ) : $toggle.data( 'open' ) );
 	}
 
 	function applyChoice( choice ) {
@@ -96,9 +86,6 @@
 		if ( choice === 'billing' ) {
 			setShipTo( false );
 		} else if ( choice === 'new' ) {
-			if ( collapsed ) {
-				setCollapsed( false );
-			}
 			var empty = {};
 			$.each( cfg.fieldKeys, function ( i, key ) {
 				empty[ key ] = '';
@@ -112,6 +99,7 @@
 			fill( cfg.addresses[ choice ] );
 		}
 
+		updateFields();
 		$( document.body ).trigger( 'update_checkout' );
 	}
 
@@ -135,26 +123,23 @@
 	} );
 
 	$toggle.on( 'click', function () {
-		setCollapsed( ! collapsed );
+		fieldsOpen = ! fieldsOpen;
+		updateFields();
 	} );
+	$( document.body ).on( 'input change', '#shipping_first_name, #shipping_last_name, #shipping_phone', updateFields );
 
-	// Chyba při odeslání → rozbalit, aby byla vidět chybná pole.
+	// Chyba při odeslání → pole adresy zobrazit.
 	$( document.body ).on( 'checkout_error', function () {
-		if ( collapsed ) {
-			setCollapsed( false );
-		}
+		fieldsOpen = true;
+		updateFields();
 	} );
 
 	// Initial state (server already prefilled the fields and ticked the checkbox).
 	var initial = currentChoice();
+	fieldsOpen = initial !== 'billing' && $( 'div.shipping_address .validate-required' ).filter( function () {
+		var $in = $( this ).find( 'input, select' ).first();
+		return $in.length && ! $.trim( $in.val() || '' );
+	} ).length > 0;
 	setShipTo( initial !== 'billing' );
-	// Sbalit, pokud je vybraná uložená adresa nebo fakturační (opakované objednávky na stejnou adresu).
-	if ( $sum.length ) {
-		$sum.prop( 'hidden', false );
-		var incomplete = initial !== 'billing' && $( 'div.shipping_address .validate-required' ).filter( function () {
-			var $in = $( this ).find( 'input, select' ).first();
-			return $in.length && ! $.trim( $in.val() || '' );
-		} ).length > 0;
-		setCollapsed( initial !== 'new' && ! incomplete );
-	}
+	updateFields();
 } )( jQuery );
