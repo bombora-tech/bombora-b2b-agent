@@ -1,8 +1,9 @@
 # Bombora B2B Agent – instalace a kontrola
 
 ## Instalace
-1. Plugins → Přidat nový → Nahrát plugin → `bombora-b2b.zip` → Aktivovat. Aktualizace z GitHubu (`bombora-tech/bombora-b2b`) přes Bombora Manager.
-   - Přechod ze starého `zg-b2b`: nejdřív **deaktivovat a smazat `zg-b2b`** (nastavení, uživatelé i objednávky zůstanou – plugin nemá uninstall), pak nahrát a aktivovat `bombora-b2b`. Oba najednou aktivní být nesmí.
+1. Instalace a aktualizace přes **Bombora → Moduly** (Bombora Manager ≥ 1.3.1, repo `bombora-tech/bombora-b2b-agent`, složka `bombora-b2b-agent`).
+   - Přechod ze starého `zg-b2b`: Bombora → Moduly → **Převést a aktualizovat** (stará složka se tiše deaktivuje a smaže bez uninstall – nastavení, B2B účty i objednávky zůstanou). Oba najednou aktivní být nesmí.
+   - Vydání nové verze: zvýšit `Version` + `ZG_B2B_VERSION`, doplnit `CHANGELOG.md`, push do `main` → GitHub Actions vytvoří release s `bombora-b2b-agent.zip`.
 2. WooCommerce → **Bombora B2B**:
    - zkontrolujte předvybrané kategorie (pivo, lihoviny…) → **Uložit nastavení** (štítek se přiřadí při uložení),
    - vyberte stránku registrace a VOP,

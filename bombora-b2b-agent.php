@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Bombora B2B Agent
- * Plugin URI:        https://github.com/bombora-tech/bombora-b2b
+ * Plugin URI:        https://github.com/bombora-tech/bombora-b2b-agent
  * Description:       Velkoobchod vo.zgruzie.cz – ceny jen pro schválené partnery, registrace firem s ověřením ARES/VIES a ručním schválením, lihoviny a pivo s doručením pouze v ČR, platba na fakturu s proformou z Eurofaktury, více doručovacích adres (pobočky) s výběrem v pokladně.
  * Version:           1.5.0
  * Author:            Bombora group s.r.o.
@@ -9,7 +9,7 @@
  * Text Domain:       zg-b2b
  * Domain Path:       /languages
  * Requires at least: 6.2
- * Update URI:        https://github.com/bombora-tech/bombora-b2b
+ * Update URI:        https://github.com/bombora-tech/bombora-b2b-agent
  * Requires PHP:      7.4
  * WC requires at least: 7.0
  */
