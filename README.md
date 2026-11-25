@@ -66,3 +66,9 @@ Ověřit při prvním testu (API dokumentace Eurofaktury není celá veřejná):
 - Admin: seznam adres v profilu uživatele.
 - Filtry: `zg_b2b_addr_max_addresses` (30), `zg_b2b_addr_endpoint_slug`, `zg_b2b_addr_checkout_enabled`, `zg_b2b_addr_field_definitions`.
 - Vyžaduje klasickou (Bricks) pokladnu, ne Checkout block.
+
+## Více firem v účtu – v1.6
+- Můj účet → Adresy → **Firmy a fakturační údaje**: hlavní firma = fakturační údaje účtu; další firmy přidává zákazník (ARES/VIES) → stav *Čeká na schválení*.
+- Schválení: Uživatelé → **Firmy ke schválení** → profil zákazníka → tabulka „Další firmy účtu“ (stav, úprava, smazání, přidání). Údaje firem mění jen administrátor.
+- Pokladna: **Fakturovat na firmu** (jen schválené). Fakturační údaje objednávky = vybraná firma; profil účtu se nemění. Meta objednávky `_zg_b2b_company_id`, `_zg_b2b_company_label`.
+- Data: user meta `zg_b2b_companies` (pole firem), `zg_b2b_companies_pending` (počet čekajících), `zg_b2b_last_company`.

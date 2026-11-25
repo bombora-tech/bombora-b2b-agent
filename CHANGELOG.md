@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.0] - 2026-11-26
+
+### Přidáno
+- **Více firem v jednom účtu.** Můj účet → Adresy → „Firmy a fakturační údaje“: hlavní firma (fakturační adresa účtu) + další firmy. Zákazník přidá firmu v pop-upu (IČO → ARES, DIČ → VIES), firma čeká na schválení, administrátorovi přijde e-mail. Žádost lze zrušit; schválenou firmu mění / odebírá jen administrátor.
+- **Schvalování firem:** Uživatelé → „Firmy ke schválení“, počet v bublině menu a upozornění; v profilu zákazníka tabulka firem (úprava údajů, stav, smazání, přidání firmy administrátorem). Zákazníkovi odejde e-mail při schválení / zamítnutí (v jeho jazyce).
+- **Pokladna:** „Fakturovat na firmu“ (jen schválené firmy, předvybraná naposledy použitá). Vybraná firma vyplní fakturační údaje objednávky (firma, IČO, DIČ, sídlo) → proforma / faktura v Eurofaktuře na tuto firmu. Profil účtu (hlavní firma) se objednávkou nepřepíše. U objednávky meta `_zg_b2b_company_id` / `_zg_b2b_company_label`.
+- Firmy a doručovací adresy jsou nezávislé.
+- Název a popis webu se registrují do WPML (doména „WP“) pro překlad do EN.
+
 ## [1.5.6] - 2026-11-25
 
 ### Opraveno

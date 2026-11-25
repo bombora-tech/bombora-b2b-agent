@@ -655,3 +655,101 @@ msgstr "The billing address appears on invoices. At checkout you just pick a del
 msgid "Zatím nemáte nastavenou fakturační adresu."
 msgstr "You have not set a billing address yet."
 
+
+# 1.6.0 – firmy
+#, php-format
+msgid "%s je povinné pole."
+msgstr "%s is a required field."
+
+msgid "Dosáhli jste maximálního počtu firem."
+msgstr "You have reached the maximum number of companies."
+
+msgid "Fakturovat na firmu"
+msgstr "Invoice to company"
+
+msgid "Firma byla odebrána."
+msgstr "The company has been removed."
+
+msgid "Firma byla odeslána ke schválení. Po schválení vám pošleme e-mail."
+msgstr "The company has been submitted for approval. We will email you once it is approved."
+
+msgid "Firma neschválena"
+msgstr "Company not approved"
+
+msgid "Firma schválena"
+msgstr "Company approved"
+
+msgid "Firma ve vašem účtu je schválená"
+msgstr "A company in your account has been approved"
+
+msgid "Firmu jsme nemohli schválit"
+msgstr "We could not approve the company"
+
+msgid "Firmu po kontrole schválíme a pošleme vám e-mail."
+msgstr "We will review and approve the company and send you an email."
+
+msgid "Firmy a fakturační údaje"
+msgstr "Companies and billing details"
+
+msgid "Hlavní"
+msgstr "Main"
+
+msgid "Na další firmu můžete fakturovat po jejím schválení. Firmy a doručovací adresy na sobě nezávisí."
+msgstr "You can invoice to an additional company once it is approved. Companies and delivery addresses are independent of each other."
+
+msgid "Na vybranou firmu zatím nelze fakturovat (není schválená). Zvolte prosím jinou."
+msgstr "The selected company cannot be invoiced yet (not approved). Please choose another one."
+
+msgid "Načítám…"
+msgstr "Loading…"
+
+msgid "Odebrat"
+msgstr "Remove"
+
+msgid "Odebrat tuto firmu?"
+msgstr "Remove this company?"
+
+msgid "Odeslat ke schválení"
+msgstr "Submit for approval"
+
+msgid "Přidat firmu"
+msgstr "Add company"
+
+msgid "Příliš mnoho pokusů. Zkuste to prosím později."
+msgstr "Too many attempts. Please try again later."
+
+msgid "Schváleno"
+msgstr "Approved"
+
+msgid "Tuto firmu už ve svém účtu máte."
+msgstr "This company is already in your account."
+
+msgid "U firmy mimo Česko vyplňte DIČ / IČ DPH."
+msgstr "For a company outside the Czech Republic, please enter the VAT ID."
+
+msgid "Ulice a č.p."
+msgstr "Street address"
+
+msgid "Zamítnuto"
+msgstr "Rejected"
+
+msgid "Zrušit žádost"
+msgstr "Cancel request"
+
+#, php-format
+msgid "firma %s je ve vašem velkoobchodním účtu schválená. V pokladně ji nyní můžete vybrat v části „Fakturovat na firmu“."
+msgstr "the company %s has been approved in your wholesale account. You can now select it at checkout under “Invoice to company”."
+
+#, php-format
+msgid "firmu %s jsme bohužel nemohli do vašeho účtu schválit. Pro více informací nám prosím napište."
+msgstr "unfortunately we could not approve the company %s for your account. Please contact us for more information."
+
+msgid "Údaje firmy mění velkoobchod – napište nám."
+msgstr "Company details are changed by the wholesaler – contact us."
+
+msgid "Údaje jsme doplnili – zkontrolujte je."
+msgstr "We have filled in the details – please check them."
+
+msgid "Údaje se nepodařilo načíst. Vyplňte je prosím ručně."
+msgstr "The details could not be loaded. Please fill them in manually."
+

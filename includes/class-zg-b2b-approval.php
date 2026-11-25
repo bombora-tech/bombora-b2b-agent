@@ -194,7 +194,7 @@ class ZG_B2B_Approval {
 
 	public static function menu_bubble() {
 		global $menu;
-		$n = self::pending_count();
+		$n = self::pending_count() + ( class_exists( 'ZG_B2B_Companies' ) ? ZG_B2B_Companies::pending_count() : 0 );
 		if ( ! $n || ! is_array( $menu ) ) {
 			return;
 		}

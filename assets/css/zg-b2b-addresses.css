@@ -393,3 +393,66 @@ html.zg-b2b-addr-modal-open body {
 	order: 9999 !important;
 	margin-top: 8px;
 }
+
+/* ---------- Firmy ---------- */
+.zg-b2b-company-badge--pending {
+	color: #8a5a00;
+	background: #fff6e2;
+}
+.zg-b2b-company-badge--rejected {
+	color: #c8102e;
+	background: #fdecea;
+}
+.zg-b2b-company--rejected {
+	opacity: .75;
+}
+.zg-b2b-company-note {
+	display: inline-flex;
+	align-items: center;
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-company-lookup {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.zg-b2b-company-lookup .input-text {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.zg-b2b-company-lookup-msg {
+	flex: 0 0 100%;
+	width: 100%;
+	min-height: 0;
+	margin: -4px 0 8px;
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+	order: 3;
+}
+.zg-b2b-company-lookup-msg:empty {
+	display: none;
+}
+.zg-b2b-company-lookup-msg.is-ok {
+	color: var(--zg-addr-teal);
+}
+.zg-b2b-company-lookup-msg.is-error {
+	color: #c8102e;
+}
+/* Pořadí polí ve formuláři firmy (šablona řadí pole přes CSS order). */
+.zg-b2b-company-fields #zg_company_country_field { order: 1 !important; }
+.zg-b2b-company-fields #zg_company_ico_field { order: 2 !important; }
+.zg-b2b-company-fields .zg-b2b-company-lookup-msg { order: 3 !important; }
+.zg-b2b-company-fields #zg_company_dic_field { order: 4 !important; }
+.zg-b2b-company-fields #zg_company_company_field { order: 5 !important; }
+.zg-b2b-company-fields #zg_company_address_1_field { order: 6 !important; }
+.zg-b2b-company-fields #zg_company_postcode_field { order: 7 !important; }
+.zg-b2b-company-fields #zg_company_city_field { order: 8 !important; }
+
+/* Pokladna: výběr firmy nad fakturačními poli. */
+.zg-b2b-addr-picker.zg-b2b-company-picker {
+	margin: 0 0 20px;
+	padding: 0 0 20px;
+	border-top: 0;
+	border-bottom: 0.8px solid var(--zg-addr-border);
+}

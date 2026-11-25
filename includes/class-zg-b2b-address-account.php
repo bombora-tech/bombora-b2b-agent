@@ -95,7 +95,12 @@ class ZG_B2B_Address_Account {
 		wp_enqueue_script( 'wc-address-i18n' );
 		wp_enqueue_script( 'zg-b2b-addresses-account', ZG_B2B_URL . 'assets/js/zg-b2b-addresses-account.js', array( 'jquery' ), ZG_B2B_VERSION, true );
 		wp_localize_script( 'zg-b2b-addresses-account', 'zgB2bAddrAccount', array(
-			'confirmDelete' => __( 'Smazat tuto doručovací adresu?', 'zg-b2b' ),
+			'confirmDelete'  => __( 'Smazat tuto doručovací adresu?', 'zg-b2b' ),
+			'confirmRemove'  => __( 'Odebrat tuto firmu?', 'zg-b2b' ),
+			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+			'loading'        => __( 'Načítám…', 'zg-b2b' ),
+			'filled'         => __( 'Údaje jsme doplnili – zkontrolujte je.', 'zg-b2b' ),
+			'error'          => __( 'Údaje se nepodařilo načíst. Vyplňte je prosím ručně.', 'zg-b2b' ),
 		) );
 	}
 
@@ -145,15 +150,8 @@ class ZG_B2B_Address_Account {
 
 		echo '<p class="zg-b2b-addr-intro">' . esc_html__( 'Fakturační adresa se uvádí na dokladech. Doručovací adresy (provozovny) si v pokladně jen vyberete a adresa se doplní.', 'zg-b2b' ) . '</p>';
 
-		// Fakturační adresa – stejná karta jako dosud (formátování vč. IČO/DIČ z WooCommerce filtrů).
-		echo '<div class="zg-b2b-addr-grid">';
-		echo '<div class="zg-b2b-addr-card zg-b2b-addr-card--billing">';
-		echo '<div class="zg-b2b-addr-card__head"><h2 class="zg-b2b-addr-card__label">' . esc_html__( 'Fakturační adresa', 'zg-b2b' ) . '</h2>';
-		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( wc_get_endpoint_url( 'edit-address', 'billing' ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
-		$billing = wc_get_account_formatted_address( 'billing' );
-		echo '<address class="zg-b2b-addr-card__address">' . ( $billing ? wp_kses_post( $billing ) : esc_html__( 'Zatím nemáte nastavenou fakturační adresu.', 'zg-b2b' ) ) . '</address>';
-		echo '</div>';
-		echo '</div>';
+		// Firmy (hlavní = fakturační adresa účtu + další firmy ke schválení).
+		ZG_B2B_Companies::render_account_section( $user_id );
 
 		echo '<div class="zg-b2b-addr-section-head"><h2 class="zg-b2b-addr-section-title">' . esc_html__( 'Doručovací adresy', 'zg-b2b' ) . '</h2>';
 		if ( count( $list ) < ZG_B2B_Address_Book::max_addresses() ) {
