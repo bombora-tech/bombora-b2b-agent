@@ -644,3 +644,14 @@ msgstr "You have no saved delivery address yet."
 msgid "např. Restaurace Vinohrady"
 msgstr "e.g. Restaurant Vinohrady"
 
+
+# 1.5.1
+msgid "Fakturační adresa"
+msgstr "Billing address"
+
+msgid "Fakturační adresa se uvádí na dokladech. Doručovací adresy (provozovny) si v pokladně jen vyberete a adresa se doplní."
+msgstr "The billing address appears on invoices. At checkout you just pick a delivery address (branch) and it is filled in."
+
+msgid "Zatím nemáte nastavenou fakturační adresu."
+msgstr "You have not set a billing address yet."
+

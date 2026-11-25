@@ -335,7 +335,6 @@ class ZG_B2B_Account {
 
 		$h .= '<div class="zg-b2b-gate__actions">'
 			. zg_b2b_button( $address, __( 'Upravit adresy', 'zg-b2b' ), 'outline', 'arrow', 'sm' )
-			. ( class_exists( 'ZG_B2B_Address_Account' ) ? zg_b2b_button( ZG_B2B_Address_Account::url(), __( 'Spravovat doručovací adresy', 'zg-b2b' ), 'outline', 'arrow', 'sm' ) : '' )
 			. zg_b2b_button( $account, __( 'Upravit jméno, e-mail a heslo', 'zg-b2b' ), 'outline', 'arrow', 'sm' )
 			. '</div>';
 		if ( self::locked_keys() ) {

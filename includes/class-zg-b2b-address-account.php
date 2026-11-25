@@ -7,33 +7,26 @@ defined( 'ABSPATH' ) || exit;
 
 class ZG_B2B_Address_Account {
 
-	/** Internal endpoint key (used for menu + URLs). */
-	const ENDPOINT = 'zg-b2b-addr-addresses';
-
-	const SLUG_CS = 'dorucovaci-adresy';
-	const SLUG_EN = 'delivery-addresses';
+	/**
+	 * Adresář je součástí Můj účet → Adresy (edit-address). Starý samostatný
+	 * endpoint (/dorucovaci-adresy/, /delivery-addresses/) jen přesměrovává.
+	 */
+	const LEGACY_ENDPOINT = 'zg-b2b-addr-addresses';
+	const SLUG_CS         = 'dorucovaci-adresy';
+	const SLUG_EN         = 'delivery-addresses';
 
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_endpoints' ), 5 );
 		add_action( 'init', array( __CLASS__, 'maybe_flush' ), 99 );
 		add_filter( 'woocommerce_get_query_vars', array( __CLASS__, 'query_vars' ) );
-		add_filter( 'woocommerce_account_menu_items', array( __CLASS__, 'menu_items' ) );
-		add_filter( 'woocommerce_endpoint_' . self::ENDPOINT . '_title', array( __CLASS__, 'title' ) );
-		add_action( 'woocommerce_account_' . self::ENDPOINT . '_endpoint', array( __CLASS__, 'render' ) );
+		add_action( 'wp', array( __CLASS__, 'replace_edit_address' ), 20 );
+		add_action( 'template_redirect', array( __CLASS__, 'redirect_legacy' ), 5 );
 		add_action( 'template_redirect', array( __CLASS__, 'handle_post' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
 		add_action( 'woocommerce_customer_save_address', array( 'ZG_B2B_Address_Book', 'on_profile_saved' ), 20, 2 );
 	}
 
-	/** Slug for the current language (WPML). */
-	public static function slug() {
-		$lang = apply_filters( 'wpml_current_language', null );
-		$slug = ( $lang && 'cs' !== $lang ) ? self::SLUG_EN : self::SLUG_CS;
-		return apply_filters( 'zg_b2b_addr_endpoint_slug', $slug, $lang );
-	}
-
 	public static function register_endpoints() {
-		// Both slugs need rewrite rules regardless of the language the rules were flushed in.
 		add_rewrite_endpoint( self::SLUG_CS, EP_ROOT | EP_PAGES );
 		add_rewrite_endpoint( self::SLUG_EN, EP_ROOT | EP_PAGES );
 	}
@@ -47,38 +40,35 @@ class ZG_B2B_Address_Account {
 	}
 
 	public static function query_vars( $vars ) {
-		$vars[ self::ENDPOINT ] = self::slug();
+		$lang                          = apply_filters( 'wpml_current_language', null );
+		$vars[ self::LEGACY_ENDPOINT ] = ( $lang && 'cs' !== $lang ) ? self::SLUG_EN : self::SLUG_CS;
 		return $vars;
 	}
 
-	public static function menu_items( $items ) {
-		$new = array();
-		foreach ( $items as $key => $label ) {
-			$new[ $key ] = $label;
-			if ( 'edit-address' === $key ) {
-				$new[ self::ENDPOINT ] = __( 'Doručovací adresy', 'zg-b2b' );
-			}
+	/** Starý odkaz → Můj účet → Adresy (se stejnými parametry). */
+	public static function redirect_legacy() {
+		if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( self::LEGACY_ENDPOINT ) ) {
+			$args = array_intersect_key( wp_unslash( $_GET ), array_flip( array( 'zg_addr', 'id' ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+			wp_safe_redirect( self::url( array_map( 'sanitize_key', $args ) ), 301 );
+			exit;
 		}
-		if ( ! isset( $new[ self::ENDPOINT ] ) ) {
-			$logout = isset( $new['customer-logout'] ) ? array( 'customer-logout' => $new['customer-logout'] ) : array();
-			unset( $new['customer-logout'] );
-			$new[ self::ENDPOINT ] = __( 'Doručovací adresy', 'zg-b2b' );
-			$new                  += $logout;
-		}
-		return $new;
 	}
 
-	public static function title() {
-		return __( 'Doručovací adresy', 'zg-b2b' );
-	}
-
+	/** URL stránky Můj účet → Adresy. */
 	public static function url( $args = array() ) {
-		$url = wc_get_account_endpoint_url( self::ENDPOINT );
+		$url = wc_get_account_endpoint_url( 'edit-address' );
 		return $args ? add_query_arg( $args, $url ) : $url;
 	}
 
 	public static function is_page() {
-		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( self::ENDPOINT );
+		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'edit-address' );
+	}
+
+	/** Vlastní obsah stránky Adresy místo šablony WooCommerce. */
+	public static function replace_edit_address() {
+		if ( remove_action( 'woocommerce_account_edit-address_endpoint', 'woocommerce_account_edit_address' ) ) {
+			add_action( 'woocommerce_account_edit-address_endpoint', array( __CLASS__, 'render' ) );
+		}
 	}
 
 	public static function assets() {
@@ -98,14 +88,27 @@ class ZG_B2B_Address_Account {
 	 * Rendering
 	 * ------------------------------------------------------------------- */
 
-	public static function render() {
+	/**
+	 * @param string $type '' (přehled) | 'billing' | 'shipping' (WooCommerce load_address).
+	 */
+	public static function render( $type = '' ) {
 		$user_id = get_current_user_id();
 		$action  = isset( $_GET['zg_addr'] ) ? sanitize_key( $_GET['zg_addr'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$id      = isset( $_GET['id'] ) ? sanitize_key( $_GET['id'] ) : '';   // phpcs:ignore WordPress.Security.NonceVerification
+		$type    = wc_edit_address_i18n( sanitize_title( $type ), true );
+
+		// Fakturační adresa: standardní formulář WooCommerce (vč. zámků B2B).
+		if ( 'billing' === $type ) {
+			woocommerce_account_edit_address( 'billing' );
+			return;
+		}
 
 		echo '<div class="zg-b2b-addr">';
 
-		if ( 'add' === $action || ( 'edit' === $action && $id ) ) {
+		if ( 'shipping' === $type ) {
+			// Původní „Doručovací adresa → Upravit“ = úprava výchozí adresy adresáře.
+			self::render_form( ZG_B2B_Address_Book::get_default( $user_id ) );
+		} elseif ( 'add' === $action || ( 'edit' === $action && $id ) ) {
 			$address = $id ? ZG_B2B_Address_Book::get( $user_id, $id ) : null;
 			if ( 'edit' === $action && ! $address ) {
 				wc_print_notice( __( 'Adresa nebyla nalezena.', 'zg-b2b' ), 'error' );
@@ -113,44 +116,57 @@ class ZG_B2B_Address_Account {
 				self::render_form( $address );
 			}
 		} else {
-			self::render_list( $user_id );
+			self::render_overview( $user_id );
 		}
 
 		echo '</div>';
 	}
 
-	private static function render_list( $user_id ) {
+	private static function render_overview( $user_id ) {
 		$list = ZG_B2B_Address_Book::get_all( $user_id );
 
-		echo '<p class="zg-b2b-addr-intro">' . esc_html__( 'Uložte si doručovací adresy svých provozoven. V pokladně pak jen vyberete provozovnu a adresa se doplní.', 'zg-b2b' ) . '</p>';
+		echo '<p class="zg-b2b-addr-intro">' . esc_html__( 'Fakturační adresa se uvádí na dokladech. Doručovací adresy (provozovny) si v pokladně jen vyberete a adresa se doplní.', 'zg-b2b' ) . '</p>';
+
+		// Fakturační adresa – stejná karta jako dosud (formátování vč. IČO/DIČ z WooCommerce filtrů).
+		echo '<div class="zg-b2b-addr-grid">';
+		echo '<div class="zg-b2b-addr-card zg-b2b-addr-card--billing">';
+		echo '<div class="zg-b2b-addr-card__head"><h2 class="zg-b2b-addr-card__label">' . esc_html__( 'Fakturační adresa', 'zg-b2b' ) . '</h2>';
+		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( wc_get_endpoint_url( 'edit-address', 'billing' ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
+		$billing = wc_get_account_formatted_address( 'billing' );
+		echo '<address class="zg-b2b-addr-card__address">' . ( $billing ? wp_kses_post( $billing ) : esc_html__( 'Zatím nemáte nastavenou fakturační adresu.', 'zg-b2b' ) ) . '</address>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="zg-b2b-addr-section-head"><h2 class="zg-b2b-addr-section-title">' . esc_html__( 'Doručovací adresy', 'zg-b2b' ) . '</h2>';
+		if ( count( $list ) < ZG_B2B_Address_Book::max_addresses() ) {
+			echo '<a class="zg-b2b-addr-btn zg-b2b-addr-btn--primary" href="' . esc_url( self::url( array( 'zg_addr' => 'add' ) ) ) . '">+ ' . esc_html__( 'Přidat doručovací adresu', 'zg-b2b' ) . '</a>';
+		}
+		echo '</div>';
 
 		if ( ! $list ) {
 			echo '<p class="zg-b2b-addr-empty">' . esc_html__( 'Zatím nemáte uloženou žádnou doručovací adresu.', 'zg-b2b' ) . '</p>';
-		} else {
-			echo '<div class="zg-b2b-addr-grid">';
-			foreach ( $list as $address ) {
-				$is_default = ! empty( $address['default'] );
-				echo '<div class="zg-b2b-addr-card' . ( $is_default ? ' zg-b2b-addr-card--default' : '' ) . '">';
-				echo '<div class="zg-b2b-addr-card__head"><strong class="zg-b2b-addr-card__label">' . esc_html( $address['label'] ) . '</strong>';
-				if ( $is_default ) {
-					echo ' <span class="zg-b2b-addr-badge">' . esc_html__( 'Výchozí', 'zg-b2b' ) . '</span>';
-				}
-				echo '</div>';
-				echo '<address class="zg-b2b-addr-card__address">' . wp_kses_post( ZG_B2B_Address_Book::format( $address['fields'] ) ) . '</address>';
-				echo '<div class="zg-b2b-addr-card__actions">';
-				echo '<a class="zg-b2b-addr-link" href="' . esc_url( self::url( array( 'zg_addr' => 'edit', 'id' => $address['id'] ) ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a>';
-				if ( ! $is_default ) {
-					self::action_button( 'default', $address['id'], __( 'Nastavit jako výchozí', 'zg-b2b' ) );
-				}
-				self::action_button( 'delete', $address['id'], __( 'Smazat', 'zg-b2b' ), 'zg-b2b-addr-delete' );
-				echo '</div></div>';
-			}
-			echo '</div>';
+			return;
 		}
 
-		if ( count( $list ) < ZG_B2B_Address_Book::max_addresses() ) {
-			echo '<p><a class="button zg-b2b-addr-add" href="' . esc_url( self::url( array( 'zg_addr' => 'add' ) ) ) . '">' . esc_html__( 'Přidat doručovací adresu', 'zg-b2b' ) . '</a></p>';
+		echo '<div class="zg-b2b-addr-grid">';
+		foreach ( $list as $address ) {
+			$is_default = ! empty( $address['default'] );
+			echo '<div class="zg-b2b-addr-card' . ( $is_default ? ' zg-b2b-addr-card--default' : '' ) . '">';
+			echo '<div class="zg-b2b-addr-card__head"><h3 class="zg-b2b-addr-card__label">' . esc_html( $address['label'] );
+			if ( $is_default ) {
+				echo ' <span class="zg-b2b-addr-badge">' . esc_html__( 'Výchozí', 'zg-b2b' ) . '</span>';
+			}
+			echo '</h3>';
+			echo '<a class="zg-b2b-addr-btn" href="' . esc_url( self::url( array( 'zg_addr' => 'edit', 'id' => $address['id'] ) ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
+			echo '<address class="zg-b2b-addr-card__address">' . wp_kses_post( ZG_B2B_Address_Book::format( $address['fields'] ) ) . '</address>';
+			echo '<div class="zg-b2b-addr-card__actions">';
+			if ( ! $is_default ) {
+				self::action_button( 'default', $address['id'], __( 'Nastavit jako výchozí', 'zg-b2b' ) );
+			}
+			self::action_button( 'delete', $address['id'], __( 'Smazat', 'zg-b2b' ), 'zg-b2b-addr-btn--danger' );
+			echo '</div></div>';
 		}
+		echo '</div>';
 	}
 
 	private static function action_button( $action, $id, $label, $class = '' ) {
@@ -158,7 +174,7 @@ class ZG_B2B_Address_Account {
 		wp_nonce_field( 'zg_b2b_addr_' . $action . '_' . $id, '_zg_b2b_addr_nonce' );
 		echo '<input type="hidden" name="zg_b2b_addr_action" value="' . esc_attr( $action ) . '">';
 		echo '<input type="hidden" name="zg_b2b_addr_id" value="' . esc_attr( $id ) . '">';
-		echo '<button type="submit" class="zg-b2b-addr-link ' . esc_attr( $class ) . '">' . esc_html( $label ) . '</button>';
+		echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small ' . esc_attr( $class ) . '">' . esc_html( $label ) . '</button>';
 		echo '</form>';
 	}
 
@@ -179,7 +195,7 @@ class ZG_B2B_Address_Account {
 		}
 		$id = $address ? $address['id'] : '';
 
-		echo '<h3>' . esc_html( $address ? __( 'Upravit doručovací adresu', 'zg-b2b' ) : __( 'Nová doručovací adresa', 'zg-b2b' ) ) . '</h3>';
+		echo '<h2 class="zg-b2b-addr-section-title">' . esc_html( $address ? __( 'Upravit doručovací adresu', 'zg-b2b' ) : __( 'Nová doručovací adresa', 'zg-b2b' ) ) . '</h2>';
 		echo '<form method="post" class="zg-b2b-addr-form">';
 		echo '<div class="woocommerce-address-fields"><div class="woocommerce-address-fields__field-wrapper">';
 
@@ -205,8 +221,8 @@ class ZG_B2B_Address_Account {
 		wp_nonce_field( 'zg_b2b_addr_save_' . $id, '_zg_b2b_addr_nonce' );
 		echo '<input type="hidden" name="zg_b2b_addr_action" value="save">';
 		echo '<input type="hidden" name="zg_b2b_addr_id" value="' . esc_attr( $id ) . '">';
-		echo '<p class="zg-b2b-addr-form__buttons"><button type="submit" class="button">' . esc_html__( 'Uložit adresu', 'zg-b2b' ) . '</button> ';
-		echo '<a class="zg-b2b-addr-link" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</a></p>';
+		echo '<p class="zg-b2b-addr-form__buttons"><button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--primary">' . esc_html__( 'Uložit adresu', 'zg-b2b' ) . '</button> ';
+		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</a></p>';
 		echo '</form>';
 	}
 

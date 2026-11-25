@@ -112,24 +112,25 @@ form.checkout.zg-b2b-addr-active #ship-to-different-address {
 	display: none;
 }
 
-/* ---------- Můj účet: Doručovací adresy ---------- */
+/* ---------- Můj účet → Adresy (fakturační + doručovací) ---------- */
 .zg-b2b-addr {
 	color: var(--zg-addr-text);
 }
 .zg-b2b-addr-intro,
 .zg-b2b-addr-empty {
+	margin: 0 0 20px;
 	color: var(--zg-addr-muted);
 }
 .zg-b2b-addr-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 	gap: 20px;
-	margin: 20px 0;
+	margin: 0 0 32px;
 }
 .zg-b2b-addr-card {
 	display: flex;
 	flex-direction: column;
-	padding: 20px;
+	padding: 24px;
 	background: #fff;
 	border: 0.8px solid var(--zg-addr-border);
 	border-radius: 14px;
@@ -140,99 +141,130 @@ form.checkout.zg-b2b-addr-active #ship-to-different-address {
 }
 .zg-b2b-addr-card__head {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	align-items: center;
-	margin: 0 0 12px;
+	gap: 12px;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin: 0 0 16px;
 }
-.zg-b2b-addr-card__label {
-	font-size: 18px;
+.zg-b2b-addr .zg-b2b-addr-card__label {
+	margin: 0;
+	padding-top: 6px;
+	font-size: 20px;
 	font-weight: 800;
 	line-height: 1.3;
+	color: var(--zg-addr-text);
 }
 .zg-b2b-addr-badge {
 	display: inline-flex;
 	align-items: center;
 	height: 22px;
+	margin-left: 6px;
 	padding: 0 10px;
 	font-size: 12px;
 	font-weight: 700;
+	vertical-align: 3px;
 	color: var(--zg-addr-teal);
 	background: var(--zg-addr-soft);
 	border-radius: 11px;
 }
 .zg-b2b-addr-card__address {
 	flex: 1 1 auto;
-	margin: 0 0 16px;
-	font-size: 15px;
+	margin: 0;
+	font-size: 16px;
 	font-style: normal;
-	line-height: 1.75;
+	line-height: 1.65;
 }
 .zg-b2b-addr-card__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
+	margin: 20px 0 0;
+	padding: 16px 0 0;
+	border-top: 0.8px solid var(--zg-addr-border);
 }
-.zg-b2b-addr-inline-form {
-	display: inline-flex;
+.zg-b2b-addr-section-head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+	margin: 0 0 16px;
+}
+.zg-b2b-addr .zg-b2b-addr-section-title {
 	margin: 0;
-}
-/* Sekundární tlačítko – stejné jako „Upravit“ u Adres */
-.zg-b2b-addr-link {
-	display: inline-flex;
-	align-items: center;
-	height: 36px;
-	padding: 0 14px;
-	font: inherit;
-	font-size: 13px;
-	font-weight: 700;
-	line-height: 1;
+	font-size: 22px;
+	font-weight: 800;
 	color: var(--zg-addr-text);
-	background: transparent;
-	border: 0.8px solid var(--zg-addr-input);
-	border-radius: 18px;
-	text-decoration: none;
-	cursor: pointer;
 }
-.zg-b2b-addr-link:hover {
-	border-color: var(--zg-addr-text);
+
+/* Inline formuláře akcí: bez stylu karet, které web dává formulářům v Můj účet. */
+.zg-b2b-addr form.zg-b2b-addr-inline-form {
+	display: inline-flex !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	background: none !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
 }
-.zg-b2b-addr-delete {
-	color: #c8102e;
-}
-.zg-b2b-addr-delete:hover {
-	border-color: #c8102e;
-}
-/* Primární tlačítko – tmavá pilulka jako aktivní položka menu */
-.zg-b2b-addr .button,
-.zg-b2b-addr-form .button {
-	display: inline-flex;
+
+/* Tlačítka – stejný tvar jako „Upravit“ a menu Můj účet. */
+.zg-b2b-addr .zg-b2b-addr-btn {
+	display: inline-flex !important;
 	align-items: center;
-	height: 38px;
-	padding: 0 18px;
-	font-size: 14px;
-	font-weight: 600;
-	color: #fff;
-	background: var(--zg-addr-text);
-	border: 0.8px solid var(--zg-addr-text);
-	border-radius: 19px;
-	text-decoration: none;
+	justify-content: center;
+	flex: 0 0 auto;
+	height: 40px !important;
+	margin: 0 !important;
+	padding: 0 18px !important;
+	font-family: inherit;
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	line-height: 1 !important;
+	white-space: nowrap;
+	text-decoration: none !important;
+	color: var(--zg-addr-text) !important;
+	background: #fff !important;
+	border: 0.8px solid var(--zg-addr-input) !important;
+	border-radius: 20px !important;
+	box-shadow: none !important;
+	cursor: pointer;
+	transition: background-color .15s, border-color .15s, color .15s;
 }
-.zg-b2b-addr .button:hover,
-.zg-b2b-addr-form .button:hover {
-	color: #fff;
-	background: var(--zg-addr-teal);
-	border-color: var(--zg-addr-teal);
+.zg-b2b-addr .zg-b2b-addr-btn:hover,
+.zg-b2b-addr .zg-b2b-addr-btn:focus-visible {
+	border-color: var(--zg-addr-text) !important;
 }
-.zg-b2b-addr-form {
-	max-width: 760px;
-	padding: 20px;
-	background: #fff;
-	border: 0.8px solid var(--zg-addr-border);
-	border-radius: 14px;
+.zg-b2b-addr .zg-b2b-addr-btn--small {
+	height: 34px !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
 }
+.zg-b2b-addr .zg-b2b-addr-btn--primary {
+	color: #fff !important;
+	background: var(--zg-addr-text) !important;
+	border-color: var(--zg-addr-text) !important;
+}
+.zg-b2b-addr .zg-b2b-addr-btn--primary:hover,
+.zg-b2b-addr .zg-b2b-addr-btn--primary:focus-visible {
+	background: var(--zg-addr-teal) !important;
+	border-color: var(--zg-addr-teal) !important;
+}
+.zg-b2b-addr .zg-b2b-addr-btn--danger {
+	color: #c8102e !important;
+	border-color: #f1c4cc !important;
+}
+.zg-b2b-addr .zg-b2b-addr-btn--danger:hover,
+.zg-b2b-addr .zg-b2b-addr-btn--danger:focus-visible {
+	color: #fff !important;
+	background: #c8102e !important;
+	border-color: #c8102e !important;
+}
+
+/* Formulář přidání / úpravy (kartu dodává styl webu pro formuláře v Můj účet). */
 .zg-b2b-addr-form__buttons {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 10px;
 	align-items: center;
 	margin: 16px 0 0;
