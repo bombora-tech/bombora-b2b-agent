@@ -384,3 +384,12 @@ html.zg-b2b-addr-modal-open body {
 		border-radius: 14px 14px 0 0;
 	}
 }
+
+/* Šablona řadí pole adresy přes CSS `order` (flex) – název nahoře, „výchozí“ na konec. */
+.zg-b2b-addr .woocommerce-address-fields__field-wrapper #zg_b2b_addr_label_field {
+	order: -1 !important;
+}
+.zg-b2b-addr .woocommerce-address-fields__field-wrapper #zg_b2b_addr_default_field {
+	order: 9999 !important;
+	margin-top: 8px;
+}

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.6] - 2026-11-25
+
+### Opraveno
+- „Použít jako výchozí doručovací adresu“ na konci formuláře i se šablonou webu, která řadí pole přes CSS `order`.
+
 ## [1.5.5] - 2026-11-25
 
 ### Opraveno
