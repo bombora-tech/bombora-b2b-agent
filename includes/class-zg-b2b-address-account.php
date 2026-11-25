@@ -257,6 +257,7 @@ class ZG_B2B_Address_Account {
 			'placeholder' => __( 'např. Restaurace Vinohrady', 'zg-b2b' ),
 			'class'       => array( 'form-row-wide' ),
 			'required'    => false,
+			'priority'    => 1, // wc-address-i18n řadí pole podle priority.
 		), $label );
 
 		foreach ( ZG_B2B_Address_Book::field_definitions( $country ) as $key => $def ) {
@@ -265,8 +266,9 @@ class ZG_B2B_Address_Account {
 
 		woocommerce_form_field( 'zg_b2b_addr_default', array(
 			'type'  => 'checkbox',
-			'label' => __( 'Použít jako výchozí doručovací adresu', 'zg-b2b' ),
-			'class' => array( 'form-row-wide' ),
+			'label'    => __( 'Použít jako výchozí doručovací adresu', 'zg-b2b' ),
+			'class'    => array( 'form-row-wide' ),
+			'priority' => 1000,
 		), ( $address && ! empty( $address['default'] ) ) ? 1 : 0 );
 
 		echo '</div></div>';

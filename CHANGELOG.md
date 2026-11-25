@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.5] - 2026-11-25
+
+### Opraveno
+- Pořadí polí ve formuláři adresy: název pobočky nahoře, „Použít jako výchozí“ až na konci (WooCommerce řadí pole podle priority).
+
 ## [1.5.4] - 2026-11-25
 
 ### Změněno
