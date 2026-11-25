@@ -101,6 +101,13 @@ class ZG_B2B_Address_Checkout {
 		echo '<div class="zg-b2b-addr-picker" id="zg-b2b-addr-picker">';
 		echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Doručovací adresa', 'zg-b2b' ) . '</h3>';
 
+		// Souhrn (sbalený stav) – vybraná adresa, „Změnit údaje“ rozbalí výběr a pole adresy.
+		echo '<div class="zg-b2b-sum" data-zg-sum="shipping" hidden>';
+		echo '<div class="zg-b2b-sum__body"><div class="zg-b2b-sum__main"></div><div class="zg-b2b-sum__contact"></div></div>';
+		echo '<button type="button" class="zg-b2b-sum__toggle" aria-expanded="false" data-open="' . esc_attr__( 'Změnit údaje', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Hotovo', 'zg-b2b' ) . '">' . esc_html__( 'Změnit údaje', 'zg-b2b' ) . '</button>';
+		echo '</div>';
+
+		echo '<div class="zg-b2b-sum__edit">';
 		self::option( 'billing', __( 'Stejná jako fakturační adresa', 'zg-b2b' ), '', 'billing' === $choice );
 
 		foreach ( $list as $address ) {
@@ -115,6 +122,7 @@ class ZG_B2B_Address_Checkout {
 		echo '</div>';
 
 		echo '<p class="zg-b2b-addr-picker__manage"><a href="' . esc_url( ZG_B2B_Address_Account::url() ) . '">' . esc_html__( 'Spravovat doručovací adresy', 'zg-b2b' ) . '</a></p>';
+		echo '</div>';
 		echo '</div>';
 	}
 

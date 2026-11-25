@@ -767,3 +767,29 @@ msgstr "Also used as the company name in the delivery address."
 msgid "fakturační adresa"
 msgstr "billing address"
 
+
+# 1.7.0
+msgid "Firma nebyla nalezena."
+msgstr "Company not found."
+
+msgid "Firmu s objednávkami nelze odebrat."
+msgstr "A company with orders cannot be removed."
+
+msgid "Hlavní firmou se stane další schválená firma."
+msgstr "Another approved company will become the main company."
+
+msgid "Hotovo"
+msgstr "Done"
+
+msgid "Platba na fakturu povolena."
+msgstr "Invoice payment allowed."
+
+msgid "Platba na fakturu zatím nepovolena."
+msgstr "Invoice payment not allowed yet."
+
+msgid "V účtu musí zůstat alespoň jedna schválená firma."
+msgstr "At least one approved company must remain in the account."
+
+msgid "Změnit údaje"
+msgstr "Change details"
+

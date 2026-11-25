@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.7.0] - 2026-11-26
+
+### Přidáno
+- Pokladna: fakturační údaje (firma + kontaktní osoba, telefon, e-mail) a doručovací adresa se zobrazují jako **sbalený souhrn** s tlačítkem „Změnit údaje“; po rozbalení výběr firmy / adresy a pole pro změnu jména, telefonu a e-mailu. Neúplné údaje nebo chyba při odeslání → automaticky rozbaleno.
+- **Platba na fakturu schvalovaná pro každou firmu zvlášť** (profil zákazníka → Další firmy účtu → sloupec „Faktura“). U hlavní firmy platí dosavadní nastavení účtu. Dostupnost platební metody se řídí firmou vybranou v pokladně (filtr `zg_b2b_invoice_allowed`).
+
+### Změněno
+- Odebrání firmy: jen firmy bez objednávek (podle ID firmy / IČO / DIČ v objednávkách); v účtu musí zůstat alespoň jedna schválená firma. Odebrat lze i hlavní firmu – hlavní se pak stane další schválená firma.
+
 ## [1.6.3] - 2026-11-26
 
 ### Opraveno

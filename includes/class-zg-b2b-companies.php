@@ -37,6 +37,8 @@ class ZG_B2B_Companies {
 		// Pokladna.
 		add_action( 'woocommerce_before_checkout_billing_form', array( __CLASS__, 'render_checkout_picker' ), 5 );
 		add_filter( 'woocommerce_checkout_fields', array( __CLASS__, 'hide_fixed_fields' ), 1001 );
+		add_action( 'woocommerce_checkout_update_order_review', array( __CLASS__, 'remember_from_review' ) );
+		add_filter( 'zg_b2b_invoice_allowed', array( __CLASS__, 'filter_invoice_allowed' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'checkout_assets' ), 20 );
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'checkout_prefill' ), 30, 2 );
 		add_filter( 'woocommerce_checkout_posted_data', array( __CLASS__, 'checkout_posted_data' ), 1000 );
@@ -244,6 +246,12 @@ class ZG_B2B_Companies {
 		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( wc_get_endpoint_url( 'edit-address', 'billing' ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
 		$billing = wc_get_account_formatted_address( 'billing' );
 		echo '<address class="zg-b2b-addr-card__address">' . ( $billing ? wp_kses_post( $billing ) : esc_html__( 'Zatím nemáte nastavenou fakturační adresu.', 'zg-b2b' ) ) . '</address>';
+		if ( $extra && '' === self::cannot_delete_reason( $user_id, self::PRIMARY ) ) {
+			echo '<div class="zg-b2b-addr-card__actions">';
+			self::remove_button( self::PRIMARY, __( 'Odebrat', 'zg-b2b' ) );
+			echo '<span class="zg-b2b-company-note">' . esc_html__( 'Hlavní firmou se stane další schválená firma.', 'zg-b2b' ) . '</span>';
+			echo '</div>';
+		}
 		echo '</div>';
 
 		foreach ( $extra as $c ) {
@@ -253,21 +261,29 @@ class ZG_B2B_Companies {
 			echo ' <span class="zg-b2b-addr-badge zg-b2b-company-badge--' . esc_attr( $st ) . '">' . esc_html( self::statuses()[ $st ] ) . '</span></h3></div>';
 			echo '<address class="zg-b2b-addr-card__address">' . implode( '<br>', array_map( 'esc_html', self::format_lines( $c ) ) ) . '</address>';
 			echo '<div class="zg-b2b-addr-card__actions">';
-			echo '<form method="post" class="zg-b2b-addr-inline-form">';
-			wp_nonce_field( 'zg_b2b_company_remove_' . $c['id'], '_zg_b2b_company_nonce' );
-			echo '<input type="hidden" name="zg_b2b_company_action" value="remove"><input type="hidden" name="zg_b2b_company_id" value="' . esc_attr( $c['id'] ) . '">';
-			echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html( 'pending' === $st ? __( 'Zrušit žádost', 'zg-b2b' ) : __( 'Odebrat', 'zg-b2b' ) ) . '</button>';
-			echo '</form>';
+			$why = self::cannot_delete_reason( $user_id, $c['id'] );
+			if ( '' === $why ) {
+				self::remove_button( $c['id'], 'pending' === $st ? __( 'Zrušit žádost', 'zg-b2b' ) : __( 'Odebrat', 'zg-b2b' ) );
+			}
 			if ( 'pending' === $st ) {
 				echo '<span class="zg-b2b-company-note">' . esc_html__( 'Firmu po kontrole schválíme a pošleme vám e-mail.', 'zg-b2b' ) . '</span>';
 			} elseif ( 'approved' === $st ) {
-				echo '<span class="zg-b2b-company-note">' . esc_html__( 'Údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</span>';
+				$inv = isset( $c['invoice'] ) && 'yes' === $c['invoice'];
+				echo '<span class="zg-b2b-company-note">' . esc_html( $inv ? __( 'Platba na fakturu povolena.', 'zg-b2b' ) : __( 'Platba na fakturu zatím nepovolena.', 'zg-b2b' ) ) . ( $why ? ' ' . esc_html( $why ) : '' ) . '</span>';
 			}
 			echo '</div></div>';
 		}
 		echo '</div>';
 
 		self::render_modal();
+	}
+
+	private static function remove_button( $id, $label ) {
+		echo '<form method="post" class="zg-b2b-addr-inline-form">';
+		wp_nonce_field( 'zg_b2b_company_remove_' . $id, '_zg_b2b_company_nonce' );
+		echo '<input type="hidden" name="zg_b2b_company_action" value="remove"><input type="hidden" name="zg_b2b_company_id" value="' . esc_attr( $id ) . '">';
+		echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html( $label ) . '</button>';
+		echo '</form>';
 	}
 
 	private static function posted( $key, $default = '' ) {
@@ -345,14 +361,20 @@ class ZG_B2B_Companies {
 		}
 
 		if ( 'remove' === $action ) {
-			$list = self::get_all( $user_id );
-			foreach ( $list as $i => $c ) {
-				// Zákazník může odebrat jakoukoli svou další firmu (bez schválení).
-				if ( $c['id'] === $id ) {
-					unset( $list[ $i ] );
-				}
+			$why = self::cannot_delete_reason( $user_id, $id );
+			if ( $why ) {
+				wc_add_notice( $why, 'error' );
+				wp_safe_redirect( ZG_B2B_Address_Account::url() );
+				exit;
 			}
-			self::save_all( $user_id, $list );
+			if ( self::PRIMARY === $id ) {
+				self::promote_next_primary( $user_id );
+			} else {
+				$list = array_values( array_filter( self::get_all( $user_id ), function ( $c ) use ( $id ) {
+					return $c['id'] !== $id;
+				} ) );
+				self::save_all( $user_id, $list );
+			}
 			if ( get_user_meta( $user_id, self::META_LAST, true ) === $id ) {
 				delete_user_meta( $user_id, self::META_LAST );
 			}
@@ -528,6 +550,14 @@ class ZG_B2B_Companies {
 
 		$choice = self::has_choice();
 		echo '<div class="zg-b2b-addr-picker zg-b2b-company-picker' . ( $choice ? '' : ' zg-b2b-company-picker--single' ) . '" id="zg-b2b-company-picker">';
+
+		// Souhrn (sbalený stav): firma + kontaktní údaje, tlačítko „Změnit údaje“ (JS).
+		echo '<div class="zg-b2b-sum" data-zg-sum="billing" hidden>';
+		echo '<div class="zg-b2b-sum__body"><div class="zg-b2b-sum__main"></div><div class="zg-b2b-sum__contact"></div></div>';
+		echo '<button type="button" class="zg-b2b-sum__toggle" aria-expanded="false" data-open="' . esc_attr__( 'Změnit údaje', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Hotovo', 'zg-b2b' ) . '">' . esc_html__( 'Změnit údaje', 'zg-b2b' ) . '</button>';
+		echo '</div>';
+
+		echo '<div class="zg-b2b-sum__edit">';
 		if ( $choice ) {
 			echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
 		}
@@ -546,6 +576,7 @@ class ZG_B2B_Companies {
 		}
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
 		echo '</div>';
+		echo '</div>';
 	}
 
 	public static function checkout_assets() {
@@ -553,9 +584,6 @@ class ZG_B2B_Companies {
 			return;
 		}
 		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
-		if ( ! self::has_choice() ) {
-			return;
-		}
 		wp_enqueue_script( 'zg-b2b-companies-checkout', ZG_B2B_URL . 'assets/js/zg-b2b-companies-checkout.js', array( 'jquery', 'wc-checkout' ), ZG_B2B_VERSION, true );
 		$data = array();
 		foreach ( self::billable( get_current_user_id() ) as $id => $c ) {
@@ -592,6 +620,9 @@ class ZG_B2B_Companies {
 			return $data;
 		}
 		self::$checkout_company = $id;
+		if ( WC()->session ) {
+			WC()->session->set( 'zg_b2b_company', $id );
+		}
 		if ( self::PRIMARY === $id ) {
 			return $data;
 		}
@@ -732,6 +763,97 @@ class ZG_B2B_Companies {
 		}
 	}
 
+
+	/** Má firma objednávky? (podle ID firmy v objednávce nebo IČO / DIČ ve fakturačních údajích) */
+	public static function has_orders( $user_id, array $c ) {
+		if ( ! function_exists( 'wc_get_orders' ) ) {
+			return true;
+		}
+		$or = array( 'relation' => 'OR', array( 'key' => self::ORDER_ID, 'value' => $c['id'] ) );
+		if ( ! empty( $c['ico'] ) ) {
+			$or[] = array( 'key' => '_' . zg_b2b_opt( 'ico_meta' ), 'value' => $c['ico'] );
+		} elseif ( ! empty( $c['dic'] ) ) {
+			$or[] = array( 'key' => '_' . zg_b2b_opt( 'dic_meta' ), 'value' => $c['dic'] );
+		}
+		$ids = wc_get_orders( array(
+			'customer_id' => (int) $user_id,
+			'limit'       => 1,
+			'return'      => 'ids',
+			'status'      => array_keys( wc_get_order_statuses() ),
+			'meta_query'  => array( $or ), // phpcs:ignore WordPress.DB.SlowDBQuery
+		) );
+		return ! empty( $ids );
+	}
+
+	/** Prázdný řetězec = firmu lze odebrat; jinak důvod pro zákazníka. */
+	public static function cannot_delete_reason( $user_id, $id ) {
+		$c = self::get( $user_id, $id );
+		if ( ! $c ) {
+			return __( 'Firma nebyla nalezena.', 'zg-b2b' );
+		}
+		if ( self::PRIMARY === $id ) {
+			$other = array_filter( self::get_all( $user_id ), function ( $e ) {
+				return 'approved' === $e['status'];
+			} );
+			if ( ! $other ) {
+				return __( 'V účtu musí zůstat alespoň jedna schválená firma.', 'zg-b2b' );
+			}
+		}
+		if ( 'approved' === $c['status'] && self::has_orders( $user_id, $c ) ) {
+			return __( 'Firmu s objednávkami nelze odebrat.', 'zg-b2b' );
+		}
+		return '';
+	}
+
+	/** Hlavní firma se maže → první schválená další firma se stane hlavní (fakturační údaje účtu). */
+	private static function promote_next_primary( $user_id ) {
+		$list = self::get_all( $user_id );
+		foreach ( $list as $i => $c ) {
+			if ( 'approved' !== $c['status'] ) {
+				continue;
+			}
+			foreach ( self::field_map() as $field => $key ) {
+				update_user_meta( $user_id, $field, self::company_value( $c, $key ) );
+			}
+			update_user_meta( $user_id, 'zg_b2b_invoice_allowed', ( isset( $c['invoice'] ) && 'yes' === $c['invoice'] ) ? 'yes' : 'no' );
+			unset( $list[ $i ] );
+			self::save_all( $user_id, $list );
+			return true;
+		}
+		return false;
+	}
+
+	/** Platba na fakturu je povolená pro firmu? (hlavní = nastavení účtu, další = schválení administrátorem u firmy) */
+	public static function invoice_allowed_for( $user_id, $id ) {
+		if ( self::PRIMARY === $id ) {
+			return null; // Rozhoduje nastavení účtu / platební metody.
+		}
+		$c = self::get( $user_id, $id );
+		return $c && 'approved' === $c['status'] && isset( $c['invoice'] ) && 'yes' === $c['invoice'];
+	}
+
+	/** Firma zvolená v pokladně (relace), jinak předvybraná. */
+	public static function current_checkout_company( $user_id ) {
+		$id = ( function_exists( 'WC' ) && WC()->session ) ? (string) WC()->session->get( 'zg_b2b_company' ) : '';
+		$billable = self::billable( $user_id );
+		return isset( $billable[ $id ] ) ? $id : self::initial_company( $user_id );
+	}
+
+	public static function remember_from_review( $post_data ) {
+		parse_str( (string) $post_data, $p );
+		if ( ! empty( $p['zg_b2b_company'] ) && WC()->session ) {
+			WC()->session->set( 'zg_b2b_company', sanitize_key( $p['zg_b2b_company'] ) );
+		}
+	}
+
+	public static function filter_invoice_allowed( $allowed, $user_id ) {
+		if ( ! $user_id ) {
+			return $allowed;
+		}
+		$per = self::invoice_allowed_for( $user_id, self::current_checkout_company( $user_id ) );
+		return null === $per ? $allowed : $per;
+	}
+
 	/* =====================================================================
 	 * Administrace
 	 * =================================================================== */
@@ -816,10 +938,10 @@ class ZG_B2B_Companies {
 		wp_nonce_field( 'zg_b2b_companies_admin', 'zg_b2b_companies_nonce' );
 		?>
 		<h2 id="zg-b2b-companies">Další firmy účtu (B2B)</h2>
-		<p class="description">Hlavní firma = fakturační údaje níže (WooCommerce). Na další firmu zákazník fakturuje v pokladně až po schválení. Údaje firem mění jen administrátor; zákazník dostane e-mail při schválení / zamítnutí.</p>
+		<p class="description">Objednávky i platbu na fakturu schvalujete pro každou firmu zvlášť (sloupec Stav a Faktura; pro hlavní firmu platí „Platba na fakturu“ výše). Hlavní firma = fakturační údaje níže (WooCommerce). Na další firmu zákazník fakturuje v pokladně až po schválení. Údaje firem mění jen administrátor; zákazník dostane e-mail při schválení / zamítnutí.</p>
 		<style>.zg-b2b-co td,.zg-b2b-co th{vertical-align:top;padding:6px}.zg-b2b-co input[type=text]{width:100%}.zg-b2b-co select{max-width:100%}.zg-b2b-co small{color:#646970}</style>
 		<table class="widefat striped zg-b2b-co">
-			<thead><tr><th style="width:22%">Firma</th><th style="width:11%">IČO</th><th style="width:13%">DIČ</th><th>Sídlo (ulice / PSČ / město / země)</th><th style="width:13%">Stav</th><th style="width:6%">Smazat</th></tr></thead>
+			<thead><tr><th style="width:22%">Firma</th><th style="width:11%">IČO</th><th style="width:13%">DIČ</th><th>Sídlo (ulice / PSČ / město / země)</th><th style="width:13%">Stav</th><th style="width:7%">Faktura</th><th style="width:6%">Smazat</th></tr></thead>
 			<tbody>
 			<?php foreach ( $list as $c ) : $n = 'zg_b2b_co[' . esc_attr( $c['id'] ) . ']'; ?>
 				<tr>
@@ -834,6 +956,7 @@ class ZG_B2B_Companies {
 						<select name="<?php echo $n; // phpcs:ignore ?>[country]"><?php foreach ( $countries as $code => $label ) : ?><option value="<?php echo esc_attr( $code ); ?>" <?php selected( $c['country'], $code ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select>
 					</td>
 					<td><select name="<?php echo $n; // phpcs:ignore ?>[status]"><?php foreach ( self::statuses() as $k => $label ) : ?><option value="<?php echo esc_attr( $k ); ?>" <?php selected( $c['status'], $k ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></td>
+					<td><label title="Povolit platbu na fakturu pro tuto firmu"><input type="checkbox" name="<?php echo $n; // phpcs:ignore ?>[invoice]" value="yes" <?php checked( isset( $c['invoice'] ) ? $c['invoice'] : 'no', 'yes' ); ?>> ano</label></td>
 					<td><label><input type="checkbox" name="<?php echo $n; // phpcs:ignore ?>[delete]" value="1"> ✕</label></td>
 				</tr>
 			<?php endforeach; ?>
@@ -848,6 +971,7 @@ class ZG_B2B_Companies {
 						<select name="zg_b2b_co[new][country]"><?php foreach ( $countries as $code => $label ) : ?><option value="<?php echo esc_attr( $code ); ?>" <?php selected( 'CZ', $code ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select>
 					</td>
 					<td><select name="zg_b2b_co[new][status]"><?php foreach ( self::statuses() as $k => $label ) : ?><option value="<?php echo esc_attr( $k ); ?>" <?php selected( 'approved', $k ); ?>><?php echo esc_html( $label ); ?></option><?php endforeach; ?></select></td>
+					<td><label><input type="checkbox" name="zg_b2b_co[new][invoice]" value="yes"> ano</label></td>
 					<td></td>
 				</tr>
 			</tbody>
@@ -876,7 +1000,7 @@ class ZG_B2B_Companies {
 				continue;
 			}
 			$new_status = isset( $p['status'] ) && isset( self::statuses()[ $p['status'] ] ) ? $p['status'] : $c['status'];
-			$list[ $i ] = array_merge( $c, self::sanitize( $p ), array( 'status' => $new_status ) );
+			$list[ $i ] = array_merge( $c, self::sanitize( $p ), array( 'status' => $new_status, 'invoice' => ! empty( $p['invoice'] ) ? 'yes' : 'no' ) );
 			if ( $new_status !== $c['status'] ) {
 				$list[ $i ]['decided'] = time();
 				$changes[]             = $list[ $i ];
@@ -889,7 +1013,7 @@ class ZG_B2B_Companies {
 			$list[] = array_merge(
 				array( 'id' => substr( md5( uniqid( '', true ) . wp_rand() ), 0, 10 ) ),
 				self::sanitize( $p ),
-				array( 'status' => $status, 'created' => time(), 'decided' => time(), 'ares' => 'na', 'ares_name' => '', 'vies' => 'na' )
+				array( 'status' => $status, 'invoice' => ! empty( $p['invoice'] ) ? 'yes' : 'no', 'created' => time(), 'decided' => time(), 'ares' => 'na', 'ares_name' => '', 'vies' => 'na' )
 			);
 		}
 

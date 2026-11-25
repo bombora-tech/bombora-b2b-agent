@@ -117,10 +117,12 @@ class ZG_B2B_Gateway_Invoice extends WC_Payment_Gateway {
 		if ( ! is_user_logged_in() || ! zg_b2b_can_see_prices() ) {
 			return false;
 		}
+		$allowed = true;
 		if ( 'allowed' === $this->get_option( 'who' ) && ! current_user_can( 'manage_woocommerce' ) ) {
-			return 'yes' === get_user_meta( get_current_user_id(), 'zg_b2b_invoice_allowed', true );
+			$allowed = 'yes' === get_user_meta( get_current_user_id(), 'zg_b2b_invoice_allowed', true );
 		}
-		return true;
+		// Další firmy účtu: platbu na fakturu schvaluje administrátor u každé firmy zvlášť.
+		return (bool) apply_filters( 'zg_b2b_invoice_allowed', $allowed, get_current_user_id() );
 	}
 
 	public function process_payment( $order_id ) {

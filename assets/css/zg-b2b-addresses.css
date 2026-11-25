@@ -511,3 +511,82 @@ form.checkout:has(#billing_ic_field.zg-b2b-hidden-field) .wpify-woo-ic-dic__comp
 form.checkout:has(#billing_ic_field.zg-b2b-hidden-field) #wpify-woo-icdic__ares-autofill-button {
 	display: none !important;
 }
+
+/* ---------- Pokladna: sbalený souhrn (firma / kontakt / doručovací adresa) ---------- */
+.zg-b2b-sum {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	justify-content: space-between;
+	padding: 14px 18px;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-border);
+	border-radius: 12px;
+}
+.zg-b2b-sum[hidden],
+.zg-b2b-sum__edit[hidden] {
+	display: none !important;
+}
+.zg-b2b-sum__body {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	line-height: 1.4;
+}
+.zg-b2b-sum__main strong {
+	display: block;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--zg-addr-text);
+}
+.zg-b2b-sum__main .zg-b2b-addr-option__detail {
+	display: block;
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-sum__contact {
+	font-size: 13px;
+	color: var(--zg-addr-text);
+}
+.zg-b2b-sum__contact:empty {
+	display: none;
+}
+/* Rozbaleno: souhrn jen jako řádek s tlačítkem „Hotovo“. */
+.zg-b2b-addr-picker:not(.is-collapsed) .zg-b2b-sum {
+	padding: 0;
+	border: 0;
+	margin: 0 0 10px;
+	justify-content: flex-end;
+}
+.zg-b2b-addr-picker:not(.is-collapsed) .zg-b2b-sum__body {
+	display: none;
+}
+form.checkout .zg-b2b-sum .zg-b2b-sum__toggle {
+	flex: 0 0 auto;
+	display: inline-flex !important;
+	align-items: center;
+	height: 34px !important;
+	margin: 0 !important;
+	padding: 0 14px !important;
+	font-size: 13px !important;
+	font-weight: 700 !important;
+	line-height: 1 !important;
+	white-space: nowrap;
+	color: var(--zg-addr-text) !important;
+	background: #fff !important;
+	border: 0.8px solid var(--zg-addr-input) !important;
+	border-radius: 17px !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+form.checkout .zg-b2b-sum .zg-b2b-sum__toggle:hover {
+	border-color: var(--zg-addr-text) !important;
+}
+.zg-b2b-collapsed {
+	display: none !important;
+}
+.zg-b2b-company-picker.is-collapsed {
+	padding-bottom: 0;
+	border-bottom: 0;
+}
