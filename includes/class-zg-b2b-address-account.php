@@ -61,7 +61,12 @@ class ZG_B2B_Address_Account {
 	}
 
 	public static function is_page() {
-		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'edit-address' );
+		global $wp;
+		if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'edit-address' ) ) {
+			return true;
+		}
+		// Záloha pro přeložené/upravené endpointy (WPML, Bricks šablona Můj účet).
+		return function_exists( 'is_account_page' ) && is_account_page() && isset( $wp->query_vars['edit-address'] );
 	}
 
 	/** Vlastní obsah stránky Adresy místo šablony WooCommerce. */
@@ -72,7 +77,14 @@ class ZG_B2B_Address_Account {
 	}
 
 	public static function assets() {
-		if ( ! self::is_page() ) {
+		if ( self::is_page() ) {
+			self::enqueue();
+		}
+	}
+
+	/** Volá se i přímo z render() – pro případ, že se stránka Adresy vykreslí jinou šablonou. */
+	public static function enqueue() {
+		if ( wp_style_is( 'zg-b2b-addresses', 'enqueued' ) ) {
 			return;
 		}
 		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
@@ -96,6 +108,8 @@ class ZG_B2B_Address_Account {
 		$action  = isset( $_GET['zg_addr'] ) ? sanitize_key( $_GET['zg_addr'] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 		$id      = isset( $_GET['id'] ) ? sanitize_key( $_GET['id'] ) : '';   // phpcs:ignore WordPress.Security.NonceVerification
 		$type    = wc_edit_address_i18n( sanitize_title( $type ), true );
+
+		self::enqueue();
 
 		// Fakturační adresa: standardní formulář WooCommerce (vč. zámků B2B).
 		if ( 'billing' === $type ) {

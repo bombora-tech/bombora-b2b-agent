@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2] - 2026-11-25
+
+### Opraveno
+- Tlačítka adres přebíjela pravidla šablony pro formuláře v Můj účet (tyrkysové pozadí) – vyšší specificita.
+- Styly a skripty adres se načtou i při přeloženém endpointu (např. `/muj-ucet/adresa/`).
+- Adresy ve dvou sloupcích (na mobilu v jednom).
+
 ## [1.5.1] - 2026-11-25
 
 ### Změněno
