@@ -73,6 +73,8 @@ class ZG_B2B_Settings {
 		$out['notice_text']       = isset( $in['notice_text'] ) && '' !== trim( $in['notice_text'] ) ? sanitize_textarea_field( $in['notice_text'] ) : $d['notice_text'];
 		$out['notice_title_en']   = isset( $in['notice_title_en'] ) && '' !== trim( $in['notice_title_en'] ) ? sanitize_text_field( $in['notice_title_en'] ) : $d['notice_title_en'];
 		$out['notice_text_en']    = isset( $in['notice_text_en'] ) && '' !== trim( $in['notice_text_en'] ) ? sanitize_textarea_field( $in['notice_text_en'] ) : $d['notice_text_en'];
+		$out['site_title_en']     = isset( $in['site_title_en'] ) ? sanitize_text_field( $in['site_title_en'] ) : $d['site_title_en'];
+		$out['site_tagline_en']   = isset( $in['site_tagline_en'] ) ? sanitize_text_field( $in['site_tagline_en'] ) : $d['site_tagline_en'];
 		$out['registration_page'] = isset( $in['registration_page'] ) ? absint( $in['registration_page'] ) : 0;
 		$out['terms_page']        = isset( $in['terms_page'] ) ? absint( $in['terms_page'] ) : 0;
 		$out['notify_email']      = isset( $in['notify_email'] ) && is_email( $in['notify_email'] ) ? sanitize_email( $in['notify_email'] ) : $d['notify_email'];
@@ -240,6 +242,19 @@ class ZG_B2B_Settings {
 						<td><input id="zg-notice-title-en" class="regular-text" type="text" name="zg_b2b_settings[notice_title_en]" value="<?php echo esc_attr( $s['notice_title_en'] ); ?>">
 							<textarea class="large-text" rows="2" name="zg_b2b_settings[notice_text_en]" style="margin-top:6px"><?php echo esc_textarea( $s['notice_text_en'] ); ?></textarea>
 							<p class="description">Nadpis a text pro anglickou verzi webu.</p></td>
+					</tr>
+				</table>
+
+				<h2>Název webu – EN</h2>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="zg-site-title-en">Název webu (EN)</label></th>
+						<td><input id="zg-site-title-en" class="regular-text" type="text" name="zg_b2b_settings[site_title_en]" value="<?php echo esc_attr( $s['site_title_en'] ); ?>">
+							<p class="description">Anglický název webu (titulek stránek, e-maily v EN). Český název je v Nastavení → Obecné. Prázdné = použije se český.</p></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="zg-site-tagline-en">Popis webu (EN)</label></th>
+						<td><input id="zg-site-tagline-en" class="regular-text" type="text" name="zg_b2b_settings[site_tagline_en]" value="<?php echo esc_attr( $s['site_tagline_en'] ); ?>"></td>
 					</tr>
 				</table>
 

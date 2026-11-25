@@ -3,7 +3,7 @@
  * Plugin Name:       Bombora B2B Agent
  * Plugin URI:        https://github.com/bombora-tech/bombora-b2b-agent
  * Description:       Velkoobchod vo.zgruzie.cz – ceny jen pro schválené partnery, registrace firem s ověřením ARES/VIES a ručním schválením, lihoviny a pivo s doručením pouze v ČR, platba na fakturu s proformou z Eurofaktury, více doručovacích adres (pobočky) s výběrem v pokladně.
- * Version:           1.6.0
+ * Version:           1.6.1
  * Author:            Bombora group s.r.o.
  * Author URI:        https://zgruzie.cz
  * Text Domain:       zg-b2b
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZG_B2B_VERSION', '1.6.0' );
+define( 'ZG_B2B_VERSION', '1.6.1' );
 define( 'ZG_B2B_FILE', __FILE__ );
 define( 'ZG_B2B_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZG_B2B_URL', plugin_dir_url( __FILE__ ) );
@@ -107,21 +107,22 @@ add_action( 'rest_api_init', 'zg_b2b_load_textdomain', 0 );
 add_action( 'change_locale', 'zg_b2b_load_textdomain' );
 
 /*
- * Název a popis webu do WPML (Překlad řetězců → doména „WP“), aby šly přeložit
- * do EN. Registrace proběhne jednou a znovu po změně v Nastavení → Obecné.
+ * Anglický název a popis webu (Bombora → B2B Agent → Název webu – EN).
+ * WPML na tomto webu „Blog Title“ k překladu nenabízí, proto přímo přes option filtr.
+ * V administraci (kromě AJAXu) zůstává český název.
  */
-function zg_b2b_register_site_strings() {
-	if ( ! has_action( 'wpml_register_single_string' ) ) {
-		return;
+function zg_b2b_site_text_en( $value, $key ) {
+	if ( ( is_admin() && ! wp_doing_ajax() ) || ! function_exists( 'zg_b2b_is_en' ) || ! zg_b2b_is_en() ) {
+		return $value;
 	}
-	do_action( 'wpml_register_single_string', 'WP', 'Blog Title', (string) get_option( 'blogname' ) );
-	do_action( 'wpml_register_single_string', 'WP', 'Tagline', (string) get_option( 'blogdescription' ) );
-	update_option( 'zg_b2b_site_strings', md5( get_option( 'blogname' ) . '|' . get_option( 'blogdescription' ) ), false );
+	$en = (string) zg_b2b_opt( $key );
+	return '' !== trim( $en ) ? $en : $value;
 }
-add_action( 'admin_init', function () {
-	if ( get_option( 'zg_b2b_site_strings' ) !== md5( get_option( 'blogname' ) . '|' . get_option( 'blogdescription' ) ) ) {
-		zg_b2b_register_site_strings();
-	}
+add_filter( 'option_blogname', function ( $v ) {
+	return zg_b2b_site_text_en( $v, 'site_title_en' );
+}, 20 );
+add_filter( 'option_blogdescription', function ( $v ) {
+	return zg_b2b_site_text_en( $v, 'site_tagline_en' );
 }, 20 );
 
 add_action( 'wp_enqueue_scripts', function () {

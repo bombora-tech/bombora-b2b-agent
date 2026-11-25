@@ -18,6 +18,8 @@ function zg_b2b_defaults() {
 		'notice_text'             => 'Lihoviny a pivo doručujeme výhradně na adresy v ČR. Do jiných zemí tento produkt neodesíláme.',
 		'notice_title_en'         => 'Delivery in the Czech Republic only',
 		'notice_text_en'          => 'We deliver spirits and beer only to addresses in the Czech Republic. This product cannot be shipped to other countries.',
+		'site_title_en'           => 'Georgian Products Wholesale for HoReCa',
+		'site_tagline_en'         => 'Georgian wines, brandy, chacha, lemonades, spices',
 		'registration_page'       => 0,
 		'terms_page'              => 0,
 		'notify_email'            => 'velkoobchod@zgruzie.cz',

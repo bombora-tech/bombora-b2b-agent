@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.1] - 2026-11-26
+
+### Přidáno
+- Anglický název a popis webu (Bombora → B2B Agent → „Název webu – EN“) pro EN verzi – titulky stránek a e-maily. WPML „Blog Title“ na tomto webu k překladu nenabízí. Registrace do WPML z 1.6.0 odstraněna.
+
 ## [1.6.0] - 2026-11-26
 
 ### Přidáno
