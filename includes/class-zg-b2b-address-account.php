@@ -7,6 +7,9 @@ defined( 'ABSPATH' ) || exit;
 
 class ZG_B2B_Address_Account {
 
+	/** @var bool Uložení z pop-upu neprošlo validací → okno se po načtení znovu otevře. */
+	private static $save_failed = false;
+
 	/**
 	 * Adresář je součástí Můj účet → Adresy (edit-address). Starý samostatný
 	 * endpoint (/dorucovaci-adresy/, /delivery-addresses/) jen přesměrovává.
@@ -131,6 +134,7 @@ class ZG_B2B_Address_Account {
 			}
 		} else {
 			self::render_overview( $user_id );
+			self::render_modal( $user_id );
 		}
 
 		echo '</div>';
@@ -153,7 +157,7 @@ class ZG_B2B_Address_Account {
 
 		echo '<div class="zg-b2b-addr-section-head"><h2 class="zg-b2b-addr-section-title">' . esc_html__( 'Doručovací adresy', 'zg-b2b' ) . '</h2>';
 		if ( count( $list ) < ZG_B2B_Address_Book::max_addresses() ) {
-			echo '<a class="zg-b2b-addr-btn zg-b2b-addr-btn--primary" href="' . esc_url( self::url( array( 'zg_addr' => 'add' ) ) ) . '">+ ' . esc_html__( 'Přidat doručovací adresu', 'zg-b2b' ) . '</a>';
+			echo '<a class="zg-b2b-addr-btn zg-b2b-addr-btn--primary" data-zg-addr-open="new" href="' . esc_url( self::url( array( 'zg_addr' => 'add' ) ) ) . '">+ ' . esc_html__( 'Přidat doručovací adresu', 'zg-b2b' ) . '</a>';
 		}
 		echo '</div>';
 
@@ -171,7 +175,7 @@ class ZG_B2B_Address_Account {
 				echo ' <span class="zg-b2b-addr-badge">' . esc_html__( 'Výchozí', 'zg-b2b' ) . '</span>';
 			}
 			echo '</h3>';
-			echo '<a class="zg-b2b-addr-btn" href="' . esc_url( self::url( array( 'zg_addr' => 'edit', 'id' => $address['id'] ) ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
+			echo '<a class="zg-b2b-addr-btn" data-zg-addr-open="' . esc_attr( $address['id'] ) . '" href="' . esc_url( self::url( array( 'zg_addr' => 'edit', 'id' => $address['id'] ) ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
 			echo '<address class="zg-b2b-addr-card__address">' . wp_kses_post( ZG_B2B_Address_Book::format( $address['fields'] ) ) . '</address>';
 			echo '<div class="zg-b2b-addr-card__actions">';
 			if ( ! $is_default ) {
@@ -183,6 +187,34 @@ class ZG_B2B_Address_Account {
 		echo '</div>';
 	}
 
+	/** Pop-up s formulářem pro přidání / úpravu doručovací adresy. */
+	private static function render_modal( $user_id ) {
+		$data = array();
+		foreach ( ZG_B2B_Address_Book::get_all( $user_id ) as $a ) {
+			$data[ $a['id'] ] = array(
+				'label'   => $a['label'],
+				'default' => ! empty( $a['default'] ),
+				'fields'  => $a['fields'],
+			);
+		}
+		$posted_id = isset( $_POST['zg_b2b_addr_id'] ) ? sanitize_key( wp_unslash( $_POST['zg_b2b_addr_id'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$reopen    = self::$save_failed ? ( $posted_id ? $posted_id : 'new' ) : '';
+
+		echo '<div class="zg-b2b-addr-modal" id="zg-b2b-addr-modal" hidden'
+			. ' data-addresses="' . esc_attr( wp_json_encode( (object) $data ) ) . '"'
+			. ' data-base-country="' . esc_attr( WC()->countries->get_base_country() ) . '"'
+			. ( $reopen ? ' data-reopen="' . esc_attr( $reopen ) . '"' : '' ) . '>';
+		echo '<div class="zg-b2b-addr-modal__backdrop" data-zg-addr-close></div>';
+		echo '<div class="zg-b2b-addr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="zg-b2b-addr-modal-title">';
+		echo '<div class="zg-b2b-addr-modal__head">';
+		echo '<h2 class="zg-b2b-addr-modal__title" id="zg-b2b-addr-modal-title" data-title-new="' . esc_attr__( 'Nová doručovací adresa', 'zg-b2b' ) . '" data-title-edit="' . esc_attr__( 'Upravit doručovací adresu', 'zg-b2b' ) . '">' . esc_html__( 'Nová doručovací adresa', 'zg-b2b' ) . '</h2>';
+		echo '<button type="button" class="zg-b2b-addr-modal__close" data-zg-addr-close aria-label="' . esc_attr__( 'Zavřít', 'zg-b2b' ) . '">&times;</button>';
+		echo '</div>';
+		echo '<div class="zg-b2b-addr-modal__body">';
+		self::render_form( null, true );
+		echo '</div></div></div>';
+	}
+
 	private static function action_button( $action, $id, $label, $class = '' ) {
 		echo '<form method="post" class="zg-b2b-addr-inline-form">';
 		wp_nonce_field( 'zg_b2b_addr_' . $action . '_' . $id, '_zg_b2b_addr_nonce' );
@@ -192,7 +224,11 @@ class ZG_B2B_Address_Account {
 		echo '</form>';
 	}
 
-	private static function render_form( $address ) {
+	/**
+	 * @param array|null $address Adresa k úpravě (null = nová).
+	 * @param bool       $modal   Vykreslit pro pop-up (bez nadpisu, „Zrušit“ zavírá okno).
+	 */
+	private static function render_form( $address, $modal = false ) {
 		$fields_values = $address ? $address['fields'] : array();
 		// Keep posted values after a validation error.
 		if ( isset( $_POST['zg_b2b_addr_action'] ) && 'save' === $_POST['zg_b2b_addr_action'] ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -209,8 +245,10 @@ class ZG_B2B_Address_Account {
 		}
 		$id = $address ? $address['id'] : '';
 
-		echo '<h2 class="zg-b2b-addr-section-title">' . esc_html( $address ? __( 'Upravit doručovací adresu', 'zg-b2b' ) : __( 'Nová doručovací adresa', 'zg-b2b' ) ) . '</h2>';
-		echo '<form method="post" class="zg-b2b-addr-form">';
+		if ( ! $modal ) {
+			echo '<h2 class="zg-b2b-addr-section-title">' . esc_html( $address ? __( 'Upravit doručovací adresu', 'zg-b2b' ) : __( 'Nová doručovací adresa', 'zg-b2b' ) ) . '</h2>';
+		}
+		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="zg-b2b-addr-form' . ( $modal ? ' zg-b2b-addr-form--modal' : '' ) . '" novalidate>';
 		echo '<div class="woocommerce-address-fields"><div class="woocommerce-address-fields__field-wrapper">';
 
 		woocommerce_form_field( 'zg_b2b_addr_label', array(
@@ -232,11 +270,15 @@ class ZG_B2B_Address_Account {
 		), ( $address && ! empty( $address['default'] ) ) ? 1 : 0 );
 
 		echo '</div></div>';
-		wp_nonce_field( 'zg_b2b_addr_save_' . $id, '_zg_b2b_addr_nonce' );
+		wp_nonce_field( 'zg_b2b_addr_save', '_zg_b2b_addr_nonce' );
 		echo '<input type="hidden" name="zg_b2b_addr_action" value="save">';
 		echo '<input type="hidden" name="zg_b2b_addr_id" value="' . esc_attr( $id ) . '">';
 		echo '<p class="zg-b2b-addr-form__buttons"><button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--primary">' . esc_html__( 'Uložit adresu', 'zg-b2b' ) . '</button> ';
-		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</a></p>';
+		if ( $modal ) {
+			echo '<button type="button" class="zg-b2b-addr-btn" data-zg-addr-close>' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</button></p>';
+		} else {
+			echo '<a class="zg-b2b-addr-btn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</a></p>';
+		}
 		echo '</form>';
 	}
 
@@ -253,7 +295,8 @@ class ZG_B2B_Address_Account {
 		$nonce   = isset( $_POST['_zg_b2b_addr_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_zg_b2b_addr_nonce'] ) ) : '';
 		$user_id = get_current_user_id();
 
-		if ( ! wp_verify_nonce( $nonce, 'zg_b2b_addr_' . $action . '_' . $id ) ) {
+		$nonce_action = ( 'save' === $action ) ? 'zg_b2b_addr_save' : 'zg_b2b_addr_' . $action . '_' . $id;
+		if ( ! wp_verify_nonce( $nonce, $nonce_action ) ) {
 			wc_add_notice( __( 'Platnost odkazu vypršela, zkuste to prosím znovu.', 'zg-b2b' ), 'error' );
 			return;
 		}
@@ -274,6 +317,7 @@ class ZG_B2B_Address_Account {
 			case 'save':
 				$fields = self::validate_posted_fields();
 				if ( false === $fields ) {
+					self::$save_failed = true;
 					return; // Notices added, form re-rendered with posted values.
 				}
 				$result = ZG_B2B_Address_Book::save( $user_id, array(
@@ -284,6 +328,7 @@ class ZG_B2B_Address_Account {
 				) );
 				if ( is_wp_error( $result ) ) {
 					wc_add_notice( $result->get_error_message(), 'error' );
+					self::$save_failed = true;
 					return;
 				}
 				wc_add_notice( __( 'Doručovací adresa byla uložena.', 'zg-b2b' ) );

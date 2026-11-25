@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.4] - 2026-11-25
+
+### Změněno
+- Přidání a úprava doručovací adresy v **pop-up okně** přímo na stránce Adresy (bez přechodu na jinou stránku). Zavření křížkem, tlačítkem Zrušit, klávesou Esc nebo kliknutím mimo okno; na mobilu se okno vysune zespodu. Při chybě validace se okno po odeslání znovu otevře s vyplněnými údaji a chybovou zprávou. Bez JavaScriptu zůstává formulář na samostatné stránce.
+
 ## [1.5.3] - 2026-11-25
 
 ### Změněno

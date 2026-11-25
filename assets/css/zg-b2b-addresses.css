@@ -274,3 +274,113 @@ form.checkout.zg-b2b-addr-active #ship-to-different-address {
 	align-items: center;
 	margin: 16px 0 0;
 }
+
+/* ---------- Pop-up: přidání / úprava doručovací adresy ---------- */
+.zg-b2b-addr-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+.zg-b2b-addr-modal[hidden] {
+	display: none !important;
+}
+html.zg-b2b-addr-modal-open,
+html.zg-b2b-addr-modal-open body {
+	overflow: hidden;
+}
+.zg-b2b-addr-modal__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(19, 35, 47, .5);
+	animation: zgAddrFade .15s ease-out;
+}
+.zg-b2b-addr-modal__dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: 680px;
+	max-height: calc(100vh - 40px);
+	background: #fff;
+	border-radius: 14px;
+	box-shadow: 0 20px 60px rgba(19, 35, 47, .25);
+	animation: zgAddrIn .18s ease-out;
+}
+.zg-b2b-addr-modal__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 20px 24px;
+	border-bottom: 0.8px solid var(--zg-addr-border);
+}
+.zg-b2b-addr.zg-b2b-addr .zg-b2b-addr-modal__title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 800;
+	line-height: 1.3;
+	color: var(--zg-addr-text);
+}
+.zg-b2b-addr.zg-b2b-addr .zg-b2b-addr-modal__close {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 40px !important;
+	height: 40px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	font-size: 26px !important;
+	line-height: 1 !important;
+	color: var(--zg-addr-text) !important;
+	background: #fff !important;
+	border: 0.8px solid var(--zg-addr-input) !important;
+	border-radius: 50% !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+.zg-b2b-addr.zg-b2b-addr .zg-b2b-addr-modal__close:hover {
+	border-color: var(--zg-addr-text) !important;
+}
+.zg-b2b-addr-modal__body {
+	padding: 20px 24px 24px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+/* Formulář v pop-upu bez rámečku karty, který šablona dává formulářům v Můj účet. */
+.zg-b2b-addr.zg-b2b-addr.zg-b2b-addr form.zg-b2b-addr-form--modal {
+	margin: 0 !important;
+	padding: 0 !important;
+	background: none !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	max-width: none !important;
+}
+.zg-b2b-addr-form--modal .zg-b2b-addr-form__buttons {
+	position: sticky;
+	bottom: -24px;
+	margin: 20px -24px -24px;
+	padding: 16px 24px;
+	background: #fff;
+	border-top: 0.8px solid var(--zg-addr-border);
+	border-radius: 0 0 14px 14px;
+}
+.zg-b2b-addr-modal__notices {
+	margin: 0 0 16px;
+}
+@keyframes zgAddrFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zgAddrIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (max-width: 600px) {
+	.zg-b2b-addr-modal {
+		align-items: flex-end;
+		padding: 0;
+	}
+	.zg-b2b-addr-modal__dialog {
+		max-height: 92vh;
+		border-radius: 14px 14px 0 0;
+	}
+}
