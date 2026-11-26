@@ -898,3 +898,36 @@ msgstr "Contact persons are saved when you order (recipient's first name, last n
 
 msgid "Kontaktní osoba byla smazána."
 msgstr "The contact person has been deleted."
+
+msgid "Kontaktní osoby"
+msgstr "Contact persons"
+
+msgid "Smazat tuto kontaktní osobu?"
+msgstr "Delete this contact person?"
+
+msgid "Kontaktní osoby jsou příjemci zásilek (jméno a telefon pro dopravce). V pokladně si je jen vyberete."
+msgstr "Contact persons are the recipients of shipments (name and phone for the carrier). At checkout you simply select one."
+
+msgid "Přidat kontaktní osobu"
+msgstr "Add contact person"
+
+msgid "Zatím nemáte uloženou žádnou kontaktní osobu."
+msgstr "You have no saved contact persons yet."
+
+msgid "Upravit kontaktní osobu"
+msgstr "Edit contact person"
+
+msgid "Uložit"
+msgstr "Save"
+
+msgid "Vyplňte prosím jméno, příjmení a telefon."
+msgstr "Please fill in the first name, last name and phone."
+
+msgid "Kontaktní osoba byla uložena."
+msgstr "The contact person has been saved."
+
+msgid "Kontaktní osobu se nepodařilo uložit."
+msgstr "The contact person could not be saved."
+
+msgid "Spravovat kontaktní osoby"
+msgstr "Manage contact persons"

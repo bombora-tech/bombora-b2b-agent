@@ -451,10 +451,10 @@ html.zg-b2b-addr-modal-open body {
 
 /* Pokladna: výběr firmy nad fakturačními poli. */
 .zg-b2b-addr-picker.zg-b2b-company-picker {
-	margin: 0 0 20px;
-	padding: 0 0 20px;
+	margin: 0;
+	padding: 0;
 	border-top: 0;
-	border-bottom: 0.8px solid var(--zg-addr-border);
+	border-bottom: 0;
 }
 
 /* ---------- Zaškrtávací pole ve stylu webu (nativní, tyrkysový akcent) ---------- */

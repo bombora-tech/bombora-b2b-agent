@@ -21,6 +21,12 @@ class ZG_B2B_Contacts {
 		add_action( 'woocommerce_after_checkout_validation', array( __CLASS__, 'validate' ), 20, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( __CLASS__, 'after_order' ), 20, 3 );
 		add_action( 'template_redirect', array( __CLASS__, 'handle_account_post' ) );
+		add_action( 'init', array( __CLASS__, 'register_endpoints' ), 5 );
+		add_filter( 'woocommerce_get_query_vars', array( __CLASS__, 'query_vars' ) );
+		add_filter( 'woocommerce_account_menu_items', array( __CLASS__, 'menu_items' ), 20 );
+		add_filter( 'woocommerce_endpoint_' . self::ENDPOINT . '_title', array( __CLASS__, 'endpoint_title' ) );
+		add_action( 'woocommerce_account_' . self::ENDPOINT . '_endpoint', array( __CLASS__, 'render_endpoint' ) );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'account_assets' ) );
 	}
 
 	private static function active() {
@@ -179,6 +185,7 @@ class ZG_B2B_Contacts {
 		}
 		echo '<label class="zg-b2b-addr-check zg-b2b-recipient__save"><input type="checkbox" name="zg_b2b_contact_save" value="1" checked> <span>' . esc_html__( 'Uložit do mých kontaktních osob', 'zg-b2b' ) . '</span></label>';
 		echo '</div>';
+		echo '<p class="zg-b2b-addr-picker__manage"><a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Spravovat kontaktní osoby', 'zg-b2b' ) . '</a></p>';
 		echo '</div>';
 	}
 
@@ -282,38 +289,175 @@ class ZG_B2B_Contacts {
 		}
 	}
 
-	/* ---------- Můj účet ---------- */
+	/* ---------- Můj účet → Kontaktní osoby (samostatná položka menu vedle Adres) ---------- */
 
-	public static function render_account_section( $user_id ) {
-		$list = self::get_all( $user_id );
-		echo '<div class="zg-b2b-addr-section-head"><h2 class="zg-b2b-addr-section-title">' . esc_html__( 'Kontaktní osoby pro doručení', 'zg-b2b' ) . '</h2></div>';
+	const ENDPOINT = 'zg-b2b-contacts';
+	const SLUG_CS  = 'kontaktni-osoby';
+	const SLUG_EN  = 'contact-persons';
+
+	public static function register_endpoints() {
+		add_rewrite_endpoint( self::SLUG_CS, EP_ROOT | EP_PAGES );
+		add_rewrite_endpoint( self::SLUG_EN, EP_ROOT | EP_PAGES );
+	}
+
+	public static function query_vars( $vars ) {
+		$lang                   = apply_filters( 'wpml_current_language', null );
+		$vars[ self::ENDPOINT ] = ( $lang && 'cs' !== $lang ) ? self::SLUG_EN : self::SLUG_CS;
+		return $vars;
+	}
+
+	public static function menu_items( $items ) {
+		$out = array();
+		foreach ( $items as $key => $label ) {
+			$out[ $key ] = $label;
+			if ( 'edit-address' === $key ) {
+				$out[ self::ENDPOINT ] = __( 'Kontaktní osoby', 'zg-b2b' );
+			}
+		}
+		if ( ! isset( $out[ self::ENDPOINT ] ) ) {
+			$out[ self::ENDPOINT ] = __( 'Kontaktní osoby', 'zg-b2b' );
+		}
+		return $out;
+	}
+
+	public static function endpoint_title( $title ) {
+		return __( 'Kontaktní osoby', 'zg-b2b' );
+	}
+
+	public static function url() {
+		return wc_get_account_endpoint_url( self::ENDPOINT );
+	}
+
+	private static function is_page() {
+		return function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( self::ENDPOINT );
+	}
+
+	public static function account_assets() {
+		if ( self::is_page() ) {
+			self::enqueue();
+		}
+	}
+
+	private static function enqueue() {
+		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
+		wp_enqueue_script( 'zg-b2b-contacts-account', ZG_B2B_URL . 'assets/js/zg-b2b-contacts-account.js', array( 'jquery' ), ZG_B2B_VERSION, true );
+		wp_localize_script( 'zg-b2b-contacts-account', 'zgB2bContacts', array(
+			'confirmDelete' => __( 'Smazat tuto kontaktní osobu?', 'zg-b2b' ),
+		) );
+	}
+
+	public static function render_endpoint() {
+		$user_id = get_current_user_id();
+		$list    = self::get_all( $user_id );
+		self::enqueue();
+
+		echo '<div class="zg-b2b-addr zg-b2b-contacts">';
+		echo '<p class="zg-b2b-addr-intro">' . esc_html__( 'Kontaktní osoby jsou příjemci zásilek (jméno a telefon pro dopravce). V pokladně si je jen vyberete.', 'zg-b2b' ) . '</p>';
+		echo '<div class="zg-b2b-addr-section-head"><h2 class="zg-b2b-addr-section-title">' . esc_html__( 'Kontaktní osoby pro doručení', 'zg-b2b' ) . '</h2>';
+		if ( count( $list ) < self::MAX ) {
+			echo '<button type="button" class="zg-b2b-addr-btn zg-b2b-addr-btn--primary" data-zg-contact-open="new">+ ' . esc_html__( 'Přidat kontaktní osobu', 'zg-b2b' ) . '</button>';
+		}
+		echo '</div>';
+
 		if ( ! $list ) {
-			echo '<p class="zg-b2b-addr-empty">' . esc_html__( 'Kontaktní osoby se uloží při objednávce (jméno, příjmení a telefon příjemce).', 'zg-b2b' ) . '</p>';
-			return;
+			echo '<p class="zg-b2b-addr-empty">' . esc_html__( 'Zatím nemáte uloženou žádnou kontaktní osobu.', 'zg-b2b' ) . '</p>';
+		} else {
+			echo '<div class="zg-b2b-addr-grid">';
+			foreach ( $list as $id => $c ) {
+				echo '<div class="zg-b2b-addr-card">';
+				echo '<div class="zg-b2b-addr-card__head"><h3 class="zg-b2b-addr-card__label">' . esc_html( self::format( $c ) ) . '</h3>';
+				echo '<button type="button" class="zg-b2b-addr-btn" data-zg-contact-open="' . esc_attr( $id ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</button></div>';
+				echo '<p class="zg-b2b-addr-card__address">' . esc_html( $c['phone'] ) . '</p>';
+				echo '<div class="zg-b2b-addr-card__actions"><form method="post" class="zg-b2b-addr-inline-form zg-b2b-contact-delete">';
+				wp_nonce_field( 'zg_b2b_contact_delete_' . $id, '_zg_b2b_contact_nonce' );
+				echo '<input type="hidden" name="zg_b2b_contact_delete" value="' . esc_attr( $id ) . '">';
+				echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html__( 'Smazat', 'zg-b2b' ) . '</button>';
+				echo '</form></div></div>';
+			}
+			echo '</div>';
 		}
-		echo '<div class="zg-b2b-contacts-list">';
+
+		// Pop-up: přidání / úprava.
+		$data = array();
 		foreach ( $list as $id => $c ) {
-			echo '<div class="zg-b2b-contacts-list__item"><span><strong>' . esc_html( self::format( $c ) ) . '</strong> <span class="zg-b2b-muted">' . esc_html( $c['phone'] ) . '</span></span>';
-			echo '<form method="post" class="zg-b2b-addr-inline-form">';
-			wp_nonce_field( 'zg_b2b_contact_delete_' . $id, '_zg_b2b_contact_nonce' );
-			echo '<input type="hidden" name="zg_b2b_contact_delete" value="' . esc_attr( $id ) . '">';
-			echo '<button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--small zg-b2b-addr-btn--danger">' . esc_html__( 'Smazat', 'zg-b2b' ) . '</button>';
-			echo '</form></div>';
+			$data[ $id ] = array( 'first_name' => $c['first_name'], 'last_name' => $c['last_name'], 'phone' => $c['phone'] );
 		}
+		echo '<div class="zg-b2b-addr-modal" id="zg-b2b-contact-modal" hidden data-contacts="' . esc_attr( wp_json_encode( (object) $data ) ) . '">';
+		echo '<div class="zg-b2b-addr-modal__backdrop" data-zg-modal-close></div>';
+		echo '<div class="zg-b2b-addr-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="zg-b2b-contact-modal-title">';
+		echo '<div class="zg-b2b-addr-modal__head"><h2 class="zg-b2b-addr-modal__title" id="zg-b2b-contact-modal-title" data-title-new="' . esc_attr__( 'Nová kontaktní osoba', 'zg-b2b' ) . '" data-title-edit="' . esc_attr__( 'Upravit kontaktní osobu', 'zg-b2b' ) . '">' . esc_html__( 'Nová kontaktní osoba', 'zg-b2b' ) . '</h2>';
+		echo '<button type="button" class="zg-b2b-addr-modal__close" data-zg-modal-close aria-label="' . esc_attr__( 'Zavřít', 'zg-b2b' ) . '">&times;</button></div>';
+		echo '<div class="zg-b2b-addr-modal__body">';
+		echo '<form method="post" action="' . esc_url( self::url() ) . '" class="zg-b2b-addr-form zg-b2b-addr-form--modal">';
+		echo '<div class="woocommerce-address-fields"><div class="woocommerce-address-fields__field-wrapper">';
+		$fields = array(
+			'first_name' => array( __( 'Jméno', 'zg-b2b' ), 'text', 'given-name', 'form-row-first' ),
+			'last_name'  => array( __( 'Příjmení', 'zg-b2b' ), 'text', 'family-name', 'form-row-last' ),
+			'phone'      => array( __( 'Telefon', 'zg-b2b' ), 'tel', 'tel', 'form-row-wide' ),
+		);
+		foreach ( $fields as $k => $f ) {
+			woocommerce_form_field( 'zg_b2b_contact_' . $k, array(
+				'type'         => $f[1],
+				'label'        => $f[0],
+				'required'     => true,
+				'autocomplete' => $f[2],
+				'class'        => array( $f[3] ),
+			), '' );
+		}
+		echo '</div></div>';
+		wp_nonce_field( 'zg_b2b_contact_save', '_zg_b2b_contact_nonce' );
+		echo '<input type="hidden" name="zg_b2b_contact_action" value="save"><input type="hidden" name="zg_b2b_contact_id" value="">';
+		echo '<p class="zg-b2b-addr-form__buttons"><button type="submit" class="zg-b2b-addr-btn zg-b2b-addr-btn--primary">' . esc_html__( 'Uložit', 'zg-b2b' ) . '</button> ';
+		echo '<button type="button" class="zg-b2b-addr-btn" data-zg-modal-close>' . esc_html__( 'Zrušit', 'zg-b2b' ) . '</button></p>';
+		echo '</form></div></div></div>';
 		echo '</div>';
 	}
 
+	/** Uložení (nová / úprava) a smazání kontaktní osoby. */
 	public static function handle_account_post() {
-		if ( empty( $_POST['zg_b2b_contact_delete'] ) || ! is_user_logged_in() ) {
+		if ( ! is_user_logged_in() ) {
 			return;
 		}
-		$id = sanitize_key( wp_unslash( $_POST['zg_b2b_contact_delete'] ) );
-		if ( ! isset( $_POST['_zg_b2b_contact_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_zg_b2b_contact_nonce'] ) ), 'zg_b2b_contact_delete_' . $id ) ) {
+		$user_id = get_current_user_id();
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput
+		if ( ! empty( $_POST['zg_b2b_contact_delete'] ) ) {
+			$id = sanitize_key( wp_unslash( $_POST['zg_b2b_contact_delete'] ) );
+			if ( ! isset( $_POST['_zg_b2b_contact_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_zg_b2b_contact_nonce'] ) ), 'zg_b2b_contact_delete_' . $id ) ) {
+				return;
+			}
+			self::delete( $user_id, $id );
+			wc_add_notice( __( 'Kontaktní osoba byla smazána.', 'zg-b2b' ) );
+			wp_safe_redirect( self::url() );
+			exit;
+		}
+		if ( empty( $_POST['zg_b2b_contact_action'] ) || 'save' !== $_POST['zg_b2b_contact_action'] ) {
 			return;
 		}
-		self::delete( get_current_user_id(), $id );
-		wc_add_notice( __( 'Kontaktní osoba byla smazána.', 'zg-b2b' ) );
-		wp_safe_redirect( remove_query_arg( array( 'zg_addr', 'id' ) ) );
+		if ( ! isset( $_POST['_zg_b2b_contact_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_zg_b2b_contact_nonce'] ) ), 'zg_b2b_contact_save' ) ) {
+			return;
+		}
+		$c  = self::sanitize( array(
+			'first_name' => isset( $_POST['zg_b2b_contact_first_name'] ) ? wp_unslash( $_POST['zg_b2b_contact_first_name'] ) : '',
+			'last_name'  => isset( $_POST['zg_b2b_contact_last_name'] ) ? wp_unslash( $_POST['zg_b2b_contact_last_name'] ) : '',
+			'phone'      => isset( $_POST['zg_b2b_contact_phone'] ) ? wp_unslash( $_POST['zg_b2b_contact_phone'] ) : '',
+		) );
+		$id = isset( $_POST['zg_b2b_contact_id'] ) ? sanitize_key( wp_unslash( $_POST['zg_b2b_contact_id'] ) ) : '';
+		// phpcs:enable
+		if ( '' === $c['first_name'] || '' === $c['last_name'] || '' === $c['phone'] ) {
+			wc_add_notice( __( 'Vyplňte prosím jméno, příjmení a telefon.', 'zg-b2b' ), 'error' );
+		} else {
+			$list = self::get_all( $user_id );
+			if ( $id && isset( $list[ $id ] ) ) {
+				$list[ $id ] = $c + array( 'id' => $id );
+				update_user_meta( $user_id, self::META, $list );
+				wc_add_notice( __( 'Kontaktní osoba byla uložena.', 'zg-b2b' ) );
+			} elseif ( self::add( $user_id, $c ) ) {
+				wc_add_notice( __( 'Kontaktní osoba byla uložena.', 'zg-b2b' ) );
+			} else {
+				wc_add_notice( __( 'Kontaktní osobu se nepodařilo uložit.', 'zg-b2b' ), 'error' );
+			}
+		}
+		wp_safe_redirect( self::url() );
 		exit;
 	}
 }

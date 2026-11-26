@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.11.0] - 2026-11-26
+
+### Přidáno
+- Můj účet → nová položka menu **„Kontaktní osoby“** (vedle Adres; CZ `/muj-ucet/kontaktni-osoby/`, EN `/en/my-account/contact-persons/`): přehled kontaktních osob, přidání a úprava v pop-upu, mazání. V pokladně odkaz „Spravovat kontaktní osoby“.
+
+### Změněno
+- Sekce kontaktních osob přesunuta ze stránky Adresy do vlastní položky menu.
+
+### Opraveno
+- Pokladna: zbytečná mezera a dvojitá čára mezi fakturačními údaji a doručovací adresou.
+
 ## [1.10.1] - 2026-11-26
 
 ### Opraveno
