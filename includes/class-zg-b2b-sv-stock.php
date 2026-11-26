@@ -173,6 +173,16 @@ class ZG_B2B_SV_Stock {
 		return $out;
 	}
 
+	/** Platba na dobírku (WooCommerce „cod“ nebo jiná metoda s „dobír“ v názvu). */
+	public static function is_cod( WC_Order $order ) {
+		return 'cod' === $order->get_payment_method() || false !== mb_stripos( (string) $order->get_payment_method_title(), 'dobír' );
+	}
+
+	/** Částka dobírky = celková cena této objednávky (u lihovin jen lihoviny). */
+	public static function cod_amount( WC_Order $order ) {
+		return self::is_cod( $order ) && ! $order->get_date_paid() ? round( (float) $order->get_total(), 2 ) : 0.0;
+	}
+
 	private static function no_emails( $on ) {
 		$ids = array( 'new_order', 'customer_processing_order', 'customer_on_hold_order', 'customer_completed_order', 'cancelled_order', 'customer_cancelled_order' );
 		foreach ( $ids as $id ) {
@@ -780,7 +790,7 @@ class ZG_B2B_SV_Stock {
 			'psc_kam'               => preg_replace( '/\s+/', '', $has_ship ? $order->get_shipping_postcode() : $order->get_billing_postcode() ),
 			'email'                 => $order->get_billing_email(),
 			'poznamka_kam'          => mb_substr( 'Objednávka ' . $order->get_order_number() . ( $order->get_customer_note() ? ' – ' . $order->get_customer_note() : '' ), 0, 250 ),
-			'dobirka'               => 0,
+			'dobirka'               => self::cod_amount( $order ), // jen částka za lihoviny
 			'typ_prepravy'          => (int) zg_b2b_opt( 'sv_msg_type' ),
 			'hmotnost'              => (int) ceil( $kg ),
 			'baliky'                => $baliky,
@@ -861,6 +871,7 @@ class ZG_B2B_SV_Stock {
 		$html = '<p>Prosíme o vyskladnění a předání kurýrovi Messenger.</p>'
 			. '<p><strong>Objednávka:</strong> ' . esc_html( $order->get_order_number() ) . '<br><strong>Messenger:</strong> ' . esc_html( isset( $msg['id'] ) ? $msg['id'] : '—' ) . ( ! empty( $msg['tracking'] ) ? ' / ' . esc_html( $msg['tracking'] ) : '' ) . '</p>'
 			. '<table cellpadding="6" style="border-collapse:collapse;width:100%" border="1"><tr><th>Kód</th><th>Produkt</th><th>Ks</th></tr>' . $rows . '</table>'
+			. '<p><strong>Platba:</strong> ' . esc_html( $order->get_payment_method_title() ) . ( self::cod_amount( $order ) ? ' – <strong>dobírka ' . wp_kses_post( wc_price( self::cod_amount( $order ), array( 'currency' => $order->get_currency() ) ) ) . '</strong> (vybírá kurýr; fakturujte se způsobem úhrady dobírka)' : '' ) . '</p>'
 			. '<p><strong>Doručení:</strong><br>' . wp_kses_post( $addr ) . '<br>' . esc_html( $order->get_billing_phone() ) . '</p>'
 			. '<p><strong>Fakturujte zákazníkovi:</strong><br>' . wp_kses_post( $order->get_formatted_billing_address() ) . '<br>' . esc_html( $order->get_billing_email() ) . '</p>'
 			. '<p>Fakturu pro zákazníka prosíme poslat na ' . esc_html( zg_b2b_contact_email() ) . '.</p>';
@@ -938,6 +949,9 @@ class ZG_B2B_SV_Stock {
 		}
 		echo '<p>' . str_replace( '<a ', '<a onclick="return confirm(\'Opravdu vrátit lihoviny – fakturovat bude Bombora group?\')" ', self::link( $order, 'merge', $parent ? 'Vrátit do původní objednávky' : 'Zrušit označení S&V' ) ) . '</p>';
 		echo '<p class="description">' . ( $parent ? 'Lihoviny se vrátí do #' . esc_html( $parent->get_order_number() ) . ' (fakturuje Bombora), tato objednávka půjde do koše. ' : 'Objednávku pak fakturuje Bombora přes Eurofakturu. ' ) . 'Vystavenou fakturu pro S&amp;V je pak potřeba stornovat ručně.</p>';
+
+		echo '<p><strong>Platba:</strong> ' . esc_html( $order->get_payment_method_title() ? $order->get_payment_method_title() : '—' )
+			. ( self::cod_amount( $order ) ? '<br><strong>Dobírka (jen lihoviny): ' . wp_kses_post( $order->get_formatted_order_total() ) . '</strong>' : '' ) . '</p>';
 
 		// Faktura Bombora → S&V.
 		$ef = $order->get_meta( '_zg_sv_ef_invoice' );

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.21.3] - 2026-11-26
+
+### Opraveno
+- S&V STOCK – dobírka: Messenger dostane jako dobírku celkovou částku objednávky lihovin (dříve vždy 0). E-mail pro S&V uvádí způsob platby a částku dobírky, box „S&V STOCK – lihoviny“ ukazuje platbu a dobírku. (Název platby a částka se do objednávky lihovin propisovaly už dřív; poplatky, např. za dobírku, zůstávají v původní objednávce.)
+
 ## [1.21.2] - 2026-11-26
 
 ### Změněno
