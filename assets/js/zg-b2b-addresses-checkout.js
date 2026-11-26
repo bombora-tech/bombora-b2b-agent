@@ -88,6 +88,19 @@
 		$slot.append( $shipFields );
 	}
 
+	/* Hlavička editačního panelu: jasně říká, co se upravuje, že se ukládá automaticky a jak skončit. */
+	var $head = $( '<div class="zg-b2b-edit-head"><div class="zg-b2b-edit-head__text"><strong class="zg-b2b-edit-head__title"></strong><span class="zg-b2b-edit-head__hint"></span></div><button type="button" class="zg-b2b-edit-head__close" aria-label="">&times;</button></div>' );
+	$head.find( '.zg-b2b-edit-head__close' ).attr( 'aria-label', cfg.done || 'OK' );
+	$shipFields.prepend( $head );
+	$head.on( 'click', '.zg-b2b-edit-head__close', function () {
+		fieldsOpen = false;
+		updateFields();
+	} );
+
+	function choiceLabel( choice ) {
+		return $.trim( $picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' ).find( 'strong' ).first().text() );
+	}
+
 	function updateFields() {
 		var choice = currentChoice();
 		var saved = choice !== 'billing' && choice !== 'new';
@@ -95,6 +108,19 @@
 		$( 'div.shipping_address' ).toggle( show );
 		$edit.prop( 'hidden', ! saved || fieldsOpen );
 		$done.prop( 'hidden', ! ( saved && fieldsOpen ) );
+
+		var editing = saved && fieldsOpen;
+		$( '.zg-b2b-shipping-inline' ).toggleClass( 'is-editing', editing ).toggleClass( 'is-new', choice === 'new' );
+		$picker.find( '.zg-b2b-addr-option' ).removeClass( 'is-editing' );
+		if ( editing ) {
+			$picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' ).addClass( 'is-editing' );
+		}
+		$head.find( '.zg-b2b-edit-head__title' ).text( editing ? ( cfg.editTitle || '' ).replace( '%s', choiceLabel( choice ) ) : ( cfg.newTitle || '' ) );
+		$head.find( '.zg-b2b-edit-head__hint' ).text( editing ? ( cfg.editHint || '' ) : ( cfg.newHint || '' ) );
+		$head.find( '.zg-b2b-edit-head__close' ).prop( 'hidden', ! editing );
+		if ( editing && ! $done.find( '.zg-b2b-save-state' ).text() ) {
+			$done.find( '.zg-b2b-save-state' ).text( cfg.autoSave || '' );
+		}
 	}
 
 	/* Změny u uložené adresy se hned uloží do adresáře (není nutné „Hotovo“). */

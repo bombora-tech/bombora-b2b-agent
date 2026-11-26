@@ -931,3 +931,19 @@ msgstr "The contact person could not be saved."
 
 msgid "Spravovat kontaktní osoby"
 msgstr "Manage contact persons"
+
+msgid "Hotovo – použít adresu"
+msgstr "Done – use this address"
+
+#, php-format
+msgid "Upravujete adresu: %s"
+msgstr "Editing address: %s"
+
+msgid "Změny se ukládají automaticky do této uložené adresy."
+msgstr "Changes are saved automatically to this saved address."
+
+msgid "Vyplňte adresu, kam máme zboží doručit."
+msgstr "Enter the address where we should deliver the goods."
+
+msgid "Změny se uloží automaticky."
+msgstr "Changes are saved automatically."

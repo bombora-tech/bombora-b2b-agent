@@ -871,3 +871,77 @@ form.checkout .zg-b2b-addr-edit[hidden] {
 .zg-b2b-shipping-inline .form-row {
 	box-sizing: border-box;
 }
+
+/* Editační panel doručovací adresy: rámeček napojený na zvolenou adresu, hlavička + lišta Hotovo. */
+.zg-b2b-shipping-inline.is-editing,
+.zg-b2b-shipping-inline.is-new {
+	margin: 12px 0 0;
+	padding: 0 18px 4px;
+	background: #fff;
+	border: 1.5px solid var(--zg-addr-teal);
+	border-radius: 14px;
+}
+.zg-b2b-edit-head {
+	order: -1000;
+	flex: 0 0 calc(100% + 36px);
+	width: calc(100% + 36px);
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin: 0 -18px 16px;
+	padding: 14px 18px;
+	background: var(--zg-addr-soft);
+	border-bottom: 0.8px solid var(--zg-addr-border);
+	border-radius: 12px 12px 0 0;
+	box-sizing: border-box;
+}
+.zg-b2b-shipping-inline:not(.is-editing):not(.is-new) .zg-b2b-edit-head {
+	display: none;
+}
+.zg-b2b-edit-head__text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+.zg-b2b-edit-head__title {
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--zg-addr-text);
+	overflow-wrap: anywhere;
+}
+.zg-b2b-edit-head__hint {
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+}
+form.checkout .zg-b2b-edit-head__close {
+	flex: 0 0 auto;
+	width: 32px !important;
+	height: 32px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	font-size: 22px !important;
+	line-height: 1 !important;
+	color: var(--zg-addr-text) !important;
+	background: #fff !important;
+	border: 0.8px solid var(--zg-addr-input) !important;
+	border-radius: 50% !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+form.checkout .zg-b2b-edit-head__close[hidden] {
+	display: none !important;
+}
+.zg-b2b-shipping-inline .zg-b2b-done-row {
+	order: 9999;
+	flex: 0 0 calc(100% + 36px);
+	width: calc(100% + 36px);
+	margin: 4px -18px -4px;
+	border-radius: 0 0 12px 12px;
+	box-sizing: border-box;
+}
+/* Zvolená adresa, která se právě upravuje. */
+.zg-b2b-choices.is-enhanced > .zg-b2b-addr-option.is-editing {
+	border-left-color: var(--zg-addr-teal);
+}

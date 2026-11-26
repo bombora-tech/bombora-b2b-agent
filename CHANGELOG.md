@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.11.3] - 2026-11-26
+
+### Změněno
+- Pokladna – úprava doručovací adresy je zřetelný editační panel: tyrkysový rámeček, hlavička „Upravujete adresu: [pobočka]“ s informací, že se změny ukládají automaticky, křížek pro zavření a dole tlačítko „Hotovo – použít adresu“ se stavem ukládání. Nová adresa má hlavičku „Nová doručovací adresa“.
+
 ## [1.11.2] - 2026-11-26
 
 ### Změněno
