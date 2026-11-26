@@ -175,6 +175,10 @@ class ZG_B2B_EF_Documents {
 		if ( $order->has_status( array( 'cancelled', 'refunded', 'failed' ) ) ) {
 			return;
 		}
+		// Proforma jen u platby na fakturu (zastaví i dřív naplánované opakované pokusy u jiných plateb).
+		if ( ZG_B2B_Gateway_Invoice::ID !== $order->get_payment_method() ) {
+			return;
+		}
 
 		$result = ZG_B2B_EF_Client::call( self::quote_method( 'Create' ), self::build_params( $order ) );
 		$number = is_wp_error( $result ) ? null : ZG_B2B_EF_Client::find( $result, array( 'number', 'documentNumber' ) );

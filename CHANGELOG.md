@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.16.1] - 2026-11-26
+
+### Opraveno
+- Proforma se vytváří jen u objednávek s platbou na fakturu. Dřív šlo tlačítkem „Vytvořit proformu“ spustit vytváření i u jiné platby (např. převodem) a při chybě se opakovaně plánovaly další pokusy; ty se teď u jiných plateb ukončí bez akce.
+
 ## [1.16.0] - 2026-11-26
 
 ### Změněno
