@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.20.1] - 2026-11-26
+
+### Opraveno
+- Nastavení: lišta „Uložit nastavení“ už není plovoucí (sticky) – způsobovala zaseknutí vykreslování stránky v Chrome.
+
 ## [1.20.0] - 2026-11-26
 
 ### Změněno

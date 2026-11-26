@@ -51,7 +51,7 @@
 .zg-adm-badge.is-warn { color: #8a5a00; background: #fff6e2; }
 
 /* Lišta uložení */
-.zg-adm-savebar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 14px; margin: 0 0 20px; padding: 12px 20px; background: rgba(255, 255, 255, .96); border: 1px solid var(--a-border); border-radius: var(--a-radius); box-shadow: 0 -4px 16px rgba(31, 27, 26, .06); }
+.zg-adm-savebar { display: flex; align-items: center; gap: 14px; margin: 0 0 20px; padding: 12px 20px; background: #fff; border: 1px solid var(--a-border); border-radius: var(--a-radius); }
 .zg-adm-savebar span { color: var(--a-muted); }
 .zg-adm.is-tools .zg-adm-savebar, .zg-adm.is-overview .zg-adm-savebar { display: none; }
 
