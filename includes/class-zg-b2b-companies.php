@@ -567,6 +567,10 @@ class ZG_B2B_Companies {
 			echo '<span class="zg-b2b-addr-option__detail">' . esc_html( implode( ' · ', $detail ) ) . '</span>';
 			echo '</span></label>';
 		}
+		if ( $choice ) {
+			// Ostatní firmy jsou skryté, dokud zákazník výslovně nezvolí „Vybrat jinou firmu“ (prevence omylu).
+			echo '<p class="zg-b2b-company-switch-row"><button type="button" class="zg-b2b-company-switch" hidden aria-expanded="false" data-open="' . esc_attr__( 'Vybrat jinou firmu', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Ponechat vybranou firmu', 'zg-b2b' ) . '">' . esc_html__( 'Vybrat jinou firmu', 'zg-b2b' ) . '</button></p>';
+		}
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
 		self::contact_line( 'billing' );
 		echo '</div>';

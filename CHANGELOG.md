@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.2] - 2026-11-26
+
+### Změněno
+- Pokladna: vidět je jen zvolená firma; ostatní firmy účtu se zobrazí až po kliknutí na „Vybrat jinou firmu“ a po výběru se seznam zase sbalí (prevence fakturace na špatnou firmu).
+
 ## [1.8.1] - 2026-11-26
 
 ### Opraveno

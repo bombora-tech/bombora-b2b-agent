@@ -47,10 +47,24 @@
 		$( document.body ).trigger( 'update_checkout' );
 	}
 
+	/* Vidět je jen zvolená firma; seznam ostatních až po „Vybrat jinou firmu“. */
+	var $switch = $picker.find( '.zg-b2b-company-switch' );
+	function setChoosing( on ) {
+		$picker.toggleClass( 'is-choosing', on );
+		$switch.attr( 'aria-expanded', on ? 'true' : 'false' ).text( on ? $switch.data( 'close' ) : $switch.data( 'open' ) );
+	}
+	if ( $switch.length ) {
+		$picker.addClass( 'has-choice' );
+		$switch.prop( 'hidden', false ).on( 'click', function () {
+			setChoosing( ! $picker.hasClass( 'is-choosing' ) );
+		} );
+	}
+
 	$picker.on( 'change', 'input[name="zg_b2b_company"]', function () {
 		$picker.find( '.zg-b2b-addr-option' ).removeClass( 'is-selected' );
 		$( this ).closest( '.zg-b2b-addr-option' ).addClass( 'is-selected' );
 		fill( this.value );
+		setChoosing( false );
 	} );
 
 	$toggle.on( 'click', function () {

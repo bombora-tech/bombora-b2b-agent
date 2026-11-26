@@ -793,3 +793,9 @@ msgstr "At least one approved company must remain in the account."
 msgid "Změnit údaje"
 msgstr "Change details"
 
+
+msgid "Vybrat jinou firmu"
+msgstr "Choose another company"
+
+msgid "Ponechat vybranou firmu"
+msgstr "Keep selected company"

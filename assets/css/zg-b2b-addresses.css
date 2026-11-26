@@ -625,3 +625,32 @@ form.checkout .zg-b2b-sum__toggle:hover {
 .zg-b2b-contact.is-open .zg-b2b-contact__body {
 	visibility: hidden;
 }
+
+/* Pokladna: jen zvolená firma, ostatní po „Vybrat jinou firmu“. */
+.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option:not(.is-selected) {
+	display: none;
+}
+.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option.is-selected input[type="radio"] {
+	display: none;
+}
+.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option.is-selected {
+	cursor: default;
+}
+.zg-b2b-company-switch-row {
+	margin: 8px 0 0;
+}
+form.checkout .zg-b2b-company-switch {
+	padding: 0 !important;
+	margin: 0 !important;
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	color: var(--zg-addr-teal) !important;
+	background: none !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	text-decoration: underline;
+	cursor: pointer;
+}
+form.checkout .zg-b2b-company-switch[hidden] {
+	display: none !important;
+}
