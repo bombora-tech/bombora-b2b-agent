@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.16.0] - 2026-11-26
+
+### Změněno
+- **Doklady z Eurofaktura.cz jsou samostatný zapínatelný modul**: Bombora → B2B Agent → „4. Modul: Doklady z Eurofaktura.cz v Můj účet“ (výchozí stav **vypnuto**). Vypnutý modul nevolá Eurofakturu, nenačítá doklady, ruší své naplánované úlohy a zákazníci vidí doklady jako před verzí 1.15.0 (proforma / faktura z platby na fakturu). Uložené seznamy dokladů zůstávají pro opětovné zapnutí.
+- Stav modulu v nastavení: zapnuto / vypnuto / plugin Eurofaktura.cz není aktivní nebo připojený / pozastaveno po chybách.
+
+### Přidáno
+- Nouzové vypnutí bez administrace: `define( 'ZG_B2B_EF_DOCS_DISABLE', true );` ve `wp-config.php`.
+- Pojistka: po 5 chybách Eurofaktury za sebou (bez odpovědi / HTTP 5xx / výjimka) se volání na 30 min pozastaví, zapíše se do logu `zg-b2b-eurofaktura`.
+- Výjimky z pluginu Eurofaktura.cz se zachytávají – chyba v něm neshodí Můj účet ani administraci objednávky.
+
 ## [1.15.0] - 2026-11-26
 
 ### Přidáno

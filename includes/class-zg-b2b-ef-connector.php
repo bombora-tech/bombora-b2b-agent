@@ -14,6 +14,10 @@
  *
  * kind: invoice (faktura) | credit (opravný daňový doklad) | proforma
  * Výdejky, objednávky zákazníka apod. se zákazníkovi nezobrazují.
+ *
+ * Zapínatelný modul: Bombora → B2B Agent → „4. Modul: Doklady z Eurofaktura.cz“.
+ * Nouzové vypnutí: define( 'ZG_B2B_EF_DOCS_DISABLE', true ); ve wp-config.php.
+ * Pojistka: po 5 chybách Eurofaktury za sebou se volání na 30 min pozastaví.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -24,8 +28,23 @@ class ZG_B2B_EF_Connector {
 	const REFRESH_HOOK = 'zg_b2b_ef_docs_refresh';
 	const META         = '_zg_ef_docs';
 	const META_CHECKED = '_zg_ef_docs_checked';
+	const FAILS        = 'zg_b2b_ef_docs_fails';
+	const PAUSED       = 'zg_b2b_ef_docs_paused';
+	const MAX_FAILS    = 5;
+
+	/** Je modul zapnutý (nastavení a není nouzově vypnutý ve wp-config)? */
+	public static function enabled() {
+		if ( defined( 'ZG_B2B_EF_DOCS_DISABLE' ) && ZG_B2B_EF_DOCS_DISABLE ) {
+			return false;
+		}
+		return 'yes' === zg_b2b_opt( 'ef_docs_module' );
+	}
 
 	public static function init() {
+		if ( ! self::enabled() ) {
+			add_action( 'init', array( __CLASS__, 'unschedule' ), 20 );
+			return;
+		}
 		add_action( 'init', array( __CLASS__, 'schedule_sync' ), 20 );
 		add_action( self::SYNC_HOOK, array( __CLASS__, 'sync' ) );
 		add_action( self::REFRESH_HOOK, array( __CLASS__, 'refresh_by_id' ) );
@@ -33,9 +52,19 @@ class ZG_B2B_EF_Connector {
 		add_action( 'woocommerce_order_status_changed', array( __CLASS__, 'queue_refresh' ), 30 );
 	}
 
-	/** Je plugin Eurofaktura.cz aktivní a připojený? */
+	/** Vypnutý modul: zrušit naplánované úlohy (jednou). */
+	public static function unschedule() {
+		if ( function_exists( 'as_unschedule_all_actions' ) && get_option( 'zg_b2b_ef_docs_scheduled' ) ) {
+			as_unschedule_all_actions( self::SYNC_HOOK, array(), 'zg-b2b' );
+			as_unschedule_all_actions( self::REFRESH_HOOK, null, 'zg-b2b' );
+			delete_option( 'zg_b2b_ef_docs_scheduled' );
+		}
+	}
+
+	/** Je plugin Eurofaktura.cz aktivní a připojený (a modul zapnutý)? */
 	public static function available() {
-		return class_exists( 'Eurofaktura_http_client' )
+		return self::enabled()
+			&& class_exists( 'Eurofaktura_http_client' )
 			&& function_exists( 'eurofaktura_map_order_for_request' )
 			&& (bool) get_option( 'eurofaktura_connected' );
 	}
@@ -45,15 +74,57 @@ class ZG_B2B_EF_Connector {
 	 * ------------------------------------------------------------------- */
 
 	private static function request( $action, $contents, $timeout ) {
-		$client = Eurofaktura_http_client::instance();
-		if ( empty( $client->client ) ) {
-			return new WP_Error( 'zg_ef_conn', 'Plugin Eurofaktura.cz nemá aktivní spojení (webhook / API klíč).' );
+		if ( get_transient( self::PAUSED ) ) {
+			return new WP_Error( 'zg_ef_paused', 'Modul je po opakovaných chybách Eurofaktury dočasně pozastaven.' );
 		}
-		$response = $client->post_request( $action, $contents, $timeout );
-		if ( empty( $response ) ) {
+		try {
+			$client = Eurofaktura_http_client::instance();
+			if ( empty( $client->client ) ) {
+				return new WP_Error( 'zg_ef_conn', 'Plugin Eurofaktura.cz nemá aktivní spojení (webhook / API klíč).' );
+			}
+			$response = $client->post_request( $action, $contents, $timeout );
+		} catch ( \Throwable $e ) { // chyba v pluginu Eurofaktura nesmí shodit web
+			$response = null;
+			ZG_B2B_EF_Client::log( $action . ' – výjimka: ' . $e->getMessage(), 'error' );
+		}
+		if ( empty( $response ) || (int) $response->getStatusCode() >= 500 ) {
+			self::failed( $action );
 			return new WP_Error( 'zg_ef_conn', 'Eurofaktura neodpověděla (' . $action . ').' );
 		}
+		delete_option( self::FAILS );
 		return $response;
+	}
+
+	/** Počítá chyby za sebou; po MAX_FAILS pozastaví volání na 30 min. */
+	private static function failed( $action ) {
+		$n = (int) get_option( self::FAILS ) + 1;
+		update_option( self::FAILS, $n, false );
+		if ( $n >= self::MAX_FAILS ) {
+			set_transient( self::PAUSED, time(), 30 * MINUTE_IN_SECONDS );
+			delete_option( self::FAILS );
+			ZG_B2B_EF_Client::log( 'Doklady Eurofaktura.cz: ' . self::MAX_FAILS . ' chyb za sebou (poslední ' . $action . ') – volání pozastavena na 30 min.', 'error' );
+		}
+	}
+
+	/** Stav modulu pro stránku nastavení. */
+	public static function status_html() {
+		if ( defined( 'ZG_B2B_EF_DOCS_DISABLE' ) && ZG_B2B_EF_DOCS_DISABLE ) {
+			return '<span style="color:#b32d2e">● Nouzově vypnuto ve wp-config.php (ZG_B2B_EF_DOCS_DISABLE).</span>';
+		}
+		if ( ! self::enabled() ) {
+			return '<span style="color:#787c82">● Modul je vypnutý.</span>';
+		}
+		if ( ! class_exists( 'Eurofaktura_http_client' ) ) {
+			return '<span style="color:#b32d2e">● Plugin Eurofaktura.cz není aktivní – modul nic nedělá.</span>';
+		}
+		if ( ! get_option( 'eurofaktura_connected' ) ) {
+			return '<span style="color:#b32d2e">● Plugin Eurofaktura.cz není připojený (WooCommerce → Nastavení → Eurofaktura).</span>';
+		}
+		$paused = (int) get_transient( self::PAUSED );
+		if ( $paused ) {
+			return '<span style="color:#dba617">● Pozastaveno po opakovaných chybách do ' . esc_html( wp_date( 'H:i', $paused + 30 * MINUTE_IN_SECONDS ) ) . ' (viz WooCommerce → Stav → Logy, zdroj zg-b2b-eurofaktura).</span>';
+		}
+		return '<span style="color:#00a32a">● Zapnuto, plugin Eurofaktura.cz je připojený.</span>';
 	}
 
 	/**
@@ -70,7 +141,11 @@ class ZG_B2B_EF_Connector {
 			return $response;
 		}
 		$code = (int) $response->getStatusCode();
-		$body = json_decode( (string) $response->getBody(), true );
+		try {
+			$body = json_decode( (string) $response->getBody(), true );
+		} catch ( \Throwable $e ) {
+			$body = null;
+		}
 		if ( 200 !== $code || ! is_array( $body ) || ! isset( $body['data']['metaData'] ) || ! is_array( $body['data']['metaData'] ) ) {
 			$msg = is_array( $body ) && ! empty( $body['message'] ) ? (string) $body['message'] : 'HTTP ' . $code;
 			return new WP_Error( 'zg_ef_refresh', $msg );
@@ -152,6 +227,9 @@ class ZG_B2B_EF_Connector {
 	 * @param int $max_age  Pokud jsou starší (s), načtou se znovu (0 = jen uložené).
 	 */
 	public static function docs( WC_Order $order, $max_age = 0 ) {
+		if ( ! self::enabled() ) {
+			return array(); // vypnutý modul = jako by doklady z Eurofaktura.cz neexistovaly
+		}
 		if ( $max_age && self::available() ) {
 			$checked = (int) $order->get_meta( self::META_CHECKED );
 			if ( time() - $checked > $max_age ) {
@@ -213,7 +291,11 @@ class ZG_B2B_EF_Connector {
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
-		$body = (string) $response->getBody();
+		try {
+			$body = (string) $response->getBody();
+		} catch ( \Throwable $e ) {
+			$body = '';
+		}
 		if ( 200 !== (int) $response->getStatusCode() || 0 !== strpos( $body, '%PDF' ) ) {
 			ZG_B2B_EF_Client::log( 'document.pdf ' . $doc_id . ' – HTTP ' . $response->getStatusCode(), 'error' );
 			return new WP_Error( 'zg_ef_pdf', 'PDF se nepodařilo stáhnout.' );
@@ -276,6 +358,9 @@ class ZG_B2B_EF_Connector {
 		if ( ! as_has_scheduled_action( self::SYNC_HOOK, array(), 'zg-b2b' ) ) {
 			as_schedule_recurring_action( time() + 300, 30 * MINUTE_IN_SECONDS, self::SYNC_HOOK, array(), 'zg-b2b' );
 		}
+		if ( ! get_option( 'zg_b2b_ef_docs_scheduled' ) ) {
+			update_option( 'zg_b2b_ef_docs_scheduled', 1, false );
+		}
 	}
 
 	/**
@@ -304,7 +389,7 @@ class ZG_B2B_EF_Connector {
 				continue;
 			}
 			self::refresh( $order );
-			if ( ++$done >= 40 ) { // max 40 volání na jeden běh
+			if ( get_transient( self::PAUSED ) || ++$done >= 40 ) { // max 40 volání na jeden běh
 				break;
 			}
 		}

@@ -97,6 +97,8 @@ class ZG_B2B_Settings {
 		$out['ef_field_dic']      = isset( $in['ef_field_dic'] ) ? preg_replace( '/[^A-Za-z]/', '', $in['ef_field_dic'] ) : '';
 		$out['ef_field_ico']      = isset( $in['ef_field_ico'] ) ? preg_replace( '/[^A-Za-z]/', '', $in['ef_field_ico'] ) : '';
 		$out['ef_auto_paid']      = empty( $in['ef_auto_paid'] ) ? 'no' : 'yes';
+		// Při nouzovém vypnutí ve wp-config je přepínač neaktivní → ponechat uloženou hodnotu.
+		$out['ef_docs_module']    = defined( 'ZG_B2B_EF_DOCS_DISABLE' ) && ZG_B2B_EF_DOCS_DISABLE ? ( isset( $old['ef_docs_module'] ) ? $old['ef_docs_module'] : 'no' ) : ( empty( $in['ef_docs_module'] ) ? 'no' : 'yes' );
 		$out['ef_invoice_meta']   = isset( $in['ef_invoice_meta'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $in['ef_invoice_meta'] ) : '';
 		$out['ef_invoice_date_meta'] = isset( $in['ef_invoice_date_meta'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $in['ef_invoice_date_meta'] ) : '';
 
@@ -333,6 +335,17 @@ class ZG_B2B_Settings {
 						<p class="description">Faktury se dohledávají automaticky každou hodinu (u objednávek do 60 dnů), nebo ručně tlačítkem v detailu objednávky.</p></td></tr>
 					<tr><th scope="row">Faktury ze stávajícího napojení</th><td>meta klíč čísla faktury <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_meta]" value="<?php echo esc_attr( $s['ef_invoice_meta'] ); ?>"> datum <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_date_meta]" value="<?php echo esc_attr( $s['ef_invoice_date_meta'] ); ?>">
 						<p class="description">Volitelné: pokud vaše současné API napojení ukládá číslo faktury do meta objednávky, zadejte klíč – faktura půjde stáhnout v Můj účet u všech objednávek.</p></td></tr>
+				</table>
+
+				<h2 id="zg-ef-docs">4. Modul: Doklady z Eurofaktura.cz v Můj účet</h2>
+				<p>Faktury a opravné daňové doklady vystavené přes plugin <strong>Eurofaktura.cz</strong> (webhooky) zobrazí zákazníkům v Můj účet → Objednávky. PDF se stahuje přes chráněný odkaz webu, veřejný odkaz Eurofaktury zákazník nevidí.</p>
+				<table class="form-table" role="presentation">
+					<tr><th scope="row">Modul</th><td>
+						<label><input type="checkbox" name="zg_b2b_settings[ef_docs_module]" value="1" <?php checked( 'yes', $s['ef_docs_module'] ); ?> <?php disabled( defined( 'ZG_B2B_EF_DOCS_DISABLE' ) && ZG_B2B_EF_DOCS_DISABLE ); ?>> Zapnout modul</label>
+						<p class="description">Vypnutím se modul úplně odpojí: žádná volání Eurofaktury, zákazníci vidí doklady jako dřív (proforma / faktura z platby na fakturu). Uložené seznamy dokladů zůstanou a po zapnutí se znovu použijí.<br>
+						Nouzové vypnutí bez administrace: do <code>wp-config.php</code> přidejte <code>define( 'ZG_B2B_EF_DOCS_DISABLE', true );</code></p>
+						<p><?php echo wp_kses_post( ZG_B2B_EF_Connector::status_html() ); ?></p>
+					</td></tr>
 				</table>
 
 				<?php submit_button( 'Uložit nastavení' ); ?>

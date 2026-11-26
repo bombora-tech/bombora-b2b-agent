@@ -40,6 +40,7 @@ function zg_b2b_defaults() {
 		'ef_field_dic'            => 'buyerTaxNumber',
 		'ef_field_ico'            => '',
 		'ef_auto_paid'            => 'yes',
+		'ef_docs_module'          => 'no',
 		'ef_invoice_meta'         => '',
 		'ef_invoice_date_meta'    => '',
 	);
