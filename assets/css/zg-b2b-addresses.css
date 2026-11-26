@@ -706,6 +706,7 @@ form.checkout .zg-b2b-choices .zg-b2b-choices__more:hover {
 	flex: 1 1 auto;
 }
 .zg-b2b-choices__count {
+	white-space: nowrap;
 	font-weight: 600;
 	color: var(--zg-addr-muted);
 }

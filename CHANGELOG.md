@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.10.1] - 2026-11-26
+
+### Opraveno
+- Pokladna (mobil): počet v závorce („(1 firma)“, „(3 adresy)“) se nezalamuje na dva řádky.
+
 ## [1.10.0] - 2026-11-26
 
 ### Přidáno
