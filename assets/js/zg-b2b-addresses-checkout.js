@@ -106,7 +106,8 @@
 		'</div>'
 	);
 	$modal.find( '.zg-b2b-addr-modal__close' ).attr( 'aria-label', cfg.close || '×' );
-	$form.append( $modal );
+	// Ne jako poslední potomek formuláře – šablona mu dává position: sticky (sloupec souhrnu).
+	$picker.after( $modal );
 	var modalOpen = false;
 
 	function openModal() {

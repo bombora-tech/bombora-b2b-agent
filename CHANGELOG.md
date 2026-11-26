@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.12.1] - 2026-11-26
+
+### Opraveno
+- Pop-up úpravy adresy v pokladně se zobrazoval jen v pravém sloupci (šablona dávala poslednímu prvku formuláře `position: sticky`); nyní přes celou obrazovku.
+
 ## [1.12.0] - 2026-11-26
 
 ### Změněno
