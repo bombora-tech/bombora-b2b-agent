@@ -1,0 +1,65 @@
+/* Bombora B2B Agent – stránka nastavení */
+.zg-adm {
+	--a-primary: #7a1f2b;
+	--a-primary-soft: #f6eced;
+	--a-text: #1f1b1a;
+	--a-muted: #6b6461;
+	--a-border: #e2dcd8;
+	--a-bg: #faf7f5;
+	--a-radius: 12px;
+	max-width: 1180px;
+	color: var(--a-text);
+}
+
+/* Hlavička */
+.zg-adm-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin: 18px 0 14px; }
+.zg-adm-head h1 { padding: 0; margin: 0 0 4px; font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.zg-adm-head p { margin: 0; color: var(--a-muted); }
+.zg-adm-ver { font-size: 12px; font-weight: 600; color: var(--a-primary); background: var(--a-primary-soft); border-radius: 999px; padding: 2px 9px; }
+.zg-adm-head__links { display: flex; gap: 8px; }
+
+/* Záložky */
+.zg-adm-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--a-border); margin-bottom: 20px; }
+.zg-adm-tabs a { padding: 10px 16px; margin-bottom: -1px; border: 1px solid transparent; border-radius: 8px 8px 0 0; color: var(--a-muted); font-weight: 600; text-decoration: none; box-shadow: none !important; }
+.zg-adm-tabs a:hover { color: var(--a-text); }
+.zg-adm-tabs a.is-active { color: var(--a-primary); background: #fff; border-color: var(--a-border); border-bottom-color: #fff; }
+
+/* Panely: bez JS vše viditelné, s JS jen aktivní */
+.zg-adm.has-js .zg-adm-panel { display: none; }
+.zg-adm.has-js .zg-adm-panel.is-active { display: block; }
+
+/* Karty */
+.zg-adm-card { background: #fff; border: 1px solid var(--a-border); border-radius: var(--a-radius); padding: 4px 24px 12px; margin: 0 0 20px; box-shadow: 0 1px 2px rgba(31, 27, 26, .04); }
+.zg-adm-card > h2 { font-size: 16px; margin: 0 -24px 14px; padding: 16px 24px; border-bottom: 1px solid var(--a-border); }
+.zg-adm-card > h2::before { content: ""; display: inline-block; width: 4px; height: 16px; margin: 0 10px -2px 0; border-radius: 2px; background: var(--a-primary); }
+.zg-adm-card .form-table { margin-top: 0; }
+.zg-adm-card .form-table th { width: 230px; padding-left: 0; font-weight: 600; }
+.zg-adm-card .form-table tr + tr th, .zg-adm-card .form-table tr + tr td { border-top: 1px solid #f1ece9; }
+.zg-adm-card .description { color: var(--a-muted); }
+.zg-adm-card pre { max-width: none !important; }
+
+/* Přehled */
+.zg-adm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.zg-adm-tile { background: #fff; border: 1px solid var(--a-border); border-radius: var(--a-radius); padding: 18px 20px; display: flex; flex-direction: column; }
+.zg-adm-tile__top { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; }
+.zg-adm-tile p { margin: 10px 0 0; color: var(--a-muted); flex: 1; }
+.zg-adm-tile .zg-adm-tile__links { flex: 0; display: flex; gap: 14px; }
+.zg-adm-tile__links a { color: var(--a-primary); font-weight: 600; text-decoration: none; }
+.zg-adm-badge { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+.zg-adm-badge.is-on { color: #1f7a45; background: #e8f5ee; }
+.zg-adm-badge.is-off { color: var(--a-muted); background: #f1ece9; }
+.zg-adm-badge.is-warn { color: #8a5a00; background: #fff6e2; }
+
+/* Lišta uložení */
+.zg-adm-savebar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 14px; margin: 0 0 20px; padding: 12px 20px; background: rgba(255, 255, 255, .96); border: 1px solid var(--a-border); border-radius: var(--a-radius); box-shadow: 0 -4px 16px rgba(31, 27, 26, .06); }
+.zg-adm-savebar span { color: var(--a-muted); }
+.zg-adm.is-tools .zg-adm-savebar, .zg-adm.is-overview .zg-adm-savebar { display: none; }
+
+.zg-adm .button-primary { background: var(--a-primary); border-color: var(--a-primary); }
+.zg-adm .button-primary:hover, .zg-adm .button-primary:focus { background: #651824; border-color: #651824; }
+
+@media (max-width: 782px) {
+	.zg-adm-head { flex-direction: column; align-items: flex-start; }
+	.zg-adm-card { padding: 4px 14px 10px; }
+	.zg-adm-card > h2 { margin: 0 -14px 12px; padding: 14px; }
+}

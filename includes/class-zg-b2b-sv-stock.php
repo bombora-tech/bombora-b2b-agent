@@ -220,6 +220,10 @@ class ZG_B2B_SV_Stock {
 		$order->update_meta_data( '_zg_sv_child', $child->get_id() );
 		$order->save();
 		$order->add_order_note( 'S&V STOCK: lihoviny přesunuty do objednávky #' . $child->get_order_number() . ' (' . implode( ', ', $names ) . ').' );
+		$inv = self::issued_invoice( $order );
+		if ( $inv ) {
+			$order->add_order_note( 'S&V STOCK – RUČNĚ v Eurofaktuře: faktura č. ' . $inv . ' byla vystavena před rozdělením. 1) Vystavte opravný daňový doklad na lihoviny (' . implode( ', ', $names ) . '). 2) Vystavte příjemku – vrácení lihovin na sklad (výdejka je neodečetla zpět).' );
+		}
 		self::no_emails( false );
 
 		self::resync_parent( $order );
@@ -303,6 +307,19 @@ class ZG_B2B_SV_Stock {
 
 		self::resync_parent( $parent );
 		return $parent;
+	}
+
+	/** Číslo platné faktury, kterou k objednávce už vystavil plugin Eurofaktura.cz (jinak ''). */
+	public static function issued_invoice( WC_Order $order ) {
+		if ( ! class_exists( 'ZG_B2B_EF_Connector' ) || ! ZG_B2B_EF_Connector::available() ) {
+			return '';
+		}
+		foreach ( ZG_B2B_EF_Connector::docs( $order, 10 * MINUTE_IN_SECONDS ) as $d ) {
+			if ( 'invoice' === $d['kind'] && ! $d['cancelled'] ) {
+				return $d['number'] ? $d['number'] : '?';
+			}
+		}
+		return '';
 	}
 
 	/** Po rozdělení aktualizovat původní objednávku v Eurofaktuře (stejné jako tlačítko „Synchronizovat“). */
@@ -745,7 +762,15 @@ class ZG_B2B_SV_Stock {
 			foreach ( $sv as $item ) {
 				echo '<li>' . (int) $item->get_quantity() . '× ' . esc_html( $item->get_name() ) . '</li>';
 			}
-			echo '</ul><p>' . self::link( $order, 'split', count( $sv ) === count( $order->get_items() ) ? 'Označit jako objednávku S&V' : 'Rozdělit objednávku', true ) . '</p>';
+			echo '</ul>';
+			$inv = self::issued_invoice( $order );
+			if ( $inv ) {
+				echo '<div style="background:#fff6e2;border-left:4px solid #dba617;padding:8px 10px;margin:0 0 10px"><strong>Pozor: Eurofaktura už vystavila fakturu č. ' . esc_html( $inv ) . ' (a výdejku).</strong><br>'
+					. 'Odebrání lihovin se do faktury ani výdejky samo nepromítne. Po rozdělení ručně v Eurofaktuře:<br>'
+					. '1) opravný daňový doklad (dobropis) na lihoviny k faktuře ' . esc_html( $inv ) . ',<br>2) příjemka – vrácení lihovin na sklad.<br>'
+					. 'Lepší je rozdělit objednávku dřív, než Eurofaktura fakturu vystaví.</div>';
+			}
+			echo '<p>' . self::link( $order, 'split', count( $sv ) === count( $order->get_items() ) ? 'Označit jako objednávku S&V' : 'Rozdělit objednávku', true ) . '</p>';
 			echo '<p class="description">Lihoviny se přesunou do nové objednávky stejného zákazníka (bez e-mailů zákazníkovi), původní objednávka se přepočítá a znovu synchronizuje s Eurofakturou.</p>';
 			return;
 		}
@@ -937,7 +962,7 @@ class ZG_B2B_SV_Stock {
 		};
 		$off = defined( 'ZG_B2B_SV_DISABLE' ) && ZG_B2B_SV_DISABLE;
 		?>
-		<h2 id="zg-sv">5. Modul: Lihoviny přes S&amp;V STOCK</h2>
+		<h2 id="zg-sv">Modul: Lihoviny přes S&amp;V STOCK</h2>
 		<p>Rozdělení objednávky s lihovinami (tlačítko v detailu objednávky), faktura Bombora → S&amp;V přes Eurofaktura API, nahrání faktury S&amp;V pro zákazníka a objednání Messengeru. Nouzové vypnutí: <code>define( 'ZG_B2B_SV_DISABLE', true );</code> ve <code>wp-config.php</code>.</p>
 		<table class="form-table" role="presentation">
 			<tr><th scope="row">Modul</th><td><label><input type="checkbox" name="zg_b2b_settings[sv_module]" value="1" <?php checked( 'yes', $s['sv_module'] ); ?> <?php disabled( $off ); ?>> Zapnout modul</label><?php echo $off ? ' <em style="color:#b32d2e">(nouzově vypnuto ve wp-config.php)</em>' : ''; ?></td></tr>

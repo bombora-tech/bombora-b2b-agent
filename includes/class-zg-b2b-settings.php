@@ -12,6 +12,15 @@ class ZG_B2B_Settings {
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ), 60 );
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
+	}
+
+	public static function assets( $hook ) {
+		if ( false === strpos( (string) $hook, 'zg-b2b' ) || false !== strpos( (string) $hook, 'dashboard' ) ) {
+			return;
+		}
+		wp_enqueue_style( 'zg-b2b-admin', ZG_B2B_URL . 'assets/css/zg-b2b-admin.css', array(), ZG_B2B_VERSION );
+		wp_enqueue_script( 'zg-b2b-admin', ZG_B2B_URL . 'assets/js/zg-b2b-admin.js', array(), ZG_B2B_VERSION, true );
 	}
 
 	/**
@@ -179,17 +188,34 @@ class ZG_B2B_Settings {
 		}
 		$activated = (int) get_option( 'zg_b2b_activated' );
 		?>
-		<div class="wrap">
-			<h1>Bombora B2B Agent</h1>
+		<div class="wrap zg-adm">
+			<div class="zg-adm-head">
+				<div>
+					<h1>Bombora B2B Agent <span class="zg-adm-ver">v<?php echo esc_html( ZG_B2B_VERSION ); ?></span></h1>
+					<p>Velkoobchod vo.zgruzie.cz – partneři, doručení, doklady a lihoviny.</p>
+				</div>
+				<div class="zg-adm-head__links">
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=zg_b2b_invoice' ) ); ?>">Platba na fakturu</a>
+					<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&source=zg-b2b-eurofaktura' ) ); ?>">Logy</a>
+				</div>
+			</div>
+			<?php echo self::tabs_nav(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+			<h1 class="screen-reader-text">Bombora B2B Agent</h1>
 
 			<?php if ( false !== $assigned ) : ?>
 				<div class="notice notice-success"><?php foreach ( (array) $assigned as $m ) : ?><p><?php echo esc_html( $m ); ?></p><?php endforeach; ?></div>
 			<?php endif; ?>
 
-			<form method="post" action="options.php">
+			<form method="post" action="options.php" class="zg-adm-form">
 				<?php settings_fields( 'zg_b2b' ); ?>
 
-				<h2>1. Lihoviny a pivo – doručení pouze v ČR</h2>
+				<div class="zg-adm-panel" data-tab="prehled">
+					<?php self::overview( $s, $tagged ); ?>
+				</div>
+
+				<div class="zg-adm-panel" data-tab="doruceni">
+				<div class="zg-adm-card">
+				<h2>Lihoviny a pivo – doručení pouze v ČR</h2>
 				<p>
 					Štítek <strong><?php echo esc_html( zg_b2b_tag_name() ); ?></strong> má nyní
 					<?php if ( $term && ! is_wp_error( $term ) ) : ?><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&product_tag=' . $term->slug ) ); ?>"><?php endif; ?><strong><?php echo (int) $tagged; ?> produktů</strong><?php echo $term ? '</a>' : ''; ?>.
@@ -250,7 +276,11 @@ class ZG_B2B_Settings {
 							<p class="description">Nadpis a text pro anglickou verzi webu.</p></td>
 					</tr>
 				</table>
+				</div>
+				</div>
 
+				<div class="zg-adm-panel" data-tab="partneri">
+				<div class="zg-adm-card">
 				<h2>Název webu – EN</h2>
 				<table class="form-table" role="presentation">
 					<tr>
@@ -263,8 +293,9 @@ class ZG_B2B_Settings {
 						<td><input id="zg-site-tagline-en" class="regular-text" type="text" name="zg_b2b_settings[site_tagline_en]" value="<?php echo esc_attr( $s['site_tagline_en'] ); ?>"></td>
 					</tr>
 				</table>
-
-				<h2>2. Ceny a registrace partnerů</h2>
+				</div>
+				<div class="zg-adm-card">
+				<h2>Ceny a registrace partnerů</h2>
 				<table class="form-table" role="presentation">
 					<tr>
 						<th scope="row">Stránka s registrací</th>
@@ -318,9 +349,12 @@ class ZG_B2B_Settings {
 						<td><?php self::country_checks( 'reg_countries', (array) $s['reg_countries'] ); ?></td>
 					</tr>
 				</table>
+				</div>
+				</div>
 
-
-				<h2 id="zg-ef">3. Eurofaktura – platba na fakturu (proforma)</h2>
+				<div class="zg-adm-panel" data-tab="eurofaktura">
+				<div class="zg-adm-card">
+				<h2 id="zg-ef">Eurofaktura API – platba na fakturu (proforma)</h2>
 				<p>Platební metodu zapnete a nastavíte (splatnost, účet, VS) ve <a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-settings&tab=checkout&section=zg_b2b_invoice' ) ); ?>">WooCommerce → Nastavení → Platby → Platba na fakturu</a>.
 				Údaje API lze místo zde zadat bezpečněji do <code>wp-config.php</code>: <code>ZG_EF_ENDPOINT</code>, <code>ZG_EF_USERNAME</code>, <code>ZG_EF_SECRET</code>, <code>ZG_EF_TOKEN</code>.</p>
 				<p style="background:#fff8e5;border-left:4px solid #dba617;padding:8px 12px">Doporučení: založte pro web <strong>samostatného API uživatele</strong>. Eurofaktura nepovoluje souběžné požadavky jednoho API uživatele – sdílení s vaší stávající synchronizací skladu by vedlo k chybám.</p>
@@ -340,8 +374,9 @@ class ZG_B2B_Settings {
 					<tr><th scope="row">Faktury ze stávajícího napojení</th><td>meta klíč čísla faktury <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_meta]" value="<?php echo esc_attr( $s['ef_invoice_meta'] ); ?>"> datum <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_date_meta]" value="<?php echo esc_attr( $s['ef_invoice_date_meta'] ); ?>">
 						<p class="description">Volitelné: pokud vaše současné API napojení ukládá číslo faktury do meta objednávky, zadejte klíč – faktura půjde stáhnout v Můj účet u všech objednávek.</p></td></tr>
 				</table>
-
-				<h2 id="zg-ef-docs">4. Modul: Doklady z Eurofaktura.cz v Můj účet</h2>
+				</div>
+				<div class="zg-adm-card">
+				<h2 id="zg-ef-docs">Modul: Doklady z Eurofaktura.cz v Můj účet</h2>
 				<p>Faktury a opravné daňové doklady vystavené přes plugin <strong>Eurofaktura.cz</strong> (webhooky) zobrazí zákazníkům v Můj účet → Objednávky. PDF se stahuje přes chráněný odkaz webu, veřejný odkaz Eurofaktury zákazník nevidí.</p>
 				<table class="form-table" role="presentation">
 					<tr><th scope="row">Modul</th><td>
@@ -351,13 +386,21 @@ class ZG_B2B_Settings {
 						<p><?php echo wp_kses_post( ZG_B2B_EF_Connector::status_html() ); ?></p>
 					</td></tr>
 				</table>
+				</div>
+				</div>
 
+				<div class="zg-adm-panel" data-tab="sv">
+				<div class="zg-adm-card">
 				<?php ZG_B2B_SV_Stock::render_settings( $s ); ?>
+				</div>
+				</div>
 
-				<?php submit_button( 'Uložit nastavení' ); ?>
+				<div class="zg-adm-savebar"><?php submit_button( 'Uložit nastavení', 'primary', 'submit', false ); ?><span>Uloží nastavení ze všech záložek.</span></div>
 			</form>
 
-			<h3>Test Eurofaktura API</h3>
+			<div class="zg-adm-panel" data-tab="nastroje">
+			<div class="zg-adm-card">
+			<h2>Test Eurofaktura API</h2>
 			<?php $test = get_transient( 'zg_b2b_ef_test_result' ); if ( false !== $test ) : delete_transient( 'zg_b2b_ef_test_result' ); ?>
 				<pre style="max-height:420px;overflow:auto;background:#1d2327;color:#f0f0f1;padding:12px;border-radius:4px;max-width:900px;white-space:pre-wrap"><?php echo esc_html( $test ); ?></pre>
 			<?php endif; ?>
@@ -369,9 +412,11 @@ class ZG_B2B_Settings {
 				<button class="button">Zavolat API</button></p>
 				<p class="description">Ověří přihlášení a ukáže surovou odpověď (užitečné pro kontrolu názvů polí). Podrobný log: WooCommerce → Stav → Logy → <code>zg-b2b-eurofaktura</code>.</p>
 			</form>
+			</div>
 
+			<div class="zg-adm-card">
 			<h2>Shortcody pro Bricks</h2>
-			<table class="widefat striped" style="max-width:900px">
+			<table class="widefat striped">
 				<tbody>
 					<tr><td><code>[zg_b2b_registration]</code></td><td>Registrační formulář (stránka registrace).</td></tr>
 					<tr><td><code>[zg_b2b_register_button]</code></td><td>Tlačítko „Registrovat firmu“. Parametry: <code>text="…"</code>, <code>variant="primary|outline|light"</code>, <code>size="sm|lg"</code>. Přihlášeným se nezobrazí.</td></tr>
@@ -380,7 +425,59 @@ class ZG_B2B_Settings {
 					<tr><td><code>[zg_cz_only_badge]</code></td><td>Malý štítek „Pouze ČR“ do výpisu produktů / Query loop.</td></tr>
 				</tbody>
 			</table>
+			</div>
+			</div>
 		</div>
 		<?php
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Vzhled stránky nastavení (záložky, přehled)
+	 * ------------------------------------------------------------------- */
+
+	private static function tabs() {
+		return array(
+			'prehled'     => 'Přehled',
+			'partneri'    => 'Partneři a registrace',
+			'doruceni'    => 'Doručení lihovin',
+			'eurofaktura' => 'Eurofaktura a doklady',
+			'sv'          => 'S&V STOCK',
+			'nastroje'    => 'Nástroje',
+		);
+	}
+
+	private static function tabs_nav() {
+		$h = '<nav class="zg-adm-tabs" role="tablist">';
+		foreach ( self::tabs() as $k => $l ) {
+			$h .= '<a href="#' . esc_attr( $k ) . '" data-tab="' . esc_attr( $k ) . '" role="tab">' . esc_html( $l ) . '</a>';
+		}
+		return $h . '</nav>';
+	}
+
+	private static function badge( $ok, $on = 'Zapnuto', $off = 'Vypnuto', $warn = false ) {
+		$cls = $ok ? 'is-on' : ( $warn ? 'is-warn' : 'is-off' );
+		return '<span class="zg-adm-badge ' . $cls . '">' . esc_html( $ok ? $on : $off ) . '</span>';
+	}
+
+	private static function overview( $s, $tagged ) {
+		$ef_api   = ZG_B2B_EF_Client::configured();
+		$ef_plug  = class_exists( 'Eurofaktura_http_client' ) && get_option( 'eurofaktura_connected' );
+		$gw       = get_option( 'woocommerce_zg_b2b_invoice_settings' );
+		$gw_on    = is_array( $gw ) && isset( $gw['enabled'] ) && 'yes' === $gw['enabled'];
+		$pending  = count( get_users( array( 'meta_key' => 'zg_b2b_status', 'meta_value' => 'pending', 'fields' => 'ID', 'number' => 100 ) ) ); // phpcs:ignore WordPress.DB.SlowDBQuery
+		$cards    = array(
+			array( 'partneri', 'Partneři a registrace', self::badge( (bool) $s['registration_page'], 'Nastaveno', 'Chybí stránka registrace', true ), $pending ? $pending . ' registrací čeká na schválení' : 'Žádné čekající registrace', array( admin_url( 'admin.php?page=zg-b2b-dashboard' ), 'B2B Dashboard' ) ),
+			array( 'doruceni', 'Doručení lihovin', self::badge( $tagged > 0, $tagged . ' produktů', 'Bez produktů', true ), 'Štítek „' . zg_b2b_tag_name() . '“ – doručení jen do povolených zemí', null ),
+			array( 'eurofaktura', 'Platba na fakturu', self::badge( $gw_on && $ef_api, 'Aktivní', $gw_on ? 'Chybí API údaje' : 'Vypnuto', $gw_on ), 'Proforma přes Eurofaktura API, po zaplacení faktura', null ),
+			array( 'eurofaktura', 'Doklady v Můj účet', self::badge( ZG_B2B_EF_Connector::enabled() && $ef_plug, 'Zapnuto', ZG_B2B_EF_Connector::enabled() ? 'Plugin Eurofaktura nepřipojen' : 'Vypnuto', ZG_B2B_EF_Connector::enabled() ), 'Faktury a opravné doklady z pluginu Eurofaktura.cz', null ),
+			array( 'sv', 'S&V STOCK – lihoviny', self::badge( ZG_B2B_SV_Stock::enabled() ), 'Rozdělení objednávky, faktura pro S&V, faktura S&V zákazníkovi', null ),
+		);
+		echo '<div class="zg-adm-grid">';
+		foreach ( $cards as $c ) {
+			echo '<div class="zg-adm-tile"><div class="zg-adm-tile__top"><strong>' . esc_html( $c[1] ) . '</strong>' . $c[2] . '</div>' // phpcs:ignore WordPress.Security.EscapeOutput
+				. '<p>' . esc_html( $c[3] ) . '</p><p class="zg-adm-tile__links"><a href="#' . esc_attr( $c[0] ) . '" data-goto="' . esc_attr( $c[0] ) . '">Nastavit →</a>'
+				. ( $c[4] ? ' <a href="' . esc_url( $c[4][0] ) . '">' . esc_html( $c[4][1] ) . ' →</a>' : '' ) . '</p></div>';
+		}
+		echo '</div>';
 	}
 }

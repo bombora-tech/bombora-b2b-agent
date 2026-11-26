@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.20.0] - 2026-11-26
+
+### Změněno
+- **Nový vzhled nastavení** (Bombora → B2B Agent): záložky Přehled · Partneři a registrace · Doručení lihovin · Eurofaktura a doklady · S&V STOCK · Nástroje; sekce v kartách, barvy webu, plovoucí lišta „Uložit nastavení“ (ukládá všechny záložky najednou), poslední otevřená záložka se pamatuje. Přehled ukazuje stav modulů (platba na fakturu, doklady v Můj účet, S&V STOCK, čekající registrace) s odkazy.
+- S&V STOCK: když už Eurofaktura k objednávce vystavila fakturu, box před rozdělením upozorní a po rozdělení zapíše do poznámky kontrolní seznam ručních kroků (opravný daňový doklad na lihoviny + příjemka na sklad).
+
 ## [1.19.0] - 2026-11-26
 
 ### Přidáno
