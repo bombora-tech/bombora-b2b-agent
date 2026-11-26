@@ -148,6 +148,12 @@ class ZG_B2B_Address_Checkout {
 			'addresses'      => (object) $addresses,
 			'fieldKeys'      => ZG_B2B_Address_Book::field_keys(),
 			'billingCountry' => $customer ? $customer->get_billing_country() : WC()->countries->get_base_country(),
+			'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+			'nonce'          => wp_create_nonce( 'zg_b2b_save_contact' ),
+			'saving'         => __( 'Ukládám…', 'zg-b2b' ),
+			'saved'          => __( 'Uloženo do adresy', 'zg-b2b' ),
+			'error'          => __( 'Nepodařilo se uložit – údaje se použijí jen pro tuto objednávku.', 'zg-b2b' ),
+			'done'           => __( 'Hotovo', 'zg-b2b' ),
 		) );
 	}
 

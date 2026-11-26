@@ -21,12 +21,66 @@
 			[ $.trim( val( 'billing_first_name' ) + ' ' + val( 'billing_last_name' ) ), val( 'billing_phone' ), val( 'billing_email' ) ].filter( Boolean ).join( ' · ' )
 		);
 	}
+	var cfg = ( typeof zgB2bCompanies !== 'undefined' ) ? zgB2bCompanies : {};
+	// Lišta pod poli: stav ukládání + výrazné „Hotovo“ (dřív bylo nahoře a zapomínalo se na něj).
+	var $done = $( '<div class="zg-b2b-done-row" hidden><span class="zg-b2b-save-state" aria-live="polite"></span><button type="button" class="zg-b2b-done-btn"></button></div>' );
+	$done.find( 'button' ).text( $toggle.data( 'close' ) || 'OK' );
+
+	function placeDone() {
+		var $last = $( rows ).last();
+		if ( $last.length ) {
+			$done.insertAfter( $last );
+			// Šablona řadí pole přes CSS order → lišta dostane stejné pořadí jako poslední pole (a je za ním).
+			var maxOrder = 0;
+			$( rows ).each( function () {
+				maxOrder = Math.max( maxOrder, parseInt( $( this ).css( 'order' ), 10 ) || 0 );
+			} );
+			$done.css( 'order', maxOrder );
+		}
+	}
+
 	function setOpen( open ) {
 		$( rows ).toggleClass( 'zg-b2b-collapsed', ! open );
-		$line.toggleClass( 'is-open', open );
-		$toggle.attr( 'aria-expanded', open ? 'true' : 'false' ).text( open ? $toggle.data( 'close' ) : $toggle.data( 'open' ) );
+		$line.toggleClass( 'is-open', open ).prop( 'hidden', open );
+		$toggle.attr( 'aria-expanded', open ? 'true' : 'false' );
+		if ( open ) {
+			placeDone();
+		}
+		$done.prop( 'hidden', ! open );
 		renderLine();
 	}
+
+	/* Okamžité uložení do účtu (debounce), aby nebylo nutné klikat na „Hotovo“. */
+	var saveTimer = null;
+	function save() {
+		if ( ! cfg.ajaxUrl || ! complete() ) {
+			return;
+		}
+		var $state = $done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok is-error' ).text( cfg.saving || '…' );
+		$.post( cfg.ajaxUrl, {
+			action: 'zg_b2b_save_contact',
+			nonce: cfg.nonce,
+			type: 'billing',
+			fields: { first_name: val( 'billing_first_name' ), last_name: val( 'billing_last_name' ), phone: val( 'billing_phone' ), email: val( 'billing_email' ) }
+		} ).done( function ( r ) {
+			if ( r && r.success ) {
+				$state.addClass( 'is-ok' ).text( '✓ ' + ( cfg.saved || '' ) );
+			} else {
+				$state.addClass( 'is-error' ).text( cfg.error || '' );
+			}
+		} ).fail( function () {
+			$state.addClass( 'is-error' ).text( cfg.error || '' );
+		} );
+	}
+	$( document.body ).on( 'change', '#billing_first_name, #billing_last_name, #billing_phone, #billing_email', function () {
+		clearTimeout( saveTimer );
+		saveTimer = setTimeout( save, 300 );
+	} );
+	$done.on( 'click', '.zg-b2b-done-btn', function () {
+		if ( complete() ) {
+			setOpen( false );
+		}
+	} );
 
 	function fill( id ) {
 		var c = companies[ id ];
@@ -68,11 +122,8 @@
 	} );
 
 	$toggle.on( 'click', function () {
-		var open = ! $line.hasClass( 'is-open' );
-		if ( ! open && ! complete() ) {
-			return; // Nejdřív doplnit chybějící údaje.
-		}
-		setOpen( open );
+		setOpen( true );
+		$( '#billing_phone' ).trigger( 'focus' );
 	} );
 
 	$( document.body ).on( 'input change', '#billing_first_name, #billing_last_name, #billing_phone, #billing_email', renderLine );

@@ -38,6 +38,7 @@ class ZG_B2B_Companies {
 		add_action( 'woocommerce_before_checkout_billing_form', array( __CLASS__, 'render_checkout_picker' ), 5 );
 		add_filter( 'woocommerce_checkout_fields', array( __CLASS__, 'hide_fixed_fields' ), 1001 );
 		add_action( 'woocommerce_checkout_update_order_review', array( __CLASS__, 'remember_from_review' ) );
+		add_action( 'wp_ajax_zg_b2b_save_contact', array( __CLASS__, 'ajax_save_contact' ) );
 		add_filter( 'zg_b2b_invoice_allowed', array( __CLASS__, 'filter_invoice_allowed' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'checkout_assets' ), 20 );
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'checkout_prefill' ), 30, 2 );
@@ -569,7 +570,8 @@ class ZG_B2B_Companies {
 		}
 		if ( $choice ) {
 			// Ostatní firmy jsou skryté, dokud zákazník výslovně nezvolí „Vybrat jinou firmu“ (prevence omylu).
-			echo '<p class="zg-b2b-company-switch-row"><button type="button" class="zg-b2b-company-switch" hidden aria-expanded="false" data-open="' . esc_attr__( 'Vybrat jinou firmu', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Ponechat vybranou firmu', 'zg-b2b' ) . '">' . esc_html__( 'Vybrat jinou firmu', 'zg-b2b' ) . '</button></p>';
+			echo '<div class="zg-b2b-contact zg-b2b-company-switch-row"><div class="zg-b2b-contact__body"><span class="zg-b2b-contact__label">' . esc_html__( 'Firma pro fakturaci', 'zg-b2b' ) . '</span> <span>' . esc_html__( 'Fakturujeme na vybranou firmu.', 'zg-b2b' ) . '</span></div>';
+			echo '<button type="button" class="zg-b2b-sum__toggle zg-b2b-company-switch" hidden aria-expanded="false" data-open="' . esc_attr__( 'Vybrat jinou firmu', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Ponechat vybranou firmu', 'zg-b2b' ) . '">' . esc_html__( 'Vybrat jinou firmu', 'zg-b2b' ) . '</button></div>';
 		}
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
 		self::contact_line( 'billing' );
@@ -598,7 +600,14 @@ class ZG_B2B_Companies {
 			}
 			$data[ $id ] = $row;
 		}
-		wp_localize_script( 'zg-b2b-companies-checkout', 'zgB2bCompanies', array( 'companies' => (object) $data ) );
+		wp_localize_script( 'zg-b2b-companies-checkout', 'zgB2bCompanies', array(
+			'companies' => (object) $data,
+			'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+			'nonce'     => wp_create_nonce( 'zg_b2b_save_contact' ),
+			'saving'    => __( 'Ukládám…', 'zg-b2b' ),
+			'saved'     => __( 'Uloženo', 'zg-b2b' ),
+			'error'     => __( 'Nepodařilo se uložit – údaje se použijí jen pro tuto objednávku.', 'zg-b2b' ),
+		) );
 	}
 
 	/** Předvyplnění fakturačních polí naposledy použitou firmou. */
@@ -842,6 +851,72 @@ class ZG_B2B_Companies {
 		$id = ( function_exists( 'WC' ) && WC()->session ) ? (string) WC()->session->get( 'zg_b2b_company' ) : '';
 		$billable = self::billable( $user_id );
 		return isset( $billable[ $id ] ) ? $id : self::initial_company( $user_id );
+	}
+
+	/**
+	 * Okamžité uložení kontaktních údajů z pokladny (bez čekání na „Hotovo“ / objednávku).
+	 * billing: jméno, příjmení, telefon, e-mail účtu; shipping: údaje vybrané uložené doručovací adresy.
+	 */
+	public static function ajax_save_contact() {
+		check_ajax_referer( 'zg_b2b_save_contact', 'nonce' );
+		$user_id = get_current_user_id();
+		if ( ! $user_id ) {
+			wp_send_json_error( array(), 403 );
+		}
+		$type   = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : '';
+		$fields = isset( $_POST['fields'] ) && is_array( $_POST['fields'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['fields'] ) ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+
+		if ( 'billing' === $type ) {
+			$customer = new WC_Customer( $user_id );
+			foreach ( array( 'first_name', 'last_name', 'phone', 'email' ) as $k ) {
+				if ( ! isset( $fields[ $k ] ) || '' === trim( $fields[ $k ] ) ) {
+					continue;
+				}
+				if ( 'email' === $k && ! is_email( $fields[ $k ] ) ) {
+					wp_send_json_error( array( 'field' => 'email' ) );
+				}
+				$customer->{'set_billing_' . $k}( 'email' === $k ? sanitize_email( $fields[ $k ] ) : $fields[ $k ] );
+			}
+			$customer->save();
+			if ( WC()->customer && WC()->customer->get_id() === $user_id ) {
+				foreach ( array( 'first_name', 'last_name', 'phone', 'email' ) as $k ) {
+					if ( ! empty( $fields[ $k ] ) ) {
+						WC()->customer->{'set_billing_' . $k}( $fields[ $k ] );
+					}
+				}
+			}
+			wp_send_json_success();
+		}
+
+		if ( 'shipping' === $type ) {
+			$id      = isset( $_POST['address'] ) ? sanitize_key( wp_unslash( $_POST['address'] ) ) : '';
+			$address = ZG_B2B_Address_Book::get( $user_id, $id );
+			if ( ! $address ) {
+				wp_send_json_error( array( 'reason' => 'not_found' ) );
+			}
+			$keys = ZG_B2B_Address_Book::field_keys();
+			foreach ( $fields as $k => $v ) {
+				if ( in_array( $k, $keys, true ) && 'company' !== $k ) {
+					$address['fields'][ $k ] = $v;
+				}
+			}
+			foreach ( array( 'address_1', 'city', 'postcode', 'country' ) as $req ) {
+				if ( empty( $address['fields'][ $req ] ) ) {
+					wp_send_json_error( array( 'field' => $req ) );
+				}
+			}
+			$r = ZG_B2B_Address_Book::save( $user_id, $address );
+			if ( is_wp_error( $r ) ) {
+				wp_send_json_error( array( 'message' => $r->get_error_message() ) );
+			}
+			$saved = ZG_B2B_Address_Book::get( $user_id, $id );
+			wp_send_json_success( array(
+				'fields' => $saved ? $saved['fields'] : array(),
+				'inline' => $saved ? ZG_B2B_Address_Book::format_inline( $saved['fields'] ) : '',
+			) );
+		}
+
+		wp_send_json_error( array(), 400 );
 	}
 
 	public static function remember_from_review( $post_data ) {

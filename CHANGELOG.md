@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.3] - 2026-11-26
+
+### Změněno
+- Pokladna: „Vybrat jinou firmu“ v rámečku s pozadím (jako kontaktní osoba).
+- Změny kontaktních údajů (jméno, telefon, e-mail) a údajů uložené doručovací adresy se **ukládají hned** (AJAX, bez nutnosti kliknout „Hotovo“); stav „Ukládám… / ✓ Uloženo“ se zobrazí u výrazného tlačítka **Hotovo pod poli** (dřív nenápadně nahoře).
+
 ## [1.8.2] - 2026-11-26
 
 ### Změněno

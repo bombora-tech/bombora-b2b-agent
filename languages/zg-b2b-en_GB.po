@@ -799,3 +799,21 @@ msgstr "Choose another company"
 
 msgid "Ponechat vybranou firmu"
 msgstr "Keep selected company"
+
+msgid "Ukládám…"
+msgstr "Saving…"
+
+msgid "Uloženo"
+msgstr "Saved"
+
+msgid "Uloženo do adresy"
+msgstr "Saved to the address"
+
+msgid "Nepodařilo se uložit – údaje se použijí jen pro tuto objednávku."
+msgstr "Could not save – the details will be used for this order only."
+
+msgid "Firma pro fakturaci"
+msgstr "Invoicing company"
+
+msgid "Fakturujeme na vybranou firmu."
+msgstr "We invoice the selected company."

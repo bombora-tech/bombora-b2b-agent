@@ -67,16 +67,59 @@
 
 	/* Pole doručovací adresy: u uložené adresy skrytá za řádkem kontaktu („Změnit údaje“),
 	   u „Jiná adresa“ vždy vidět, u fakturační adresy skrytá. */
+	var $done = $( '<div class="zg-b2b-done-row" hidden><span class="zg-b2b-save-state" aria-live="polite"></span><button type="button" class="zg-b2b-done-btn"></button></div>' );
+	$done.find( 'button' ).text( cfg.done || 'OK' );
+	$( 'div.shipping_address' ).first().append( $done );
+
 	function updateFields() {
 		var choice = currentChoice();
-		var show = choice === 'new' || ( choice !== 'billing' && fieldsOpen );
+		var saved = choice !== 'billing' && choice !== 'new';
+		var show = choice === 'new' || ( saved && fieldsOpen );
 		$( 'div.shipping_address' ).toggle( show );
-		$line.prop( 'hidden', choice === 'billing' || choice === 'new' || ! $line.length );
+		$line.prop( 'hidden', ! saved || fieldsOpen || ! $line.length );
+		$done.prop( 'hidden', ! ( saved && fieldsOpen ) );
 		var text = [ $.trim( ( $( '#shipping_first_name' ).val() || '' ) + ' ' + ( $( '#shipping_last_name' ).val() || '' ) ), $.trim( $( '#shipping_phone' ).val() || '' ) ].filter( Boolean ).join( ' · ' );
 		$line.find( '.zg-b2b-contact__text' ).text( text );
-		$line.toggleClass( 'is-open', fieldsOpen );
-		$toggle.attr( 'aria-expanded', fieldsOpen ? 'true' : 'false' ).text( fieldsOpen ? $toggle.data( 'close' ) : $toggle.data( 'open' ) );
 	}
+
+	/* Změny u uložené adresy se hned uloží do adresáře (není nutné „Hotovo“). */
+	var saveTimer = null;
+	function saveAddress() {
+		var choice = currentChoice();
+		if ( ! cfg.ajaxUrl || choice === 'billing' || choice === 'new' || ! cfg.addresses[ choice ] ) {
+			return;
+		}
+		var fields = {};
+		$.each( cfg.fieldKeys, function ( i, key ) {
+			var $f = $( '#shipping_' + key );
+			if ( $f.length && key !== 'company' ) {
+				fields[ key ] = $f.val() || '';
+			}
+		} );
+		var $state = $done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok is-error' ).text( cfg.saving || '…' );
+		$.post( cfg.ajaxUrl, { action: 'zg_b2b_save_contact', nonce: cfg.nonce, type: 'shipping', address: choice, fields: fields } ).done( function ( r ) {
+			if ( r && r.success ) {
+				cfg.addresses[ choice ] = r.data.fields;
+				$picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' ).find( '.zg-b2b-addr-option__detail' ).text( r.data.inline );
+				$state.addClass( 'is-ok' ).text( '✓ ' + ( cfg.saved || '' ) );
+			} else {
+				$state.addClass( 'is-error' ).text( cfg.error || '' );
+			}
+		} ).fail( function () {
+			$state.addClass( 'is-error' ).text( cfg.error || '' );
+		} );
+	}
+	$( document.body ).on( 'change', 'div.shipping_address :input', function () {
+		if ( ! fieldsOpen ) {
+			return;
+		}
+		clearTimeout( saveTimer );
+		saveTimer = setTimeout( saveAddress, 300 );
+	} );
+	$done.on( 'click', '.zg-b2b-done-btn', function () {
+		fieldsOpen = false;
+		updateFields();
+	} );
 
 	function applyChoice( choice ) {
 		$picker.find( '.zg-b2b-addr-option' ).removeClass( 'is-selected' );
@@ -123,7 +166,7 @@
 	} );
 
 	$toggle.on( 'click', function () {
-		fieldsOpen = ! fieldsOpen;
+		fieldsOpen = true;
 		updateFields();
 	} );
 	$( document.body ).on( 'input change', '#shipping_first_name, #shipping_last_name, #shipping_phone', updateFields );

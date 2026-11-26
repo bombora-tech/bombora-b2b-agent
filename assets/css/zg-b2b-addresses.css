@@ -654,3 +654,58 @@ form.checkout .zg-b2b-company-switch {
 form.checkout .zg-b2b-company-switch[hidden] {
 	display: none !important;
 }
+
+/* Změna firmy v rámečku s pozadím (stejně jako kontaktní osoba). */
+.zg-b2b-company-switch-row {
+	margin: 10px 0 0 !important;
+}
+.zg-b2b-company-picker.is-choosing .zg-b2b-company-switch-row .zg-b2b-contact__body {
+	visibility: hidden;
+}
+
+/* Lišta pod rozbalenými poli: stav uložení + výrazné „Hotovo“. */
+.zg-b2b-done-row {
+	display: flex;
+	flex: 0 0 100%;
+	width: 100%;
+	gap: 12px;
+	align-items: center;
+	justify-content: flex-end;
+	margin: 4px 0 12px;
+	padding: 12px 18px;
+	background: var(--zg-addr-soft);
+	border-radius: 12px;
+}
+.zg-b2b-done-row[hidden] {
+	display: none !important;
+}
+.zg-b2b-save-state {
+	margin-right: auto;
+	font-size: 13px;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-save-state.is-ok {
+	color: var(--zg-addr-teal);
+	font-weight: 700;
+}
+.zg-b2b-save-state.is-error {
+	color: #c8102e;
+}
+form.checkout .zg-b2b-done-btn {
+	display: inline-flex !important;
+	align-items: center;
+	height: 38px !important;
+	margin: 0 !important;
+	padding: 0 22px !important;
+	font-size: 14px !important;
+	font-weight: 700 !important;
+	color: #fff !important;
+	background: var(--zg-addr-text) !important;
+	border: 0 !important;
+	border-radius: 19px !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+form.checkout .zg-b2b-done-btn:hover {
+	background: var(--zg-addr-teal) !important;
+}
