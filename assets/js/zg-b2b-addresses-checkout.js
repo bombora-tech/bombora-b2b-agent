@@ -92,9 +92,56 @@
 	var $head = $( '<div class="zg-b2b-edit-head"><div class="zg-b2b-edit-head__text"><strong class="zg-b2b-edit-head__title"></strong><span class="zg-b2b-edit-head__hint"></span></div><button type="button" class="zg-b2b-edit-head__close" aria-label="">&times;</button></div>' );
 	$head.find( '.zg-b2b-edit-head__close' ).attr( 'aria-label', cfg.done || 'OK' );
 	$shipFields.prepend( $head );
-	$head.on( 'click', '.zg-b2b-edit-head__close', function () {
+
+	/* Úprava uložené adresy v pop-upu. Pole se do okna přesunou (zůstávají uvnitř formuláře pokladny),
+	   po zavření se vrátí zpět. Tělo okna má třídu .woocommerce-address-fields kvůli výběru země. */
+	var $modal = $(
+		'<div class="zg-b2b-addr zg-b2b-addr-modal zg-b2b-checkout-modal" hidden>' +
+			'<div class="zg-b2b-addr-modal__backdrop" data-zg-modal-close></div>' +
+			'<div class="zg-b2b-addr-modal__dialog" role="dialog" aria-modal="true">' +
+				'<div class="zg-b2b-addr-modal__head"><h2 class="zg-b2b-addr-modal__title"></h2>' +
+				'<button type="button" class="zg-b2b-addr-modal__close" data-zg-modal-close>&times;</button></div>' +
+				'<div class="zg-b2b-addr-modal__body woocommerce-address-fields"><p class="zg-b2b-addr-intro zg-b2b-checkout-modal__hint"></p></div>' +
+			'</div>' +
+		'</div>'
+	);
+	$modal.find( '.zg-b2b-addr-modal__close' ).attr( 'aria-label', cfg.close || '×' );
+	$form.append( $modal );
+	var modalOpen = false;
+
+	function openModal() {
+		if ( modalOpen || ! $shipFields.length ) {
+			return;
+		}
+		modalOpen = true;
+		$modal.find( '.zg-b2b-addr-modal__title' ).text( ( cfg.editTitle || '%s' ).replace( '%s', choiceLabel( currentChoice() ) ) );
+		$modal.find( '.zg-b2b-checkout-modal__hint' ).text( cfg.editHint || '' );
+		$modal.find( '.zg-b2b-addr-modal__body' ).append( $shipFields );
+		$modal.prop( 'hidden', false );
+		$( 'html' ).addClass( 'zg-b2b-addr-modal-open' );
+		$( document.body ).trigger( 'country_to_state_changed' );
+		window.setTimeout( function () { $shipFields.find( '#shipping_address_1' ).trigger( 'focus' ); }, 30 );
+	}
+	function closeModal() {
+		if ( ! modalOpen ) {
+			return;
+		}
+		modalOpen = false;
+		$slot.append( $shipFields );
+		$modal.prop( 'hidden', true );
+		$( 'html' ).removeClass( 'zg-b2b-addr-modal-open' );
+		$edit.trigger( 'focus' );
+	}
+	$modal.on( 'click', '[data-zg-modal-close]', function ( e ) {
+		e.preventDefault();
 		fieldsOpen = false;
 		updateFields();
+	} );
+	$( document ).on( 'keydown', function ( e ) {
+		if ( e.key === 'Escape' && modalOpen ) {
+			fieldsOpen = false;
+			updateFields();
+		}
 	} );
 
 	function choiceLabel( choice ) {
@@ -110,16 +157,15 @@
 		$done.prop( 'hidden', ! ( saved && fieldsOpen ) );
 
 		var editing = saved && fieldsOpen;
-		$( '.zg-b2b-shipping-inline' ).toggleClass( 'is-editing', editing ).toggleClass( 'is-new', choice === 'new' );
-		$picker.find( '.zg-b2b-addr-option' ).removeClass( 'is-editing' );
+		$( '.zg-b2b-shipping-inline' ).toggleClass( 'is-new', choice === 'new' );
+		$head.find( '.zg-b2b-edit-head__title' ).text( cfg.newTitle || '' );
+		$head.find( '.zg-b2b-edit-head__hint' ).text( cfg.newHint || '' );
+		$head.find( '.zg-b2b-edit-head__close' ).prop( 'hidden', true );
 		if ( editing ) {
-			$picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' ).addClass( 'is-editing' );
-		}
-		$head.find( '.zg-b2b-edit-head__title' ).text( editing ? ( cfg.editTitle || '' ).replace( '%s', choiceLabel( choice ) ) : ( cfg.newTitle || '' ) );
-		$head.find( '.zg-b2b-edit-head__hint' ).text( editing ? ( cfg.editHint || '' ) : ( cfg.newHint || '' ) );
-		$head.find( '.zg-b2b-edit-head__close' ).prop( 'hidden', ! editing );
-		if ( editing && ! $done.find( '.zg-b2b-save-state' ).text() ) {
-			$done.find( '.zg-b2b-save-state' ).text( cfg.autoSave || '' );
+			$done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok is-error' ).text( cfg.autoSave || '' );
+			openModal();
+		} else {
+			closeModal();
 		}
 	}
 

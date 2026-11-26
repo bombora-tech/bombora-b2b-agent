@@ -945,3 +945,34 @@ form.checkout .zg-b2b-edit-head__close[hidden] {
 .zg-b2b-choices.is-enhanced > .zg-b2b-addr-option.is-editing {
 	border-left-color: var(--zg-addr-teal);
 }
+
+/* Pokladna: úprava uložené doručovací adresy v pop-upu. */
+.zg-b2b-checkout-modal .zg-b2b-addr-modal__body {
+	padding-bottom: 0;
+}
+.zg-b2b-checkout-modal .zg-b2b-checkout-modal__hint {
+	margin: 0 0 16px;
+	font-size: 14px;
+}
+.zg-b2b-checkout-modal .zg-b2b-edit-head {
+	display: none !important;
+}
+.zg-b2b-checkout-modal .shipping_address .form-row {
+	box-sizing: border-box;
+}
+.zg-b2b-checkout-modal .zg-b2b-done-row {
+	position: sticky;
+	bottom: 0;
+	order: 9999;
+	flex: 0 0 calc(100% + 48px);
+	width: calc(100% + 48px);
+	box-sizing: border-box;
+	margin: 12px -24px 0;
+	padding: 16px 24px;
+	background: #fff;
+	border-top: 0.8px solid var(--zg-addr-border);
+	border-radius: 0 0 14px 14px;
+}
+.zg-b2b-checkout-modal .zg-b2b-addr-modal__dialog {
+	max-width: 560px;
+}

@@ -164,11 +164,12 @@ class ZG_B2B_Address_Checkout {
 			'error'          => __( 'Nepodařilo se uložit – údaje se použijí jen pro tuto objednávku.', 'zg-b2b' ),
 			'done'           => __( 'Hotovo – použít adresu', 'zg-b2b' ),
 			/* translators: %s: název pobočky */
-			'editTitle'      => __( 'Upravujete adresu: %s', 'zg-b2b' ),
+			'editTitle'      => __( 'Upravit adresu: %s', 'zg-b2b' ),
 			'editHint'       => __( 'Změny se ukládají automaticky do této uložené adresy.', 'zg-b2b' ),
 			'newTitle'       => __( 'Nová doručovací adresa', 'zg-b2b' ),
 			'newHint'        => __( 'Vyplňte adresu, kam máme zboží doručit.', 'zg-b2b' ),
 			'autoSave'       => __( 'Změny se uloží automaticky.', 'zg-b2b' ),
+			'close'          => __( 'Zavřít', 'zg-b2b' ),
 			'contacts'       => class_exists( 'ZG_B2B_Contacts' ) ? ZG_B2B_Contacts::script_data( $user_id ) : new stdClass(),
 		) );
 	}

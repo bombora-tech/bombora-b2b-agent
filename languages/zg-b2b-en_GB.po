@@ -947,3 +947,7 @@ msgstr "Enter the address where we should deliver the goods."
 
 msgid "Změny se uloží automaticky."
 msgstr "Changes are saved automatically."
+
+#, php-format
+msgid "Upravit adresu: %s"
+msgstr "Edit address: %s"

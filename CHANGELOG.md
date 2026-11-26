@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.12.0] - 2026-11-26
+
+### Změněno
+- Pokladna: úprava uložené doručovací adresy („Upravit adresu“) se otevírá v **pop-upu** (stejné okno jako v Můj účet → Adresy). Změny se ukládají automaticky, okno zavře „Hotovo – použít adresu“, křížek, kliknutí mimo okno nebo Esc. Na mobilu se okno vysouvá zespodu. Zadání nové adresy („Jiná adresa“) zůstává přímo v pokladně.
+
 ## [1.11.3] - 2026-11-26
 
 ### Změněno
