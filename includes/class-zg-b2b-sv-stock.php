@@ -254,13 +254,12 @@ class ZG_B2B_SV_Stock {
 			$order->remove_item( $id );
 		}
 
-		// Doprava lihovin = Messenger (vlastní řádek, cena dle nastavení).
-		$ship = new WC_Order_Item_Shipping();
-		$ship->set_method_title( 'Messenger – S&V STOCK' );
-		$ship->set_method_id( 'zg_sv_messenger' );
-		$ship->set_total( 0 );
+		// Doprava: lihoviny se doručují zdarma → žádný řádek dopravy; jen při nastavení „přesunout“ se poplatek přesune.
 		if ( 'move' === zg_b2b_opt( 'sv_shipping' ) ) {
 			foreach ( $order->get_items( 'shipping' ) as $sid => $s ) {
+				$ship = new WC_Order_Item_Shipping();
+				$ship->set_method_title( $s->get_method_title() );
+				$ship->set_method_id( $s->get_method_id() );
 				$ship->set_total( $s->get_total() );
 				$ship->set_taxes( $s->get_taxes() );
 				// Pro „Vrátit do původní objednávky“.
@@ -275,10 +274,10 @@ class ZG_B2B_SV_Stock {
 					)
 				);
 				$order->remove_item( $sid );
+				$child->add_item( $ship );
 				break;
 			}
 		}
-		$child->add_item( $ship );
 
 		$child->calculate_totals( false );
 		$child->save(); // nejdřív jako „pending“
@@ -415,11 +414,30 @@ class ZG_B2B_SV_Stock {
 
 	/** Plugin Eurofaktura.cz nesmí dostat objednávku lihovin (fakturovalo by se zákazníkovi). */
 	public static function block_ef_webhook( $should, $webhook, $arg ) {
-		if ( ! $should || ! $webhook || (int) get_option( 'eurofaktura_webhook_id' ) !== (int) $webhook->get_id() ) {
+		if ( ! $should || ! $webhook || ! self::is_ef_webhook( $webhook ) ) {
 			return $should;
 		}
-		$order = is_numeric( $arg ) ? wc_get_order( $arg ) : null;
-		return $order && self::is_sv_order( $order ) ? false : $should;
+		$id    = is_numeric( $arg ) ? (int) $arg : ( is_array( $arg ) && isset( $arg['id'] ) ? (int) $arg['id'] : 0 );
+		$order = $id ? wc_get_order( $id ) : null;
+		return $order && 'yes' === $order->get_meta( '_zg_sv_order' ) ? false : $should;
+	}
+
+	/** Webhook do Eurofaktury: vybraný v pluginu, nebo jakýkoli se stejným hostem / s doménou Eurofaktury. */
+	private static function is_ef_webhook( $webhook ) {
+		$url  = (string) $webhook->get_delivery_url();
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( preg_match( '/eurofaktura|e-racuni|eracuni/', $host ) ) {
+			return true;
+		}
+		$main_id = (int) get_option( 'eurofaktura_webhook_id' );
+		if ( ! $main_id ) {
+			return false;
+		}
+		if ( $main_id === (int) $webhook->get_id() ) {
+			return true;
+		}
+		$main = wc_get_webhook( $main_id );
+		return $main && $host && strtolower( (string) wp_parse_url( $main->get_delivery_url(), PHP_URL_HOST ) ) === $host;
 	}
 
 	/* ---------------------------------------------------------------------
@@ -1047,7 +1065,7 @@ class ZG_B2B_SV_Stock {
 				<div style="max-height:220px;overflow:auto;border:1px solid #dcdcde;padding:8px 12px;background:#fff;max-width:520px"><?php self::cat_tree( array_map( 'intval', (array) $s['sv_categories'] ) ); ?></div>
 				<p class="description">Produkty z těchto kategorií (i podkategorií) se při rozdělení přesunou do objednávky pro S&amp;V. Produkty druhého skladu, které prodává Bombora (vlastní spotřeba / dárky), sem nezařazujte.</p></td></tr>
 			<tr><th scope="row">Poplatek za dopravu</th><td><select name="zg_b2b_settings[sv_shipping]">
-				<option value="keep" <?php selected( 'keep', $s['sv_shipping'] ); ?>>Ponechat v původní objednávce (lihoviny: Messenger 0 Kč)</option>
+				<option value="keep" <?php selected( 'keep', $s['sv_shipping'] ); ?>>Ponechat v původní objednávce (lihoviny bez dopravy – zdarma)</option>
 				<option value="move" <?php selected( 'move', $s['sv_shipping'] ); ?>>Přesunout do objednávky lihovin</option>
 			</select></td></tr>
 			<?php

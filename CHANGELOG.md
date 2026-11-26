@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.21.1] - 2026-11-26
+
+### Opraveno
+- S&V STOCK: objednávka lihovin se mohla dostat do Eurofaktury. Blokují se teď **všechny** webhooky do Eurofaktury (vybraný v pluginu Eurofaktura.cz i další se stejnou adresou / doménou Eurofaktury) a modul Doklady pro objednávky lihovin nikdy nevolá `order.refresh` (mohl objednávku v Eurofaktuře založit).
+- S&V STOCK: objednávka lihovin už nedostává řádek dopravy „Messenger – S&V STOCK“ (lihoviny se doručují zdarma). Při nastavení „Přesunout do objednávky lihovin“ se přesune původní řádek dopravy.
+
 ## [1.21.0] - 2026-11-26
 
 ### Změněno

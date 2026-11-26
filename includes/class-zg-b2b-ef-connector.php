@@ -136,6 +136,9 @@ class ZG_B2B_EF_Connector {
 		if ( ! self::available() ) {
 			return new WP_Error( 'zg_ef_conn', 'Plugin Eurofaktura.cz není aktivní nebo připojený.' );
 		}
+		if ( 'yes' === $order->get_meta( '_zg_sv_order' ) ) {
+			return array(); // objednávka lihovin S&V: Eurofaktuře ji nikdy neposílat (order.refresh by ji tam mohl založit)
+		}
 		$response = self::request( 'order.refresh', eurofaktura_map_order_for_request( $order ), 8 );
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -348,6 +351,10 @@ class ZG_B2B_EF_Connector {
 	 * ------------------------------------------------------------------- */
 
 	public static function queue_refresh( $order_id ) {
+		$o = wc_get_order( $order_id );
+		if ( ! $o || 'yes' === $o->get_meta( '_zg_sv_order' ) ) {
+			return;
+		}
 		if ( self::available() && function_exists( 'as_schedule_single_action' ) ) {
 			as_unschedule_action( self::REFRESH_HOOK, array( 'order_id' => (int) $order_id ), 'zg-b2b' );
 			as_schedule_single_action( time() + 120, self::REFRESH_HOOK, array( 'order_id' => (int) $order_id ), 'zg-b2b' );
@@ -356,7 +363,7 @@ class ZG_B2B_EF_Connector {
 
 	/** Objednávka, u které se doklady ještě nikdy nenačetly → načíst na pozadí (za 10 s). */
 	public static function queue_first_check( WC_Order $order ) {
-		if ( ! self::available() || ! function_exists( 'as_has_scheduled_action' ) || $order->get_meta( self::META_CHECKED ) ) {
+		if ( ! self::available() || ! function_exists( 'as_has_scheduled_action' ) || $order->get_meta( self::META_CHECKED ) || 'yes' === $order->get_meta( '_zg_sv_order' ) ) {
 			return;
 		}
 		$args = array( 'order_id' => (int) $order->get_id() );
