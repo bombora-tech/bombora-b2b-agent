@@ -1014,3 +1014,18 @@ msgstr "Credit note"
 
 msgid "storno"
 msgstr "cancelled"
+
+msgid "Faktura od S&V STOCK s.r.o. (lihoviny)."
+msgstr "Invoice from S&V STOCK s.r.o. (spirits)."
+
+msgid "Dobrý den, v příloze posíláme fakturu %1$s k objednávce č. %2$s (lihoviny, fakturuje S&V STOCK s.r.o.)."
+msgstr "Hello, please find attached invoice %1$s for order no. %2$s (spirits, invoiced by S&V STOCK s.r.o.)."
+
+msgid "Fakturu najdete také v sekci Můj účet → Objednávky."
+msgstr "You can also find the invoice in My Account → Orders."
+
+msgid "Faktura k objednávce č. %s"
+msgstr "Invoice for order no. %s"
+
+msgid "Vaše zásilka (lihoviny) byla předána přepravci Messenger. Sledování: %s"
+msgstr "Your shipment (spirits) has been handed over to the Messenger courier. Tracking: %s"

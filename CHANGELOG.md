@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.18.0] - 2026-11-26
+
+### Přidáno
+- **Modul „Lihoviny přes S&V STOCK“** (Bombora → B2B Agent → sekce 5, výchozí vypnuto; nouzově `ZG_B2B_SV_DISABLE` ve wp-config.php). Metabox „S&V STOCK – lihoviny“ v detailu objednávky:
+  - **Rozdělit objednávku**: lihoviny z kategorií S&V se přesunou do nové propojené objednávky stejného zákazníka (bez e-mailů, bez druhého odečtení skladu, stav a datum platby převzaté). Původní objednávka se přepočítá a znovu synchronizuje s pluginem Eurofaktura.cz. Objednávka jen s lihovinami se pouze označí.
+  - Objednávka lihovin se **neposílá pluginu Eurofaktura.cz** (blokovaný webhook). Zákazník u ní **nikdy nevidí doklady z Eurofaktury**.
+  - **Vystavit v Eurofaktuře**: faktura Bombora → S&V přes API (odběratel S&V, volitelně pole skladu S&V, ceny 1:1 z objednávky, bez dopravy); PDF přijde e-mailem ke kontrole.
+  - **Faktura S&V pro zákazníka**: nahrání PDF s číslem, volitelně e-mail zákazníkovi s přílohou; zobrazí se v Můj účet (sloupec Doklady i detail objednávky). Mazání nahraných faktur.
+  - **Messenger**: „Objednat Messenger“ (API importParcel – vyzvednutí u S&V v Kladně, balíky podle hmotnosti, kontrola věku, kód VO-číslo), číslo zásilky a sledování, poznámka zákazníkovi s odkazem na sledování, „Štítky PDF“ (printLabels) a e-mail S&V k expedici se štítky (kopie vám). Testovací prostředí Messengeru je ve výchozím stavu zapnuté.
+
 ## [1.17.0] - 2026-11-26
 
 ### Změněno

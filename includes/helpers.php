@@ -10,7 +10,8 @@ function zg_b2b_eu_countries() {
 }
 
 function zg_b2b_defaults() {
-	return array(
+	$sv = class_exists( 'ZG_B2B_SV_Stock' ) ? ZG_B2B_SV_Stock::defaults() : array();
+	return $sv + array(
 		'allowed_countries'       => array( 'CZ' ),
 		'cz_categories'           => array(),
 		'block_foreign_customers' => 'yes',

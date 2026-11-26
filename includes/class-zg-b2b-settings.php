@@ -102,6 +102,10 @@ class ZG_B2B_Settings {
 		$out['ef_invoice_meta']   = isset( $in['ef_invoice_meta'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $in['ef_invoice_meta'] ) : '';
 		$out['ef_invoice_date_meta'] = isset( $in['ef_invoice_date_meta'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $in['ef_invoice_date_meta'] ) : '';
 
+		if ( class_exists( 'ZG_B2B_SV_Stock' ) ) {
+			$out = array_merge( $out, ZG_B2B_SV_Stock::sanitize( $in, $old ) );
+		}
+
 		$out['tag_name'] = isset( $in['tag_name'] ) && '' !== trim( $in['tag_name'] ) ? sanitize_text_field( $in['tag_name'] ) : $d['tag_name'];
 
 		// Při uložení z administrace: přejmenovat štítek, přidat ho k zaškrtnutým kategoriím
@@ -347,6 +351,8 @@ class ZG_B2B_Settings {
 						<p><?php echo wp_kses_post( ZG_B2B_EF_Connector::status_html() ); ?></p>
 					</td></tr>
 				</table>
+
+				<?php ZG_B2B_SV_Stock::render_settings( $s ); ?>
 
 				<?php submit_button( 'Uložit nastavení' ); ?>
 			</form>

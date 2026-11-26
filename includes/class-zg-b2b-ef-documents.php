@@ -275,6 +275,9 @@ class ZG_B2B_EF_Documents {
 
 	/** Který doklad zákazník právě vidí: faktura nahrazuje proformu. */
 	public static function visible_type( WC_Order $order ) {
+		if ( class_exists( 'ZG_B2B_SV_Stock' ) && ZG_B2B_SV_Stock::is_sv_order( $order ) ) {
+			return ZG_B2B_SV_Stock::invoices( $order ) ? 'sv' : ''; // jen faktury S&V, nikdy doklady Eurofaktury
+		}
 		$ef = ZG_B2B_EF_Connector::customer_docs( $order );
 		if ( $ef && ( ZG_B2B_EF_Connector::has_invoice( $ef ) || ! $order->get_meta( '_zg_ef_proforma_number' ) ) ) {
 			return 'ef';
@@ -314,7 +317,10 @@ class ZG_B2B_EF_Documents {
 					'order'      => $order->get_id(),
 					'key'        => $order->get_order_key(),
 					'doc'        => $doc_id,
-				)
+				),
+				function ( $v ) {
+					return '' !== (string) $v;
+				}
 			),
 			home_url( '/' )
 		);
@@ -325,7 +331,7 @@ class ZG_B2B_EF_Documents {
 		if ( empty( $_GET['zg_b2b_doc'] ) || empty( $_GET['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			return;
 		}
-		$type  = in_array( $_GET['zg_b2b_doc'], array( 'invoice', 'ef' ), true ) ? sanitize_key( $_GET['zg_b2b_doc'] ) : 'proforma'; // phpcs:ignore WordPress.Security.NonceVerification
+		$type  = in_array( $_GET['zg_b2b_doc'], array( 'invoice', 'ef', 'sv' ), true ) ? sanitize_key( $_GET['zg_b2b_doc'] ) : 'proforma'; // phpcs:ignore WordPress.Security.NonceVerification
 		$order = wc_get_order( absint( $_GET['order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		$key   = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
@@ -335,6 +341,9 @@ class ZG_B2B_EF_Documents {
 		);
 		if ( ! $allowed ) {
 			wp_die( esc_html__( 'Doklad není k dispozici. Přihlaste se prosím ke svému účtu.', 'zg-b2b' ), '', array( 'response' => 403 ) );
+		}
+		if ( 'sv' === $type && class_exists( 'ZG_B2B_SV_Stock' ) && ZG_B2B_SV_Stock::is_sv_order( $order ) ) {
+			ZG_B2B_SV_Stock::stream_invoice( $order, isset( $_GET['doc'] ) ? absint( $_GET['doc'] ) : -1 ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 		if ( 'ef' === $type ) {
 			self::stream_ef_doc( $order, isset( $_GET['doc'] ) ? sanitize_text_field( wp_unslash( $_GET['doc'] ) ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification
@@ -409,6 +418,9 @@ class ZG_B2B_EF_Documents {
 	public static function doc_links( WC_Order $order ) {
 		$type  = self::visible_type( $order );
 		$links = array();
+		if ( 'sv' === $type ) {
+			return ZG_B2B_SV_Stock::doc_links( $order );
+		}
 		if ( 'ef' === $type ) {
 			foreach ( ZG_B2B_EF_Connector::customer_docs( $order ) as $d ) {
 				$name    = 'credit' === $d['kind'] ? __( 'Opravný doklad', 'zg-b2b' ) : ( 'proforma' === $d['kind'] ? __( 'Proforma', 'zg-b2b' ) : __( 'Faktura', 'zg-b2b' ) );
@@ -473,6 +485,15 @@ class ZG_B2B_EF_Documents {
 				return '<p class="zg-b2b-doc-pending">' . esc_html__( 'Proformu připravujeme – během několika minut vám ji pošleme e-mailem a objeví se zde.', 'zg-b2b' ) . '</p>';
 			}
 			return '';
+		}
+		if ( 'sv' === $type ) {
+			$html = '';
+			foreach ( ZG_B2B_SV_Stock::doc_links( $order ) as $l ) {
+				$html .= '<div class="zg-b2b-doc"><span class="zg-b2b-doc__icon">' . zg_b2b_icon( 'info' ) . '</span>'
+					. '<span class="zg-b2b-doc__body"><strong>' . esc_html( $l['label'] ) . '</strong><span>' . esc_html( $l['hint'] ) . '</span></span>'
+					. zg_b2b_button( $l['url'], __( 'Stáhnout PDF', 'zg-b2b' ), 'outline', 'arrow', 'sm' ) . '</div>';
+			}
+			return $html;
 		}
 		if ( 'ef' === $type ) {
 			$html = '';

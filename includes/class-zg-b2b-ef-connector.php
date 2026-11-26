@@ -245,6 +245,9 @@ class ZG_B2B_EF_Connector {
 
 	/** Doklady pro zákazníka: faktury a opravné doklady (proforma z Eurofaktura pluginu jen dokud není faktura). */
 	public static function customer_docs( WC_Order $order, $max_age = 0 ) {
+		if ( class_exists( 'ZG_B2B_SV_Stock' ) && ZG_B2B_SV_Stock::is_sv_order( $order ) ) {
+			return array(); // objednávka lihovin: doklad v Eurofaktuře je faktura Bombora → S&V, zákazník ho nevidí
+		}
 		$docs    = self::docs( $order, $max_age );
 		$invoice = self::has_invoice( $docs );
 		$out     = array();
@@ -393,6 +396,9 @@ class ZG_B2B_EF_Connector {
 		);
 		$done = 0;
 		foreach ( $orders as $order ) {
+			if ( 'yes' === $order->get_meta( '_zg_sv_order' ) ) {
+				continue;
+			}
 			$docs    = $order->get_meta( self::META );
 			$checked = (int) $order->get_meta( self::META_CHECKED );
 			$age     = is_array( $docs ) && self::has_invoice( $docs ) ? 6 * HOUR_IN_SECONDS : 25 * MINUTE_IN_SECONDS;

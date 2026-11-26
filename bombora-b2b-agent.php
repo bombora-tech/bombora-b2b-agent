@@ -3,7 +3,7 @@
  * Plugin Name:       Bombora B2B Agent
  * Plugin URI:        https://github.com/bombora-tech/bombora-b2b-agent
  * Description:       Velkoobchod vo.zgruzie.cz – ceny jen pro schválené partnery, registrace firem s ověřením ARES/VIES a ručním schválením, lihoviny a pivo s doručením pouze v ČR, platba na fakturu s proformou z Eurofaktury, více doručovacích adres (pobočky) s výběrem v pokladně.
- * Version:           1.17.0
+ * Version:           1.18.0
  * Author:            Bombora group s.r.o.
  * Author URI:        https://zgruzie.cz
  * Text Domain:       zg-b2b
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZG_B2B_VERSION', '1.17.0' );
+define( 'ZG_B2B_VERSION', '1.18.0' );
 define( 'ZG_B2B_FILE', __FILE__ );
 define( 'ZG_B2B_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZG_B2B_URL', plugin_dir_url( __FILE__ ) );
@@ -59,6 +59,7 @@ add_action( 'plugins_loaded', function () {
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-gateway-invoice.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-ef-connector.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-ef-documents.php';
+	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-sv-stock.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-address-book.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-address-account.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-address-checkout.php';
@@ -80,6 +81,7 @@ add_action( 'plugins_loaded', function () {
 	ZG_B2B_Country_Prompt::init();
 	ZG_B2B_EF_Connector::init();
 	ZG_B2B_EF_Documents::init();
+	ZG_B2B_SV_Stock::init();
 	ZG_B2B_Address_Account::init();
 	ZG_B2B_Address_Checkout::init();
 	ZG_B2B_Address_Admin::init();
