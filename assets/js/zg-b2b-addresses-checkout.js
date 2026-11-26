@@ -180,7 +180,7 @@
 		var fields = {};
 		$.each( cfg.fieldKeys, function ( i, key ) {
 			var $f = $( '#shipping_' + key );
-			if ( $f.length && key !== 'company' && ( ! $recipient.length || contactKeys.indexOf( key ) === -1 ) ) {
+			if ( $f.length && ( ! $recipient.length || contactKeys.indexOf( key ) === -1 ) ) {
 				fields[ key ] = $f.val() || '';
 			}
 		} );
@@ -188,7 +188,12 @@
 		$.post( cfg.ajaxUrl, { action: 'zg_b2b_save_contact', nonce: cfg.nonce, type: 'shipping', address: choice, fields: fields } ).done( function ( r ) {
 			if ( r && r.success ) {
 				cfg.addresses[ choice ] = r.data.fields;
-				$picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' ).find( '.zg-b2b-addr-option__detail' ).text( r.data.inline );
+				var $opt = $picker.find( 'input[name="zg_b2b_addr_choice"][value="' + choice + '"]' ).closest( '.zg-b2b-addr-option' );
+				$opt.find( '.zg-b2b-addr-option__detail' ).text( r.data.inline );
+				if ( r.data.label ) {
+					$opt.find( 'strong' ).first().text( r.data.label );
+					$modal.find( '.zg-b2b-addr-modal__title' ).text( ( cfg.editTitle || '%s' ).replace( '%s', r.data.label ) );
+				}
 				$state.addClass( 'is-ok' ).text( '✓ ' + ( cfg.saved || '' ) );
 			} else {
 				$state.addClass( 'is-error' ).text( cfg.error || '' );

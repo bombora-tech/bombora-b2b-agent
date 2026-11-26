@@ -241,6 +241,9 @@ class ZG_B2B_Address_Book {
 
 	/** Label shown when the customer did not enter one. */
 	public static function fallback_label( array $fields ) {
+		if ( ! empty( $fields['company'] ) ) {
+			return $fields['company'];
+		}
 		$parts = array_filter( array(
 			isset( $fields['company'] ) ? $fields['company'] : '',
 			isset( $fields['city'] ) ? $fields['city'] : '',

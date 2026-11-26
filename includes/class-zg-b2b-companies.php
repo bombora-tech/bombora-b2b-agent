@@ -918,7 +918,11 @@ class ZG_B2B_Companies {
 			}
 			$keys = ZG_B2B_Address_Book::field_keys();
 			foreach ( $fields as $k => $v ) {
-				if ( in_array( $k, $keys, true ) && 'company' !== $k ) {
+				if ( 'company' === $k ) {
+					if ( '' !== trim( $v ) ) {
+						$address['label'] = $v; // Název podniku = název adresy.
+					}
+				} elseif ( in_array( $k, $keys, true ) ) {
 					$address['fields'][ $k ] = $v;
 				}
 			}
@@ -935,6 +939,7 @@ class ZG_B2B_Companies {
 			wp_send_json_success( array(
 				'fields' => $saved ? $saved['fields'] : array(),
 				'inline' => $saved ? ZG_B2B_Address_Book::format_inline( $saved['fields'] ) : '',
+				'label'  => $saved ? $saved['label'] : '',
 			) );
 		}
 

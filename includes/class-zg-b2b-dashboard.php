@@ -256,7 +256,7 @@ class ZG_B2B_Dashboard {
 	private static function render_addresses( $user_id ) {
 		$list = ZG_B2B_Address_Book::get_all( $user_id );
 		echo '<div class="postbox"><div class="postbox-header"><h2>Doručovací adresy (pobočky)</h2></div><div class="inside">';
-		echo '<table class="widefat striped zg-b2b-co"><thead><tr><th style="width:16%">Název pobočky</th><th style="width:16%">Jméno / Příjmení</th><th>Ulice / PSČ / Město / Země</th><th style="width:12%">Telefon</th><th style="width:6%">Výchozí</th><th style="width:6%">Smazat</th></tr></thead><tbody>';
+		echo '<table class="widefat striped zg-b2b-co"><thead><tr><th style="width:16%">Název podniku</th><th style="width:16%">Jméno / Příjmení</th><th>Ulice / PSČ / Město / Země</th><th style="width:12%">Telefon</th><th style="width:6%">Výchozí</th><th style="width:6%">Smazat</th></tr></thead><tbody>';
 		$rows        = $list;
 		$rows[]      = array( 'id' => 'new', 'label' => '', 'default' => false, 'fields' => array() );
 		$has_default = false;
@@ -279,7 +279,7 @@ class ZG_B2B_Dashboard {
 			echo '<td>' . ( $is_new ? '' : '<label><input type="checkbox" name="' . esc_attr( $n ) . '[delete]" value="1"> ✕</label>' ) . '</td>';
 			echo '</tr>';
 		}
-		echo '</tbody></table><p class="description">Název pobočky se uvádí i jako název firmy v doručovací adrese.</p></div></div>';
+		echo '</tbody></table><p class="description">Název podniku se uvádí i jako název firmy v doručovací adrese (příjemce zásilky).</p></div></div>';
 	}
 
 	private static function render_orders( $user_id ) {
@@ -384,7 +384,7 @@ class ZG_B2B_Dashboard {
 				continue;
 			}
 			if ( '' === $label ) {
-				$errors[] = 'Název pobočky je povinný – adresa nezměněna.';
+				$errors[] = 'Název podniku je povinný – adresa nezměněna.';
 				continue;
 			}
 			$fields = array();

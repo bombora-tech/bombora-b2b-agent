@@ -951,3 +951,12 @@ msgstr "Changes are saved automatically."
 #, php-format
 msgid "Upravit adresu: %s"
 msgstr "Edit address: %s"
+
+msgid "Název podniku"
+msgstr "Business name"
+
+msgid "Restaurace, kavárna, vinotéka, obchod nebo firma"
+msgstr "Restaurant, café, wine shop, store or company"
+
+msgid "Uvede se na zásilce jako název příjemce (pro dopravce)."
+msgstr "Shown on the shipment as the recipient name (for the carrier)."

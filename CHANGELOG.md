@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.13.0] - 2026-11-26
+
+### Změněno
+- Doručovací adresa: pole firmy se jmenuje **„Název podniku“** (nápověda: restaurace, kavárna, vinotéka, obchod nebo firma) a je **povinné** – v pokladně, v Můj účet → Adresy i v B2B Dashboardu.
+- Název podniku = název uložené adresy: úprava v pop-upu v pokladně přejmenuje i uloženou adresu; nová adresa uložená z pokladny se pojmenuje podle názvu podniku (samostatné pole „Název pobočky“ v pokladně odstraněno).
+
 ## [1.12.1] - 2026-11-26
 
 ### Opraveno

@@ -251,9 +251,9 @@ class ZG_B2B_Address_Account {
 
 		woocommerce_form_field( 'zg_b2b_addr_label', array(
 			'type'        => 'text',
-			'label'       => __( 'Název pobočky', 'zg-b2b' ),
-			'placeholder' => __( 'např. Restaurace Vinohrady', 'zg-b2b' ),
-			'description' => __( 'Uvede se i jako název firmy v doručovací adrese.', 'zg-b2b' ),
+			'label'       => __( 'Název podniku', 'zg-b2b' ),
+			'placeholder' => __( 'Restaurace, kavárna, vinotéka, obchod nebo firma', 'zg-b2b' ),
+			'description' => __( 'Uvede se na zásilce jako název příjemce (pro dopravce).', 'zg-b2b' ),
 			'class'       => array( 'form-row-wide' ),
 			'required'    => true,
 			'priority'    => 1, // wc-address-i18n řadí pole podle priority.
@@ -352,7 +352,7 @@ class ZG_B2B_Address_Account {
 
 		if ( '' === trim( isset( $_POST['zg_b2b_addr_label'] ) ? sanitize_text_field( wp_unslash( $_POST['zg_b2b_addr_label'] ) ) : '' ) ) {
 			/* translators: %s: field label */
-			wc_add_notice( sprintf( __( '%s je povinné pole.', 'zg-b2b' ), '<strong>' . esc_html__( 'Název pobočky', 'zg-b2b' ) . '</strong>' ), 'error' );
+			wc_add_notice( sprintf( __( '%s je povinné pole.', 'zg-b2b' ), '<strong>' . esc_html__( 'Název podniku', 'zg-b2b' ) . '</strong>' ), 'error' );
 			$ok = false;
 		}
 		unset( $defs['company'] ); // Název firmy = název pobočky.

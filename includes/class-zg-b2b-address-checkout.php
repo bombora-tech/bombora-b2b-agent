@@ -12,6 +12,8 @@ class ZG_B2B_Address_Checkout {
 
 	public static function init() {
 		add_filter( 'woocommerce_ship_to_different_address_checked', array( __CLASS__, 'auto_check' ), 20 );
+		add_filter( 'woocommerce_shipping_fields', array( __CLASS__, 'company_field' ), 50 );
+		add_filter( 'woocommerce_checkout_fields', array( __CLASS__, 'checkout_company_field' ), 1002 );
 		add_filter( 'woocommerce_checkout_get_value', array( __CLASS__, 'prefill' ), 20, 2 );
 		add_action( 'woocommerce_after_checkout_billing_form', array( __CLASS__, 'render_picker' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ) );
@@ -22,6 +24,29 @@ class ZG_B2B_Address_Checkout {
 		add_action( 'woocommerce_admin_order_data_after_shipping_address', array( __CLASS__, 'admin_label' ) );
 		add_action( 'woocommerce_order_details_after_customer_details', array( __CLASS__, 'customer_label' ) );
 		add_action( 'woocommerce_email_customer_details', array( __CLASS__, 'email_label' ), 25, 3 );
+	}
+
+	/** Název podniku v doručovací adrese: povinný, srozumitelný popisek (pro dopravce / WMS). */
+	public static function company_def( array $def ) {
+		$def['label']       = __( 'Název podniku', 'zg-b2b' );
+		$def['placeholder'] = __( 'Restaurace, kavárna, vinotéka, obchod nebo firma', 'zg-b2b' );
+		$def['required']    = true;
+		$def['hidden']      = false;
+		return $def;
+	}
+
+	public static function company_field( $fields ) {
+		if ( isset( $fields['shipping_company'] ) && (bool) apply_filters( 'zg_b2b_shipping_company_required', true ) ) {
+			$fields['shipping_company'] = self::company_def( $fields['shipping_company'] );
+		}
+		return $fields;
+	}
+
+	public static function checkout_company_field( $fields ) {
+		if ( isset( $fields['shipping']['shipping_company'] ) ) {
+			$fields['shipping'] = self::company_field( $fields['shipping'] );
+		}
+		return $fields;
 	}
 
 	/** Is the feature active for the current visitor? */
@@ -118,7 +143,6 @@ class ZG_B2B_Address_Checkout {
 
 		echo '<div class="zg-b2b-addr-picker__save" hidden>';
 		echo '<label class="zg-b2b-addr-picker__save-check zg-b2b-addr-check"><input type="checkbox" name="zg_b2b_addr_save_new" value="1" checked> <span>' . esc_html__( 'Uložit adresu do mých doručovacích adres', 'zg-b2b' ) . '</span></label>';
-		echo '<input type="text" class="input-text" name="zg_b2b_addr_new_label" maxlength="100" placeholder="' . esc_attr__( 'Název pobočky', 'zg-b2b' ) . '">';
 		echo '</div>';
 
 		echo '<p class="zg-b2b-addr-picker__manage"><button type="button" class="zg-b2b-addr-edit" hidden>' . esc_html__( 'Upravit adresu', 'zg-b2b' ) . '</button><a href="' . esc_url( ZG_B2B_Address_Account::url() ) . '">' . esc_html__( 'Spravovat doručovací adresy', 'zg-b2b' ) . '</a></p>';
@@ -215,7 +239,7 @@ class ZG_B2B_Address_Checkout {
 			$getter         = 'get_shipping_' . $key;
 			$fields[ $key ] = is_callable( array( $order, $getter ) ) ? (string) $order->$getter() : (string) $order->get_meta( '_shipping_' . $key );
 		}
-		$label  = isset( $_POST['zg_b2b_addr_new_label'] ) ? wp_unslash( $_POST['zg_b2b_addr_new_label'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$label  = isset( $fields['company'] ) ? $fields['company'] : ''; // Název podniku = název uložené adresy.
 		$result = ZG_B2B_Address_Book::save( get_current_user_id(), array(
 			'label'  => $label,
 			'fields' => $fields,
