@@ -153,7 +153,8 @@
 		var choice = currentChoice();
 		var saved = choice !== 'billing' && choice !== 'new';
 		var show = choice === 'new' || ( saved && fieldsOpen );
-		$( 'div.shipping_address' ).toggle( show );
+		// stop(): WooCommerce po změně „Doručit na jinou adresu“ pole rozbaluje animací (slideDown).
+		$( 'div.shipping_address' ).stop( true, true ).toggle( show );
 		$edit.prop( 'hidden', ! saved || fieldsOpen );
 		$done.prop( 'hidden', ! ( saved && fieldsOpen ) );
 
@@ -163,7 +164,9 @@
 		$head.find( '.zg-b2b-edit-head__hint' ).text( cfg.newHint || '' );
 		$head.find( '.zg-b2b-edit-head__close' ).prop( 'hidden', true );
 		if ( editing ) {
-			$done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok is-error' ).text( cfg.autoSave || '' );
+			if ( ! modalOpen ) {
+				$done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok is-error' ).text( '' );
+			}
 			openModal();
 		} else {
 			closeModal();
@@ -209,9 +212,31 @@
 		clearTimeout( saveTimer );
 		saveTimer = setTimeout( saveAddress, 300 );
 	} );
+	/* „Uložit adresu“: kontrola povinných polí, okamžité uložení a zavření okna. */
 	$done.on( 'click', '.zg-b2b-done-btn', function () {
+		var missing = $shipFields.find( '.validate-required' ).filter( ':visible' ).filter( function () {
+			var $in = $( this ).find( 'input, select' ).first();
+			return $in.length && ! $.trim( $in.val() || '' );
+		} );
+		$shipFields.find( '.validate-required' ).removeClass( 'woocommerce-invalid woocommerce-invalid-required-field' );
+		if ( missing.length ) {
+			missing.addClass( 'woocommerce-invalid woocommerce-invalid-required-field' );
+			missing.first().find( 'input, select' ).first().trigger( 'focus' );
+			$done.find( '.zg-b2b-save-state' ).removeClass( 'is-ok' ).addClass( 'is-error' ).text( cfg.required || '' );
+			return;
+		}
+		clearTimeout( saveTimer );
+		saveAddress();
 		fieldsOpen = false;
 		updateFields();
+	} );
+
+	// Po inicializaci / změně „Doručit na jinou adresu“ (animace WooCommerce) vynutit správný stav polí.
+	$( document.body ).on( 'init_checkout updated_checkout', function () {
+		window.setTimeout( updateFields, 0 );
+	} );
+	$( document.body ).on( 'change', shipToSelector, function () {
+		window.setTimeout( updateFields, 0 );
 	} );
 
 	function applyChoice( choice ) {
@@ -309,4 +334,5 @@
 	setShipTo( initial !== 'billing' );
 	applyRecipient();
 	updateFields();
+	window.setTimeout( updateFields, 600 );
 } )( jQuery );

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.1] - 2026-11-26
+
+### Opraveno
+- Pokladna: po úpravě adresy a obnovení stránky se pod uloženou adresou zobrazovala pole adresy (animace WooCommerce „Doručit na jinou adresu“ je znovu rozbalila). Stav polí se nyní vynutí i po inicializaci pokladny.
+
+### Změněno
+- Pop-up úpravy adresy: tlačítko **„Uložit adresu“** (místo „Hotovo – použít adresu“) – zkontroluje povinná pole, adresu hned uloží a okno zavře; text v okně upraven.
+
 ## [1.13.0] - 2026-11-26
 
 ### Změněno

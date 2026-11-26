@@ -985,3 +985,7 @@ form.checkout .zg-b2b-edit-head__close[hidden] {
 	margin: 0 !important;
 	transform: none !important;
 }
+
+form.checkout .zg-b2b-done-btn {
+	white-space: nowrap;
+}

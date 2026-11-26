@@ -960,3 +960,9 @@ msgstr "Restaurant, café, wine shop, store or company"
 
 msgid "Uvede se na zásilce jako název příjemce (pro dopravce)."
 msgstr "Shown on the shipment as the recipient name (for the carrier)."
+
+msgid "Vyplňte prosím povinná pole."
+msgstr "Please fill in the required fields."
+
+msgid "Upravte údaje a klikněte na „Uložit adresu“. Změna se uloží do vašich doručovacích adres."
+msgstr "Edit the details and click “Save address”. The change is saved to your delivery addresses."
