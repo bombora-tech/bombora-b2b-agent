@@ -48,6 +48,12 @@ class ZG_B2B_SV_Stock {
 		add_action( 'admin_post_zg_b2b_sv_upload', array( __CLASS__, 'admin_upload' ) );
 		add_filter( 'woocommerce_webhook_should_deliver', array( __CLASS__, 'block_ef_webhook' ), 20, 3 );
 		add_action( 'admin_init', array( __CLASS__, 'migrate_shipping_titles' ) );
+		add_action( 'admin_init', array( __CLASS__, 'migrate_child_dates' ) );
+		// Seznam objednávek ve WooCommerce: objednávka lihovin u původní objednávky.
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( __CLASS__, 'admin_list_column' ), 20, 2 );
+		add_action( 'manage_shop_order_posts_custom_column', array( __CLASS__, 'admin_list_legacy_column' ), 20, 2 );
+		add_filter( 'woocommerce_shop_order_list_table_order_css_classes', array( __CLASS__, 'admin_row_class' ), 10, 2 );
+		add_action( 'admin_head', array( __CLASS__, 'admin_list_css' ) );
 		// Můj účet: objednávka lihovin se zobrazuje u původní objednávky, ne jako samostatný řádek.
 		add_filter( 'woocommerce_my_account_my_orders_query', array( __CLASS__, 'hide_children' ) );
 		add_action( 'woocommerce_my_account_my_orders_column_order-number', array( __CLASS__, 'col_number' ) );
@@ -297,6 +303,10 @@ class ZG_B2B_SV_Stock {
 		}
 
 		$child->calculate_totals( false );
+		// Datum jako původní objednávka (+1 s) → v seznamech objednávek je hned u ní.
+		if ( $order->get_date_created() ) {
+			$child->set_date_created( $order->get_date_created()->getTimestamp() + 1 );
+		}
 		$child->save(); // nejdřív jako „pending“
 		// Sklad už odečetla původní objednávka – podobjednávka ho nesmí odečíst znovu.
 		$child->get_data_store()->set_stock_reduced( $child->get_id(), true );
@@ -455,6 +465,84 @@ class ZG_B2B_SV_Stock {
 				break;
 			}
 		}
+	}
+
+	/** Jednorázově: dřívější objednávky lihovin dostanou datum původní objednávky (+1 s). */
+	public static function migrate_child_dates() {
+		if ( get_option( 'zg_b2b_sv_dates_migrated' ) ) {
+			return;
+		}
+		update_option( 'zg_b2b_sv_dates_migrated', 1, false );
+		$ids = wc_get_orders(
+			array(
+				'limit'      => -1,
+				'return'     => 'ids',
+				'status'     => 'any',
+				'meta_query' => array( array( 'key' => '_zg_sv_parent', 'compare' => 'EXISTS' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
+			)
+		);
+		foreach ( $ids as $id ) {
+			$child  = wc_get_order( $id );
+			$parent = $child ? wc_get_order( (int) $child->get_meta( '_zg_sv_parent' ) ) : null;
+			if ( $child && $parent && $parent->get_date_created() ) {
+				$child->set_date_created( $parent->get_date_created()->getTimestamp() + 1 );
+				$child->save();
+			}
+		}
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Administrace: seznam objednávek WooCommerce
+	 * ------------------------------------------------------------------- */
+
+	/** Pod číslem objednávky vazba na druhou část (HPOS i starší úložiště). */
+	public static function admin_list_column( $column, $order ) {
+		if ( 'order_number' !== $column ) {
+			return;
+		}
+		$order = $order instanceof WC_Order ? $order : wc_get_order( $order );
+		if ( ! $order ) {
+			return;
+		}
+		$child  = self::child( $order );
+		$parent = self::parent( $order );
+		if ( $child ) {
+			echo '<a class="zg-sv-adm-rel" href="' . esc_url( $child->get_edit_order_url() ) . '">↳ lihoviny #' . esc_html( $child->get_order_number() ) . ' · ' . esc_html( wc_get_order_status_name( $child->get_status() ) ) . '</a>';
+		} elseif ( $parent ) {
+			echo '<span class="zg-sv-adm-badge">Lihoviny S&amp;V</span> <a class="zg-sv-adm-rel" href="' . esc_url( $parent->get_edit_order_url() ) . '">k #' . esc_html( $parent->get_order_number() ) . '</a>';
+		} elseif ( self::is_sv_order( $order ) ) {
+			echo '<span class="zg-sv-adm-badge">Lihoviny S&amp;V</span>';
+		}
+	}
+
+	public static function admin_list_legacy_column( $column, $post_id ) {
+		self::admin_list_column( $column, $post_id );
+	}
+
+	/** Třída řádku pro objednávku lihovin (odsazení). */
+	public static function admin_row_class( $classes, $order ) {
+		if ( $order instanceof WC_Order && self::is_sv_order( $order ) ) {
+			$classes[] = 'zg-sv-adm-child';
+		}
+		return $classes;
+	}
+
+	public static function admin_list_css() {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || ! in_array( $screen->id, array( 'woocommerce_page_wc-orders', 'edit-shop_order' ), true ) ) {
+			return;
+		}
+		echo '<style>
+			.zg-sv-adm-rel{display:block;margin-top:3px;font-size:12px;color:#7a1f2b;text-decoration:none}
+			.zg-sv-adm-rel:hover{text-decoration:underline}
+			.zg-sv-adm-badge{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:999px;background:#f6eced;color:#7a1f2b;font-size:11px;font-weight:600}
+			.zg-sv-adm-badge + .zg-sv-adm-rel{display:inline;margin-left:4px}
+			tr.zg-sv-adm-child td,tr.zg-sv-adm-child th{background:#fcf8f8}
+			tr.zg-sv-adm-child th.check-column{box-shadow:inset 4px 0 0 #7a1f2b}
+			tr.zg-sv-adm-child td.order_number{padding-left:28px}
+		</style>';
+		// Záloha, kdyby verze WooCommerce neměla filtr tříd řádku.
+		echo '<script>document.addEventListener("DOMContentLoaded",function(){document.querySelectorAll(".zg-sv-adm-badge").forEach(function(b){var r=b.closest("tr");if(r){r.classList.add("zg-sv-adm-child");}});});</script>';
 	}
 
 	/** Číslo platné faktury, kterou k objednávce už vystavil plugin Eurofaktura.cz (jinak ''). */

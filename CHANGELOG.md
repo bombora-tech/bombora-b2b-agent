@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.22.0] - 2026-11-27
+
+### Přidáno
+- S&V STOCK – seznam objednávek ve WooCommerce: objednávka lihovin dostane datum původní objednávky (+1 s), takže je v seznamu hned u ní. Pod číslem původní objednávky odkaz „↳ lihoviny #X · stav“, objednávka lihovin má štítek „Lihoviny S&V · k #Y“ a odsazený, barevně odlišený řádek.
+- Jednorázově: už rozdělené objednávky lihovin dostanou datum původní objednávky.
+
 ## [1.21.3] - 2026-11-26
 
 ### Opraveno
