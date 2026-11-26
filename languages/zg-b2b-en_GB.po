@@ -1029,3 +1029,15 @@ msgstr "Invoice for order no. %s"
 
 msgid "Vaše zásilka (lihoviny) byla předána přepravci Messenger. Sledování: %s"
 msgstr "Your shipment (spirits) has been handed over to the Messenger courier. Tracking: %s"
+
+msgid "lihoviny"
+msgstr "spirits"
+
+msgid "Lihoviny z této objednávky dodává a fakturuje S&V STOCK s.r.o. jako objednávku č. %1$s (%2$s, %3$s)."
+msgstr "The spirits from this order are delivered and invoiced by S&V STOCK s.r.o. as order no. %1$s (%2$s, %3$s)."
+
+msgid "Tato objednávka je součástí objednávky č. %s – lihoviny dodává a fakturuje S&V STOCK s.r.o."
+msgstr "This order is part of order no. %s – the spirits are delivered and invoiced by S&V STOCK s.r.o."
+
+msgid "Zobrazit č. %s"
+msgstr "View no. %s"

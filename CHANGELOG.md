@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.21.0] - 2026-11-26
+
+### Změněno
+- S&V STOCK – Můj účet (CZ+EN): oddělená objednávka lihovin už není samostatný řádek v seznamu objednávek. Zobrazuje se u původní objednávky: pod číslem objednávky odkaz „+ č. X lihoviny · stav“, pod cenou „+ částka lihoviny“, ve sloupci Doklady i faktury S&V (označené „· lihoviny“).
+- Detail objednávky: u původní objednávky informace „Lihoviny z této objednávky dodává a fakturuje S&V STOCK s.r.o. jako objednávku č. X“ s tlačítkem, u objednávky lihovin „Tato objednávka je součástí objednávky č. Y“.
+
 ## [1.20.1] - 2026-11-26
 
 ### Opraveno

@@ -47,6 +47,82 @@ class ZG_B2B_SV_Stock {
 		add_action( 'admin_post_zg_b2b_sv', array( __CLASS__, 'admin_action' ) );
 		add_action( 'admin_post_zg_b2b_sv_upload', array( __CLASS__, 'admin_upload' ) );
 		add_filter( 'woocommerce_webhook_should_deliver', array( __CLASS__, 'block_ef_webhook' ), 20, 3 );
+		// Můj účet: objednávka lihovin se zobrazuje u původní objednávky, ne jako samostatný řádek.
+		add_filter( 'woocommerce_my_account_my_orders_query', array( __CLASS__, 'hide_children' ) );
+		add_action( 'woocommerce_my_account_my_orders_column_order-number', array( __CLASS__, 'col_number' ) );
+		add_action( 'woocommerce_order_details_before_order_table', array( __CLASS__, 'detail_link' ), 5 );
+	}
+
+	/** Objednávka lihovin oddělená z této objednávky (jen existující). */
+	public static function child( WC_Order $order ) {
+		if ( ! self::enabled() || ! $order->get_meta( '_zg_sv_child' ) ) {
+			return null;
+		}
+		$c = wc_get_order( (int) $order->get_meta( '_zg_sv_child' ) );
+		return $c && 'trash' !== $c->get_status() ? $c : null;
+	}
+
+	public static function parent( WC_Order $order ) {
+		if ( ! self::is_sv_order( $order ) || ! $order->get_meta( '_zg_sv_parent' ) ) {
+			return null;
+		}
+		$p = wc_get_order( (int) $order->get_meta( '_zg_sv_parent' ) );
+		return $p && 'trash' !== $p->get_status() ? $p : null;
+	}
+
+	public static function hide_children( $args ) {
+		$uid = get_current_user_id();
+		if ( ! $uid ) {
+			return $args;
+		}
+		$ids = wc_get_orders(
+			array(
+				'customer'   => $uid,
+				'limit'      => -1,
+				'return'     => 'ids',
+				'meta_query' => array( array( 'key' => '_zg_sv_parent', 'compare' => 'EXISTS' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
+			)
+		);
+		$hide = array();
+		foreach ( $ids as $id ) {
+			$o = wc_get_order( $id );
+			if ( $o && self::parent( $o ) ) {
+				$hide[] = (int) $id;
+			}
+		}
+		if ( $hide ) {
+			$args['exclude'] = array_merge( isset( $args['exclude'] ) ? (array) $args['exclude'] : array(), $hide );
+		}
+		return $args;
+	}
+
+	/** Sloupec Objednávka: číslo + pod ním připojená objednávka lihovin. */
+	public static function col_number( $order ) {
+		echo '<a href="' . esc_url( $order->get_view_order_url() ) . '">' . esc_html( _x( '#', 'hash before order number', 'woocommerce' ) . $order->get_order_number() ) . '</a>';
+		$child = self::child( $order );
+		if ( $child ) {
+			echo '<a class="zg-b2b-sv-sub zg-b2b-sv-sub--link" href="' . esc_url( $child->get_view_order_url() ) . '">'
+				. '+ ' . esc_html( _x( '#', 'hash before order number', 'woocommerce' ) . $child->get_order_number() ) . ' ' . esc_html__( 'lihoviny', 'zg-b2b' )
+				. ' · ' . esc_html( wc_get_order_status_name( $child->get_status() ) ) . '</a>';
+		}
+	}
+
+	/** Detail objednávky: vazba na druhou část. */
+	public static function detail_link( $order ) {
+		if ( ! $order instanceof WC_Order || is_admin() ) {
+			return;
+		}
+		$child  = self::child( $order );
+		$parent = self::parent( $order );
+		if ( ! $child && ! $parent ) {
+			return;
+		}
+		$other = $child ? $child : $parent;
+		$text  = $child
+			? sprintf( __( 'Lihoviny z této objednávky dodává a fakturuje S&V STOCK s.r.o. jako objednávku č. %1$s (%2$s, %3$s).', 'zg-b2b' ), $child->get_order_number(), wp_strip_all_tags( $child->get_formatted_order_total() ), wc_get_order_status_name( $child->get_status() ) )
+			: sprintf( __( 'Tato objednávka je součástí objednávky č. %s – lihoviny dodává a fakturuje S&V STOCK s.r.o.', 'zg-b2b' ), $parent->get_order_number() );
+		echo '<div class="zg-b2b-sv-related"><span class="zg-b2b-doc__icon">' . zg_b2b_icon( 'info' ) . '</span><span>' . esc_html( $text ) . '</span>'
+			. zg_b2b_button( $other->get_view_order_url(), sprintf( __( 'Zobrazit č. %s', 'zg-b2b' ), $other->get_order_number() ), 'outline', 'arrow', 'sm' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
 	/* ---------------------------------------------------------------------

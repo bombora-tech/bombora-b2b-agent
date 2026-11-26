@@ -301,3 +301,10 @@ html.zg-b2b-modal-open { overflow: hidden; }
 .zg-b2b-doc-link .zg-b2b-icon { width: 15px; height: 15px; flex: 0 0 15px; }
 .zg-b2b-doc-link--cancelled { border-color: var(--zg-b2b-muted); color: var(--zg-b2b-muted) !important; }
 .zg-b2b-doc-link--cancelled span { text-decoration: line-through; }
+/* Můj účet: objednávka lihovin (S&V STOCK) u původní objednávky */
+.zg-b2b-sv-sub { display: block; margin-top: 4px; font-size: 12px; font-weight: 500; color: var(--zg-b2b-muted); white-space: nowrap; }
+a.zg-b2b-sv-sub--link { color: var(--zg-b2b-primary) !important; text-decoration: none !important; }
+a.zg-b2b-sv-sub--link:hover { text-decoration: underline !important; }
+.zg-b2b-sv-related { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; padding: 14px 16px; background: var(--zg-b2b-primary-soft); border: 1px solid var(--zg-b2b-border); border-radius: var(--zg-b2b-radius); }
+.zg-b2b-sv-related > span:nth-child(2) { flex: 1; }
+@media (max-width: 640px) { .zg-b2b-sv-related { flex-wrap: wrap; } }

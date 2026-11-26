@@ -409,6 +409,10 @@ class ZG_B2B_EF_Documents {
 	/** Celková cena bez textu „za N položek“. */
 	public static function orders_col_total( $order ) {
 		echo wp_kses_post( $order->get_formatted_order_total() );
+		$child = class_exists( 'ZG_B2B_SV_Stock' ) ? ZG_B2B_SV_Stock::child( $order ) : null;
+		if ( $child ) {
+			echo '<span class="zg-b2b-sv-sub">+ ' . wp_kses_post( $child->get_formatted_order_total() ) . ' ' . esc_html__( 'lihoviny', 'zg-b2b' ) . '</span>';
+		}
 	}
 
 	/**
@@ -443,6 +447,13 @@ class ZG_B2B_EF_Documents {
 	public static function orders_col_docs( $order ) {
 		ZG_B2B_EF_Connector::queue_first_check( $order ); // starší objednávky bez načtených dokladů → načíst na pozadí
 		$links = self::doc_links( $order );
+		$child = class_exists( 'ZG_B2B_SV_Stock' ) ? ZG_B2B_SV_Stock::child( $order ) : null;
+		if ( $child ) { // doklady objednávky lihovin (faktury S&V) ve stejném řádku
+			foreach ( self::doc_links( $child ) as $l ) {
+				$l['label'] .= ' · ' . __( 'lihoviny', 'zg-b2b' );
+				$links[]     = $l;
+			}
+		}
 		if ( ! $links ) {
 			echo '<span class="zg-b2b-muted">—</span>';
 			return;
