@@ -187,6 +187,17 @@ class ZG_B2B_SV_Stock {
 			foreach ( $order->get_items( 'shipping' ) as $sid => $s ) {
 				$ship->set_total( $s->get_total() );
 				$ship->set_taxes( $s->get_taxes() );
+				// Pro „Vrátit do původní objednávky“.
+				$child->update_meta_data(
+					'_zg_sv_moved_shipping',
+					array(
+						'title'       => $s->get_method_title(),
+						'method_id'   => $s->get_method_id(),
+						'instance_id' => $s->get_instance_id(),
+						'total'       => $s->get_total(),
+						'taxes'       => $s->get_taxes(),
+					)
+				);
 				$order->remove_item( $sid );
 				break;
 			}
@@ -213,6 +224,85 @@ class ZG_B2B_SV_Stock {
 
 		self::resync_parent( $order );
 		return $child;
+	}
+
+	/**
+	 * Vrátí lihoviny zpět do původní objednávky (např. fakturuje-li vše Bombora).
+	 * Podobjednávka se přesune do koše (kvůli dohledatelnosti), sklad se nemění.
+	 *
+	 * @return WC_Order|WP_Error  Původní objednávka.
+	 */
+	public static function merge( WC_Order $child ) {
+		if ( ! self::is_sv_order( $child ) ) {
+			return new WP_Error( 'zg_sv', 'Nejde o objednávku lihovin S&V.' );
+		}
+		$parent = $child->get_meta( '_zg_sv_parent' ) ? wc_get_order( $child->get_meta( '_zg_sv_parent' ) ) : null;
+
+		// Objednávka jen označená (nebyla rozdělena) → jen zrušit označení.
+		if ( ! $parent ) {
+			$child->delete_meta_data( '_zg_sv_order' );
+			$child->save();
+			$child->add_order_note( 'S&V STOCK: označení zrušeno – objednávku vyřizuje a fakturuje Bombora group. Doklady z Eurofaktury se zákazníkovi opět zobrazují.' );
+			self::resync_parent( $child );
+			return $child;
+		}
+
+		self::no_emails( true );
+		$names = array();
+		foreach ( $child->get_items() as $item ) {
+			$new = new WC_Order_Item_Product();
+			$new->set_props(
+				array(
+					'name'         => $item->get_name(),
+					'product_id'   => $item->get_product_id(),
+					'variation_id' => $item->get_variation_id(),
+					'quantity'     => $item->get_quantity(),
+					'tax_class'    => $item->get_tax_class(),
+					'subtotal'     => $item->get_subtotal(),
+					'subtotal_tax' => $item->get_subtotal_tax(),
+					'total'        => $item->get_total(),
+					'total_tax'    => $item->get_total_tax(),
+					'taxes'        => $item->get_taxes(),
+				)
+			);
+			foreach ( $item->get_meta_data() as $m ) {
+				$new->add_meta_data( $m->key, $m->value ); // vč. _reduced_stock → případné storno vrátí sklad správně
+			}
+			$parent->add_item( $new );
+			$names[] = $item->get_quantity() . '× ' . $item->get_name();
+		}
+		$ship = $child->get_meta( '_zg_sv_moved_shipping' );
+		if ( is_array( $ship ) ) {
+			$s = new WC_Order_Item_Shipping();
+			$s->set_method_title( $ship['title'] );
+			$s->set_method_id( $ship['method_id'] );
+			$s->set_instance_id( $ship['instance_id'] );
+			$s->set_total( $ship['total'] );
+			$s->set_taxes( $ship['taxes'] );
+			$parent->add_item( $s );
+		}
+		$parent->calculate_totals( false );
+		$parent->delete_meta_data( '_zg_sv_child' );
+		$parent->save();
+
+		$warn = array();
+		$ef   = $child->get_meta( '_zg_sv_ef_invoice' );
+		if ( $ef ) {
+			$warn[] = 'v Eurofaktuře zůstala faktura pro S&V č. ' . $ef['number'] . ' – stornujte ji';
+		}
+		if ( self::invoices( $child ) ) {
+			$warn[] = 'nahrané faktury S&V zůstaly u objednávky #' . $child->get_order_number() . ' v koši – zákazník je už nevidí';
+		}
+		if ( $child->get_meta( '_zg_sv_msg' ) ) {
+			$warn[] = 'objednaný Messenger je potřeba zrušit u Messengeru';
+		}
+		$parent->add_order_note( 'S&V STOCK: lihoviny vráceny z objednávky #' . $child->get_order_number() . ' (' . implode( ', ', $names ) . ') – fakturuje Bombora group.' . ( $warn ? ' Pozor: ' . implode( '; ', $warn ) . '.' : '' ) );
+		$child->add_order_note( 'S&V STOCK: položky vráceny do objednávky #' . $parent->get_order_number() . ', objednávka přesunuta do koše.' );
+		$child->delete( false ); // koš; webhook Eurofaktury se nepošle (objednávka S&V)
+		self::no_emails( false );
+
+		self::resync_parent( $parent );
+		return $parent;
 	}
 
 	/** Po rozdělení aktualizovat původní objednávku v Eurofaktuře (stejné jako tlačítko „Synchronizovat“). */
@@ -664,6 +754,8 @@ class ZG_B2B_SV_Stock {
 		if ( $parent ) {
 			echo '<p>Odděleno z objednávky <a href="' . esc_url( $parent->get_edit_order_url() ) . '">#' . esc_html( $parent->get_order_number() ) . '</a>. Plugin Eurofaktura.cz tuto objednávku nedostává.</p>';
 		}
+		echo '<p>' . str_replace( '<a ', '<a onclick="return confirm(\'Opravdu vrátit lihoviny – fakturovat bude Bombora group?\')" ', self::link( $order, 'merge', $parent ? 'Vrátit do původní objednávky' : 'Zrušit označení S&V' ) ) . '</p>';
+		echo '<p class="description">' . ( $parent ? 'Lihoviny se vrátí do #' . esc_html( $parent->get_order_number() ) . ' (fakturuje Bombora), tato objednávka půjde do koše. ' : 'Objednávku pak fakturuje Bombora přes Eurofakturu. ' ) . 'Vystavenou fakturu pro S&amp;V je pak potřeba stornovat ručně.</p>';
 
 		// Faktura Bombora → S&V.
 		$ef = $order->get_meta( '_zg_sv_ef_invoice' );
@@ -722,6 +814,13 @@ class ZG_B2B_SV_Stock {
 			if ( is_wp_error( $r ) ) {
 				$order->add_order_note( 'S&V STOCK: ' . $r->get_error_message() );
 			} elseif ( $r->get_id() !== $order->get_id() ) {
+				$back = $r->get_edit_order_url();
+			}
+		} elseif ( 'merge' === $do ) {
+			$r = self::merge( $order );
+			if ( is_wp_error( $r ) ) {
+				$order->add_order_note( 'S&V STOCK: ' . $r->get_error_message() );
+			} else {
 				$back = $r->get_edit_order_url();
 			}
 		} elseif ( 'efinv' === $do ) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.0] - 2026-11-26
+
+### Přidáno
+- S&V STOCK: tlačítko **„Vrátit do původní objednávky“** u objednávky lihovin (s potvrzením). Položky (vč. příznaku odečtení skladu) a případně přesunutý poplatek za dopravu se vrátí do původní objednávky, ta se přepočítá a znovu synchronizuje s Eurofakturou – fakturuje Bombora group. Objednávka lihovin jde do koše (bez e-mailů, bez webhooku Eurofaktury, sklad beze změny). Poznámka upozorní na fakturu pro S&V k stornu, nahrané faktury S&V a objednaný Messenger.
+- U objednávky jen označené jako S&V (nerozdělené) tlačítko **„Zrušit označení S&V“** – doklady z Eurofaktury se zákazníkovi opět zobrazí.
+
 ## [1.18.0] - 2026-11-26
 
 ### Přidáno
