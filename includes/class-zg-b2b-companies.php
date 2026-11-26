@@ -497,12 +497,20 @@ class ZG_B2B_Companies {
 		if ( self::has_choice() ) {
 			$hide = array_merge( $hide, array_keys( self::field_map() ) );
 		}
-		$map = self::field_map();
+		// Kontaktní údaje účtu se v pokladně nezobrazují (příjemce zásilky = blok „Kontaktní osoba“).
+		$contact = array( 'billing_first_name', 'billing_last_name', 'billing_phone', 'billing_email' );
+		$hide    = array_merge( $hide, $contact );
+		$map     = self::field_map();
 		foreach ( array_unique( $hide ) as $key ) {
 			if ( ! isset( $fields['billing'][ $key ] ) ) {
 				continue;
 			}
-			$value = isset( $map[ $key ] ) && $company ? self::company_value( $company, $map[ $key ] ) : (string) get_user_meta( $user_id, $key, true );
+			if ( in_array( $key, $contact, true ) ) {
+				$getter = 'get_' . $key;
+				$value  = ( WC()->customer && is_callable( array( WC()->customer, $getter ) ) ) ? (string) WC()->customer->$getter() : (string) get_user_meta( $user_id, $key, true );
+			} else {
+				$value = isset( $map[ $key ] ) && $company ? self::company_value( $company, $map[ $key ] ) : (string) get_user_meta( $user_id, $key, true );
+			}
 			// Prázdné povinné pole necháme viditelné, aby šlo objednávku dokončit.
 			if ( '' === $value && ! empty( $fields['billing'][ $key ]['required'] ) ) {
 				continue;
@@ -576,7 +584,6 @@ class ZG_B2B_Companies {
 		}
 		echo '</div>';
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
-		self::contact_line( 'billing' );
 		echo '</div>';
 	}
 
@@ -593,6 +600,7 @@ class ZG_B2B_Companies {
 	public static function choices_header( $icon, $label, $count ) {
 		$icons = array(
 			'company'  => '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M15 9h2a2 2 0 0 1 2 2v10"/><path d="M9 7h2M9 11h2M9 15h2"/></svg>',
+			'person'   => '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
 			'delivery' => '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>',
 		);
 		echo '<button type="button" class="zg-b2b-choices__more" aria-expanded="false" hidden>';
@@ -600,14 +608,6 @@ class ZG_B2B_Companies {
 		echo '<span class="zg-b2b-choices__label">' . esc_html( $label ) . ' <span class="zg-b2b-choices__count">(' . esc_html( $count ) . ')</span></span>';
 		echo '<span class="zg-b2b-choices__chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>';
 		echo '</button>';
-	}
-
-	/** Řádek „Kontaktní osoba: jméno · telefon · e-mail“ + „Změnit údaje“ (JS rozbalí pole). */
-	public static function contact_line( $type ) {
-		echo '<div class="zg-b2b-contact" data-zg-contact="' . esc_attr( $type ) . '" hidden>';
-		echo '<div class="zg-b2b-contact__body"><span class="zg-b2b-contact__label">' . esc_html__( 'Kontaktní osoba', 'zg-b2b' ) . '</span> <span class="zg-b2b-contact__text"></span></div>';
-		echo '<button type="button" class="zg-b2b-sum__toggle" aria-expanded="false" data-open="' . esc_attr__( 'Změnit údaje', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Hotovo', 'zg-b2b' ) . '">' . esc_html__( 'Změnit údaje', 'zg-b2b' ) . '</button>';
-		echo '</div>';
 	}
 
 	public static function checkout_assets() {

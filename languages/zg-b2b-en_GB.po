@@ -850,3 +850,51 @@ msgstr "%d addresses"
 
 msgid "Zadat novou doručovací adresu"
 msgstr "Enter a new delivery address"
+
+msgid "Upravit adresu"
+msgstr "Edit address"
+
+msgid "Příjemce zásilky – jméno a telefon pro dopravce."
+msgstr "Recipient of the shipment – name and phone for the carrier."
+
+msgid "Vybrat jinou kontaktní osobu"
+msgstr "Choose another contact person"
+
+#, php-format
+msgid "%d možnost"
+msgstr "%d option"
+
+#, php-format
+msgid "%d možnosti"
+msgstr "%d options"
+
+#, php-format
+msgid "%d možností"
+msgstr "%d options"
+
+msgid "Nová kontaktní osoba"
+msgstr "New contact person"
+
+msgid "Zadat jméno a telefon příjemce"
+msgstr "Enter the recipient's name and phone"
+
+msgid "povinné"
+msgstr "required"
+
+msgid "Uložit do mých kontaktních osob"
+msgstr "Save to my contact persons"
+
+msgid "Vybraná kontaktní osoba již neexistuje. Zvolte prosím jinou."
+msgstr "The selected contact person no longer exists. Please choose another one."
+
+msgid "Vyplňte prosím jméno, příjmení a telefon kontaktní osoby pro doručení."
+msgstr "Please fill in the first name, last name and phone of the delivery contact person."
+
+msgid "Kontaktní osoby pro doručení"
+msgstr "Delivery contact persons"
+
+msgid "Kontaktní osoby se uloží při objednávce (jméno, příjmení a telefon příjemce)."
+msgstr "Contact persons are saved when you order (recipient's first name, last name and phone)."
+
+msgid "Kontaktní osoba byla smazána."
+msgstr "The contact person has been deleted."

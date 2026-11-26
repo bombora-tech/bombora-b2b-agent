@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0] - 2026-11-26
+
+### Přidáno
+- Pokladna – nový blok **„Kontaktní osoba“** (příjemce zásilky): výběr z uložených kontaktních osob (rozbalovací seznam jako u firem/adres) nebo **nová osoba** (jméno, příjmení, telefon) s volbou „Uložit do mých kontaktních osob“. Příjemce se zapíše do doručovacího jména a telefonu objednávky – i u „Stejná jako fakturační adresa“ (doručovací adresa se doplní z fakturační).
+- Seznam kontaktních osob se při prvním použití naplní z kontaktu účtu a uložených doručovacích adres; v Můj účet → Adresy je přehled s mazáním.
+
+### Změněno
+- Fakturace: kontaktní údaje účtu (jméno, příjmení, telefon, e-mail) se v pokladně nezobrazují vůbec (zobrazí se jen, pokud chybí povinný údaj).
+- Doručovací adresa: místo řádku s kontaktem tlačítko „Upravit adresu“; jméno a telefon v polích adresy řídí blok „Kontaktní osoba“.
+
+### Opraveno
+- Mobil: pokladna „ujížděla“ do strany – iOS zvětšoval stránku při kliknutí do pole s písmem 15 px; pole mají na mobilu 16 px, delší texty se zalamují a vodorovné přetečení je oříznuto.
+
 ## [1.9.0] - 2026-11-26
 
 ### Změněno

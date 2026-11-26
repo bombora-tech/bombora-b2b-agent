@@ -161,6 +161,7 @@ class ZG_B2B_Address_Account {
 
 		if ( ! $list ) {
 			echo '<p class="zg-b2b-addr-empty">' . esc_html__( 'Zatím nemáte uloženou žádnou doručovací adresu.', 'zg-b2b' ) . '</p>';
+			self::render_contacts( $user_id );
 			return;
 		}
 
@@ -183,6 +184,13 @@ class ZG_B2B_Address_Account {
 			echo '</div></div>';
 		}
 		echo '</div>';
+		self::render_contacts( $user_id );
+	}
+
+	private static function render_contacts( $user_id ) {
+		if ( class_exists( 'ZG_B2B_Contacts' ) ) {
+			ZG_B2B_Contacts::render_account_section( $user_id );
+		}
 	}
 
 	/** Pop-up s formulářem pro přidání / úpravu doručovací adresy. */

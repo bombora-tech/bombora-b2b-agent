@@ -16,8 +16,9 @@
 	var shipToSelector = '#ship-to-different-address-checkbox, #ship-to-different-address input[type="checkbox"]';
 	var syncing = false;
 	var fieldsOpen = false;
-	var $line = $picker.find( '[data-zg-contact="shipping"]' );
-	var $toggle = $line.find( '.zg-b2b-sum__toggle' );
+	var $edit = $picker.find( '.zg-b2b-addr-edit' );
+	var contactKeys = [ 'first_name', 'last_name', 'phone' ];
+	var $recipient = $( '#zg-b2b-recipient' );
 
 	$form.addClass( 'zg-b2b-addr-active' );
 
@@ -55,17 +56,19 @@
 			setField( 'country', fields.country );
 		}
 		$.each( cfg.fieldKeys, function ( i, key ) {
-			if ( key !== 'country' ) {
+			// Jméno a telefon řídí blok „Kontaktní osoba“.
+			if ( key !== 'country' && ( ! $recipient.length || contactKeys.indexOf( key ) === -1 ) ) {
 				setField( key, fields[ key ] );
 			}
 		} );
+		applyRecipient();
 	}
 
 	function currentChoice() {
 		return $picker.find( 'input[name="zg_b2b_addr_choice"]:checked' ).val() || 'billing';
 	}
 
-	/* Pole doručovací adresy: u uložené adresy skrytá za řádkem kontaktu („Změnit údaje“),
+	/* Pole doručovací adresy: u uložené adresy skrytá (tlačítko „Upravit adresu“),
 	   u „Jiná adresa“ vždy vidět, u fakturační adresy skrytá. */
 	var $done = $( '<div class="zg-b2b-done-row" hidden><span class="zg-b2b-save-state" aria-live="polite"></span><button type="button" class="zg-b2b-done-btn"></button></div>' );
 	$done.find( 'button' ).text( cfg.done || 'OK' );
@@ -76,10 +79,8 @@
 		var saved = choice !== 'billing' && choice !== 'new';
 		var show = choice === 'new' || ( saved && fieldsOpen );
 		$( 'div.shipping_address' ).toggle( show );
-		$line.prop( 'hidden', ! saved || fieldsOpen || ! $line.length );
+		$edit.prop( 'hidden', ! saved || fieldsOpen );
 		$done.prop( 'hidden', ! ( saved && fieldsOpen ) );
-		var text = [ $.trim( ( $( '#shipping_first_name' ).val() || '' ) + ' ' + ( $( '#shipping_last_name' ).val() || '' ) ), $.trim( $( '#shipping_phone' ).val() || '' ) ].filter( Boolean ).join( ' · ' );
-		$line.find( '.zg-b2b-contact__text' ).text( text );
 	}
 
 	/* Změny u uložené adresy se hned uloží do adresáře (není nutné „Hotovo“). */
@@ -92,7 +93,7 @@
 		var fields = {};
 		$.each( cfg.fieldKeys, function ( i, key ) {
 			var $f = $( '#shipping_' + key );
-			if ( $f.length && key !== 'company' ) {
+			if ( $f.length && key !== 'company' && ( ! $recipient.length || contactKeys.indexOf( key ) === -1 ) ) {
 				fields[ key ] = $f.val() || '';
 			}
 		} );
@@ -136,7 +137,6 @@
 			empty.country = cfg.billingCountry;
 			setShipTo( true );
 			fill( empty );
-			$( '#shipping_first_name, #shipping_company' ).first().trigger( 'focus' );
 		} else if ( cfg.addresses[ choice ] ) {
 			setShipTo( true );
 			fill( cfg.addresses[ choice ] );
@@ -165,11 +165,42 @@
 		}
 	} );
 
-	$toggle.on( 'click', function () {
+	$edit.on( 'click', function () {
 		fieldsOpen = true;
 		updateFields();
 	} );
-	$( document.body ).on( 'input change', '#shipping_first_name, #shipping_last_name, #shipping_phone', updateFields );
+
+	/* ---------- Kontaktní osoba (příjemce): vybraná ze seznamu nebo nová ---------- */
+	function recipientChoice() {
+		return $recipient.find( 'input[name="zg_b2b_contact"]:checked, input[type="hidden"][name="zg_b2b_contact"]' ).first().val() || 'new';
+	}
+	function applyRecipient() {
+		if ( ! $recipient.length ) {
+			return;
+		}
+		var choice = recipientChoice();
+		var c = ( cfg.contacts && cfg.contacts[ choice ] ) || null;
+		$recipient.find( '.zg-b2b-recipient__new' ).prop( 'hidden', choice !== 'new' );
+		$.each( contactKeys, function ( i, key ) {
+			var v = c ? c[ key ] : ( $( '#zg_b2b_contact_' + key ).val() || '' );
+			var $f = $( '#shipping_' + key );
+			if ( $f.length && $f.val() !== v ) {
+				$f.val( v );
+			}
+		} );
+	}
+	if ( $recipient.length ) {
+		$form.addClass( 'zg-b2b-recipient-active' );
+		$recipient.on( 'change', 'input[name="zg_b2b_contact"]', function () {
+			$recipient.find( '.zg-b2b-addr-option' ).removeClass( 'is-selected' );
+			$( this ).closest( '.zg-b2b-addr-option' ).addClass( 'is-selected' );
+			applyRecipient();
+			if ( this.value === 'new' ) {
+				$( '#zg_b2b_contact_first_name' ).trigger( 'focus' );
+			}
+		} );
+		$recipient.on( 'input change', '.zg-b2b-recipient__new input', applyRecipient );
+	}
 
 	// Chyba při odeslání → pole adresy zobrazit.
 	$( document.body ).on( 'checkout_error', function () {
@@ -184,5 +215,6 @@
 		return $in.length && ! $.trim( $in.val() || '' );
 	} ).length > 0;
 	setShipTo( initial !== 'billing' );
+	applyRecipient();
 	updateFields();
 } )( jQuery );

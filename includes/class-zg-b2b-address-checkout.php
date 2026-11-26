@@ -121,11 +121,12 @@ class ZG_B2B_Address_Checkout {
 		echo '<input type="text" class="input-text" name="zg_b2b_addr_new_label" maxlength="100" placeholder="' . esc_attr__( 'Název pobočky', 'zg-b2b' ) . '">';
 		echo '</div>';
 
-		if ( class_exists( 'ZG_B2B_Companies' ) ) {
-			ZG_B2B_Companies::contact_line( 'shipping' );
-		}
-		echo '<p class="zg-b2b-addr-picker__manage"><a href="' . esc_url( ZG_B2B_Address_Account::url() ) . '">' . esc_html__( 'Spravovat doručovací adresy', 'zg-b2b' ) . '</a></p>';
+		echo '<p class="zg-b2b-addr-picker__manage"><button type="button" class="zg-b2b-addr-edit" hidden>' . esc_html__( 'Upravit adresu', 'zg-b2b' ) . '</button><a href="' . esc_url( ZG_B2B_Address_Account::url() ) . '">' . esc_html__( 'Spravovat doručovací adresy', 'zg-b2b' ) . '</a></p>';
 		echo '</div>';
+
+		if ( class_exists( 'ZG_B2B_Contacts' ) ) {
+			ZG_B2B_Contacts::render_checkout();
+		}
 	}
 
 	private static function option( $value, $label, $detail, $checked ) {
@@ -162,6 +163,7 @@ class ZG_B2B_Address_Checkout {
 			'saved'          => __( 'Uloženo do adresy', 'zg-b2b' ),
 			'error'          => __( 'Nepodařilo se uložit – údaje se použijí jen pro tuto objednávku.', 'zg-b2b' ),
 			'done'           => __( 'Hotovo', 'zg-b2b' ),
+			'contacts'       => class_exists( 'ZG_B2B_Contacts' ) ? ZG_B2B_Contacts::script_data( $user_id ) : new stdClass(),
 		) );
 	}
 
