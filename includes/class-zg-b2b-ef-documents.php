@@ -26,7 +26,10 @@ class ZG_B2B_EF_Documents {
 		add_action( 'init', array( __CLASS__, 'schedule_sync' ), 20 );
 		add_action( 'init', array( __CLASS__, 'maybe_download' ), 30 );
 
-		add_filter( 'woocommerce_my_account_my_orders_actions', array( __CLASS__, 'my_orders_actions' ), 20, 2 );
+		// Můj účet → Objednávky: sloupec „Doklady“ (1 tlačítko = 1 doklad), cena bez počtu položek.
+		add_filter( 'woocommerce_my_account_my_orders_columns', array( __CLASS__, 'orders_columns' ), 30 );
+		add_action( 'woocommerce_my_account_my_orders_column_zg-docs', array( __CLASS__, 'orders_col_docs' ) );
+		add_action( 'woocommerce_my_account_my_orders_column_order-total', array( __CLASS__, 'orders_col_total' ) );
 		add_action( 'woocommerce_order_details_after_order_table', array( __CLASS__, 'order_details_box' ), 5 );
 		add_filter( 'woocommerce_email_attachments', array( __CLASS__, 'email_attachments' ), 20, 3 );
 
@@ -380,6 +383,68 @@ class ZG_B2B_EF_Documents {
 	 * Můj účet a děkovací stránka
 	 * ------------------------------------------------------------------- */
 
+	public static function orders_columns( $cols ) {
+		$out = array();
+		foreach ( $cols as $k => $v ) {
+			if ( 'order-actions' === $k ) {
+				$out['zg-docs'] = __( 'Doklady', 'zg-b2b' );
+			}
+			$out[ $k ] = $v;
+		}
+		if ( ! isset( $out['zg-docs'] ) ) {
+			$out['zg-docs'] = __( 'Doklady', 'zg-b2b' );
+		}
+		return $out;
+	}
+
+	/** Celková cena bez textu „za N položek“. */
+	public static function orders_col_total( $order ) {
+		echo wp_kses_post( $order->get_formatted_order_total() );
+	}
+
+	/**
+	 * Všechny doklady objednávky ke stažení: [ url, label, cancelled ].
+	 * Doklady z Eurofaktura.cz, jinak proforma / faktura z platby na fakturu.
+	 */
+	public static function doc_links( WC_Order $order ) {
+		$type  = self::visible_type( $order );
+		$links = array();
+		if ( 'ef' === $type ) {
+			foreach ( ZG_B2B_EF_Connector::customer_docs( $order ) as $d ) {
+				$name    = 'credit' === $d['kind'] ? __( 'Opravný doklad', 'zg-b2b' ) : ( 'proforma' === $d['kind'] ? __( 'Proforma', 'zg-b2b' ) : __( 'Faktura', 'zg-b2b' ) );
+				$links[] = array(
+					'url'       => self::download_url( $order, 'ef', $d['id'] ),
+					'label'     => trim( $name . ' ' . $d['number'] ),
+					'cancelled' => $d['cancelled'],
+				);
+			}
+		} elseif ( $type ) {
+			$links[] = array(
+				'url'       => self::download_url( $order, $type ),
+				'label'     => trim( ( 'invoice' === $type ? __( 'Faktura', 'zg-b2b' ) : __( 'Proforma', 'zg-b2b' ) ) . ' ' . $order->get_meta( '_zg_ef_' . $type . '_number' ) ),
+				'cancelled' => false,
+			);
+		}
+		return $links;
+	}
+
+	public static function orders_col_docs( $order ) {
+		ZG_B2B_EF_Connector::queue_first_check( $order ); // starší objednávky bez načtených dokladů → načíst na pozadí
+		$links = self::doc_links( $order );
+		if ( ! $links ) {
+			echo '<span class="zg-b2b-muted">—</span>';
+			return;
+		}
+		echo '<div class="zg-b2b-doc-links">';
+		foreach ( $links as $l ) {
+			$label = $l['cancelled'] ? $l['label'] . ' (' . __( 'storno', 'zg-b2b' ) . ')' : $l['label'];
+			echo '<a class="zg-b2b-doc-link' . ( $l['cancelled'] ? ' zg-b2b-doc-link--cancelled' : '' ) . '" href="' . esc_url( $l['url'] ) . '" title="' . esc_attr__( 'Stáhnout PDF', 'zg-b2b' ) . '">'
+				. zg_b2b_icon( 'download' ) . '<span>' . esc_html( $label ) . '</span></a>';
+		}
+		echo '</div>';
+	}
+
+	/** Dříve: doklady jako akce u objednávky – nahrazeno sloupcem „Doklady“. */
 	public static function my_orders_actions( $actions, $order ) {
 		$type = self::visible_type( $order );
 		if ( 'ef' === $type ) {

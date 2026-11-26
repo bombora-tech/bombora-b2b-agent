@@ -294,3 +294,10 @@ html.zg-b2b-modal-open { overflow: hidden; }
 .zg-b2b-modal__list li { margin: 2px 0 !important; }
 .zg-b2b-doc--cancelled { opacity: .7; }
 .zg-b2b-doc--cancelled .zg-b2b-doc__body strong { text-decoration: line-through; }
+/* Můj účet → Objednávky: sloupec Doklady */
+.zg-b2b-doc-links { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.zg-b2b-doc-link { display: inline-flex; align-items: center; gap: 6px; padding: .4em .85em; border: 1px solid var(--zg-b2b-primary); border-radius: 999px; color: var(--zg-b2b-primary) !important; font-size: 13px; font-weight: 600; line-height: 1.2; text-decoration: none !important; white-space: nowrap; transition: background .15s ease; }
+.zg-b2b-doc-link:hover { background: var(--zg-b2b-primary-soft); }
+.zg-b2b-doc-link .zg-b2b-icon { width: 15px; height: 15px; flex: 0 0 15px; }
+.zg-b2b-doc-link--cancelled { border-color: var(--zg-b2b-muted); color: var(--zg-b2b-muted) !important; }
+.zg-b2b-doc-link--cancelled span { text-decoration: line-through; }

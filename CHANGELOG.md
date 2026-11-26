@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0] - 2026-11-26
+
+### Změněno
+- Můj účet → Objednávky (CZ+EN):
+  - Sloupec „Celkem“ ukazuje jen cenu, bez textu „za N položek“.
+  - Nový sloupec **„Doklady“** před „Akce objednávky“: jedno tlačítko ke stažení PDF pro každý doklad objednávky (faktura, opravný doklad, proforma), s číslem dokladu. Stornovaný doklad je šedý, přeškrtnutý, s označením „(storno)“. Doklady už se nepřidávají mezi akce objednávky.
+  - Objednávky, u kterých se doklady z Eurofaktura.cz ještě nenačetly (např. starší než 45 dní), se po zobrazení seznamu načtou na pozadí a objeví se při příští návštěvě.
+
 ## [1.16.1] - 2026-11-26
 
 ### Opraveno

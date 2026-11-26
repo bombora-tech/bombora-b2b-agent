@@ -351,6 +351,17 @@ class ZG_B2B_EF_Connector {
 		}
 	}
 
+	/** Objednávka, u které se doklady ještě nikdy nenačetly → načíst na pozadí (za 10 s). */
+	public static function queue_first_check( WC_Order $order ) {
+		if ( ! self::available() || ! function_exists( 'as_has_scheduled_action' ) || $order->get_meta( self::META_CHECKED ) ) {
+			return;
+		}
+		$args = array( 'order_id' => (int) $order->get_id() );
+		if ( ! as_has_scheduled_action( self::REFRESH_HOOK, $args, 'zg-b2b' ) ) {
+			as_schedule_single_action( time() + 10, self::REFRESH_HOOK, $args, 'zg-b2b' );
+		}
+	}
+
 	public static function schedule_sync() {
 		if ( ! function_exists( 'as_has_scheduled_action' ) || ! self::available() ) {
 			return;

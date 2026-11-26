@@ -1008,3 +1008,9 @@ msgstr "Credit note (PDF)"
 
 msgid "Doklad není k dispozici."
 msgstr "This document is not available."
+
+msgid "Opravný doklad"
+msgstr "Credit note"
+
+msgid "storno"
+msgstr "cancelled"
