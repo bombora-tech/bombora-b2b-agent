@@ -560,9 +560,6 @@ class ZG_B2B_Companies {
 		$choice = self::has_choice();
 		echo '<div class="zg-b2b-addr-picker zg-b2b-company-picker' . ( $choice ? '' : ' zg-b2b-company-picker--single' ) . '" id="zg-b2b-company-picker">';
 
-		if ( $choice ) {
-			echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
-		}
 		$billable = self::billable( $user_id );
 		echo '<div class="zg-b2b-choices" data-zg-choices>';
 		if ( $choice ) {

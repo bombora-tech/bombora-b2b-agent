@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.11.1] - 2026-11-26
+
+### Změněno
+- Pokladna: odstraněn nadpis „Fakturovat na firmu“ (výběr firmy je přímo pod „Fakturační údaje“).
+
 ## [1.11.0] - 2026-11-26
 
 ### Přidáno
