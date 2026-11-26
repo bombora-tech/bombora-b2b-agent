@@ -292,3 +292,5 @@ html.zg-b2b-modal-open { overflow: hidden; }
 .zg-b2b-modal__field > .select2-container:has(> .select2-dropdown) .select2-dropdown { position: absolute; top: 0; left: 0; width: 100% !important; }
 .zg-b2b-modal__list { margin: 0 0 12px !important; padding: 10px 14px 10px 30px !important; border-radius: 10px; background: var(--zg-b2b-bg); font-weight: 600; font-size: 14px; }
 .zg-b2b-modal__list li { margin: 2px 0 !important; }
+.zg-b2b-doc--cancelled { opacity: .7; }
+.zg-b2b-doc--cancelled .zg-b2b-doc__body strong { text-decoration: line-through; }

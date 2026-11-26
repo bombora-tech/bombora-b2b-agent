@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.15.0] - 2026-11-26
+
+### Přidáno
+- **Doklady z pluginu Eurofaktura.cz v Můj účet** (CZ+EN): faktury a opravné daňové doklady vystavené přes oficiální plugin Eurofaktura.cz (webhooky) se zobrazují v detailu objednávky v bloku „Doklady“ a jako akce v seznamu objednávek.
+  - Seznam dokladů se načítá stejnou akcí jako metabox pluginu Eurofaktura (`order.refresh`) a ukládá se k objednávce (`_zg_ef_docs`): 2 min po změně stavu objednávky, každých 30 min (objednávky za 45 dní; s fakturou jednou za 6 h) a při otevření detailu objednávky (pokud je seznam starší než 10 min).
+  - PDF se stahuje přes chráněný odkaz webu (přihlášený vlastník + klíč objednávky + ID dokladu, který k objednávce patří) a streamuje se z Eurofaktury (`document.pdf`) bez ukládání na disk. Veřejný odkaz Eurofaktury („Otevřít link“) zákazník nevidí.
+  - Stornovaná faktura: štítek „stornováno“, přeškrtnutý název, nezobrazuje se v akcích seznamu objednávek. Výdejky a objednávky zákazníka se nezobrazují.
+- Platba na fakturu: faktura k proformě se nejdřív hledá v dokladech pluginu Eurofaktura.cz, až pak přes API (`SalesInvoiceList`).
+
+### Změněno
+- Metabox objednávky přejmenován na **„B2B doklady (Můj účet)“** (odlišení od metaboxu „Eurofaktura.cz“): přehled dokladů, které vidí zákazník, čas načtení a tlačítko „Načíst doklady“. Část s proformou se zobrazuje jen u platby na fakturu.
+- Proforma zůstává z B2B Agenta (plugin Eurofaktura.cz proformy nevytváří); po vystavení faktury ji v Můj účet nahradí faktura.
+
 ## [1.14.0] - 2026-11-26
 
 ### Změněno

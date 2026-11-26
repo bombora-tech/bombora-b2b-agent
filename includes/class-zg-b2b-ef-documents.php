@@ -7,6 +7,9 @@
  *   _zg_ef_proforma_number / _date / _id / _file
  *   _zg_ef_invoice_number  / _date / _id / _file
  *   _zg_ef_due_date, _zg_ef_proforma_attempts
+ *
+ * Faktury a opravné daňové doklady vystavené přes plugin Eurofaktura.cz
+ * (webhooky) načítá ZG_B2B_EF_Connector – mají přednost před proformou.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -265,6 +268,10 @@ class ZG_B2B_EF_Documents {
 
 	/** Který doklad zákazník právě vidí: faktura nahrazuje proformu. */
 	public static function visible_type( WC_Order $order ) {
+		$ef = ZG_B2B_EF_Connector::customer_docs( $order );
+		if ( $ef && ( ZG_B2B_EF_Connector::has_invoice( $ef ) || ! $order->get_meta( '_zg_ef_proforma_number' ) ) ) {
+			return 'ef';
+		}
 		self::import_existing_invoice_meta( $order );
 		if ( $order->get_meta( '_zg_ef_invoice_number' ) ) {
 			return 'invoice';
@@ -292,12 +299,15 @@ class ZG_B2B_EF_Documents {
 		$order->save();
 	}
 
-	public static function download_url( WC_Order $order, $type ) {
+	public static function download_url( WC_Order $order, $type, $doc_id = '' ) {
 		return add_query_arg(
-			array(
-				'zg_b2b_doc' => $type,
-				'order'      => $order->get_id(),
-				'key'        => $order->get_order_key(),
+			array_filter(
+				array(
+					'zg_b2b_doc' => $type,
+					'order'      => $order->get_id(),
+					'key'        => $order->get_order_key(),
+					'doc'        => $doc_id,
+				)
 			),
 			home_url( '/' )
 		);
@@ -308,7 +318,7 @@ class ZG_B2B_EF_Documents {
 		if ( empty( $_GET['zg_b2b_doc'] ) || empty( $_GET['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			return;
 		}
-		$type  = 'invoice' === $_GET['zg_b2b_doc'] ? 'invoice' : 'proforma'; // phpcs:ignore WordPress.Security.NonceVerification
+		$type  = in_array( $_GET['zg_b2b_doc'], array( 'invoice', 'ef' ), true ) ? sanitize_key( $_GET['zg_b2b_doc'] ) : 'proforma'; // phpcs:ignore WordPress.Security.NonceVerification
 		$order = wc_get_order( absint( $_GET['order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		$key   = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
@@ -318,6 +328,9 @@ class ZG_B2B_EF_Documents {
 		);
 		if ( ! $allowed ) {
 			wp_die( esc_html__( 'Doklad není k dispozici. Přihlaste se prosím ke svému účtu.', 'zg-b2b' ), '', array( 'response' => 403 ) );
+		}
+		if ( 'ef' === $type ) {
+			self::stream_ef_doc( $order, isset( $_GET['doc'] ) ? sanitize_text_field( wp_unslash( $_GET['doc'] ) ) : '' ); // phpcs:ignore WordPress.Security.NonceVerification
 		}
 		if ( ! current_user_can( 'manage_woocommerce' ) && self::visible_type( $order ) !== $type ) {
 			wp_die( esc_html__( 'Tento doklad už není k dispozici – stáhněte si prosím fakturu.', 'zg-b2b' ), '', array( 'response' => 404 ) );
@@ -334,13 +347,48 @@ class ZG_B2B_EF_Documents {
 		exit;
 	}
 
+	/**
+	 * PDF dokladu z pluginu Eurofaktura.cz – jen doklad, který k objednávce
+	 * opravdu patří (ID ze seznamu u objednávky), streamuje se bez ukládání.
+	 */
+	private static function stream_ef_doc( WC_Order $order, $doc_id ) {
+		$doc = $doc_id ? ZG_B2B_EF_Connector::find_doc( $order, $doc_id ) : null;
+		if ( ! $doc && $doc_id ) {
+			ZG_B2B_EF_Connector::docs( $order, 1 ); // seznam mohl zastarat – jednou načíst znovu
+			$doc = ZG_B2B_EF_Connector::find_doc( $order, $doc_id );
+		}
+		if ( ! $doc ) {
+			wp_die( esc_html__( 'Doklad není k dispozici.', 'zg-b2b' ), '', array( 'response' => 404 ) );
+		}
+		$pdf = ZG_B2B_EF_Connector::pdf( $doc['id'] );
+		if ( is_wp_error( $pdf ) ) {
+			wp_die( esc_html__( 'PDF se teď nepodařilo načíst. Zkuste to prosím za chvíli.', 'zg-b2b' ), '', array( 'response' => 503 ) );
+		}
+		nocache_headers();
+		header( 'Content-Type: application/pdf' );
+		header( 'Content-Disposition: attachment; filename="' . ZG_B2B_EF_Connector::filename( $doc ) . '"' );
+		header( 'Content-Length: ' . strlen( $pdf ) );
+		echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput
+		exit;
+	}
+
 	/* ---------------------------------------------------------------------
 	 * Můj účet a děkovací stránka
 	 * ------------------------------------------------------------------- */
 
 	public static function my_orders_actions( $actions, $order ) {
 		$type = self::visible_type( $order );
-		if ( $type ) {
+		if ( 'ef' === $type ) {
+			foreach ( ZG_B2B_EF_Connector::customer_docs( $order ) as $d ) {
+				if ( $d['cancelled'] ) {
+					continue;
+				}
+				$actions[ 'zg_ef_' . md5( $d['id'] ) ] = array(
+					'url'  => self::download_url( $order, 'ef', $d['id'] ),
+					'name' => 'credit' === $d['kind'] ? __( 'Opravný doklad (PDF)', 'zg-b2b' ) : ( 'proforma' === $d['kind'] ? __( 'Proforma (PDF)', 'zg-b2b' ) : __( 'Faktura (PDF)', 'zg-b2b' ) ),
+				);
+			}
+		} elseif ( $type ) {
 			$actions[ 'zg_' . $type ] = array(
 				'url'  => self::download_url( $order, $type ),
 				'name' => 'invoice' === $type ? __( 'Faktura (PDF)', 'zg-b2b' ) : __( 'Proforma (PDF)', 'zg-b2b' ),
@@ -356,6 +404,17 @@ class ZG_B2B_EF_Documents {
 				return '<p class="zg-b2b-doc-pending">' . esc_html__( 'Proformu připravujeme – během několika minut vám ji pošleme e-mailem a objeví se zde.', 'zg-b2b' ) . '</p>';
 			}
 			return '';
+		}
+		if ( 'ef' === $type ) {
+			$html = '';
+			foreach ( ZG_B2B_EF_Connector::customer_docs( $order ) as $d ) {
+				$html .= '<div class="zg-b2b-doc' . ( $d['cancelled'] ? ' zg-b2b-doc--cancelled' : '' ) . '">'
+					. '<span class="zg-b2b-doc__icon">' . zg_b2b_icon( 'info' ) . '</span>'
+					. '<span class="zg-b2b-doc__body"><strong>' . esc_html( ZG_B2B_EF_Connector::label( $d ) ) . '</strong><span>' . esc_html( ZG_B2B_EF_Connector::hint( $d ) ) . '</span></span>'
+					. zg_b2b_button( self::download_url( $order, 'ef', $d['id'] ), __( 'Stáhnout PDF', 'zg-b2b' ), 'outline', 'arrow', 'sm' )
+					. '</div>';
+			}
+			return $html;
 		}
 		$num   = $order->get_meta( '_zg_ef_' . $type . '_number' );
 		$label = 'invoice' === $type
@@ -375,6 +434,7 @@ class ZG_B2B_EF_Documents {
 		if ( ! $order instanceof WC_Order || is_wc_endpoint_url( 'order-received' ) ) {
 			return;
 		}
+		ZG_B2B_EF_Connector::docs( $order, 10 * MINUTE_IN_SECONDS ); // čerstvé doklady při zobrazení detailu
 		$docs = self::documents_html( $order );
 		$pay  = '';
 		if ( ZG_B2B_Gateway_Invoice::ID === $order->get_payment_method() && $order->has_status( 'on-hold' ) ) {
@@ -446,7 +506,9 @@ class ZG_B2B_EF_Documents {
 		);
 		foreach ( $orders as $order ) {
 			if ( $order->get_meta( '_zg_ef_proforma_number' ) && ! $order->get_meta( '_zg_ef_invoice_number' ) ) {
-				self::find_invoice( $order );
+				if ( ! self::invoice_from_connector( $order ) ) {
+					self::find_invoice( $order );
+				}
 			}
 		}
 	}
@@ -535,15 +597,31 @@ class ZG_B2B_EF_Documents {
 		return true;
 	}
 
+	/** Faktura k proformě z pluginu Eurofaktura.cz (spolehlivější než hledání přes API). */
+	public static function invoice_from_connector( WC_Order $order ) {
+		if ( ! ZG_B2B_EF_Connector::available() ) {
+			return false;
+		}
+		foreach ( ZG_B2B_EF_Connector::docs( $order, 25 * MINUTE_IN_SECONDS ) as $d ) {
+			if ( 'invoice' === $d['kind'] && ! $d['cancelled'] && $d['number'] ) {
+				self::set_invoice( $order, $d['number'], '', '', 'z pluginu Eurofaktura.cz', false );
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** Uloží fakturu k objednávce, stáhne PDF a volitelně označí objednávku jako zaplacenou. */
-	public static function set_invoice( WC_Order $order, $number, $date = '', $id = '', $how = 'zadáno ručně' ) {
+	public static function set_invoice( WC_Order $order, $number, $date = '', $id = '', $how = 'zadáno ručně', $fetch_pdf = true ) {
 		$order->update_meta_data( '_zg_ef_invoice_number', $number );
 		$order->update_meta_data( '_zg_ef_invoice_date', $date ? substr( $date, 0, 10 ) : '' );
 		$order->update_meta_data( '_zg_ef_invoice_id', $id );
 		$order->delete_meta_data( '_zg_ef_invoice_file' );
 		$order->save();
 		$order->add_order_note( 'Eurofaktura: faktura č. ' . $number . ' (' . $how . '). V Můj účet nahradila proformu.' );
-		self::ensure_pdf( $order, 'invoice' );
+		if ( $fetch_pdf ) {
+			self::ensure_pdf( $order, 'invoice' );
+		}
 
 		if ( 'yes' === zg_b2b_opt( 'ef_auto_paid' ) && $order->has_status( 'on-hold' ) ) {
 			// Faktura po zaplacení = platba přijata → „Zpracovává se“ (e-mail s fakturou v příloze).
@@ -561,7 +639,7 @@ class ZG_B2B_EF_Documents {
 			$screens[] = wc_get_page_screen_id( 'shop-order' );
 		}
 		foreach ( array_unique( $screens ) as $screen ) {
-			add_meta_box( 'zg-b2b-ef', 'Eurofaktura', array( __CLASS__, 'render_meta_box' ), $screen, 'side', 'high' );
+			add_meta_box( 'zg-b2b-ef', 'B2B doklady (Můj účet)',array( __CLASS__, 'render_meta_box' ), $screen, 'side', 'high' );
 		}
 	}
 
@@ -575,8 +653,30 @@ class ZG_B2B_EF_Documents {
 		if ( ! $order ) {
 			return;
 		}
-		$p = $order->get_meta( '_zg_ef_proforma_number' );
-		$i = $order->get_meta( '_zg_ef_invoice_number' );
+		$p      = $order->get_meta( '_zg_ef_proforma_number' );
+		$i      = $order->get_meta( '_zg_ef_invoice_number' );
+		$is_inv = ZG_B2B_Gateway_Invoice::ID === $order->get_payment_method();
+
+		if ( ZG_B2B_EF_Connector::available() ) {
+			$ef      = ZG_B2B_EF_Connector::customer_docs( $order );
+			$checked = (int) $order->get_meta( ZG_B2B_EF_Connector::META_CHECKED );
+			echo '<p><strong>Doklady z Eurofaktura.cz</strong> <span class="description">(vidí zákazník)</span></p>';
+			if ( $ef ) {
+				echo '<ul style="margin:0 0 8px">';
+				foreach ( $ef as $d ) {
+					echo '<li>' . esc_html( ZG_B2B_EF_Connector::label( $d ) ) . ' – <a href="' . esc_url( self::download_url( $order, 'ef', $d['id'] ) ) . '">PDF</a></li>';
+				}
+				echo '</ul>';
+			} else {
+				echo '<p>—</p>';
+			}
+			echo '<p class="description">' . ( $checked ? 'Načteno ' . esc_html( wp_date( 'j. n. Y H:i', $checked ) ) : 'Zatím nenačteno' ) . '</p>';
+			echo '<p>' . self::action_link( $order, 'efsync', 'Načíst doklady' ) . '</p><hr>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		}
+		if ( ! $is_inv && ! $p && ! $i ) {
+			echo '<p class="description">Proforma se vytváří jen u platby na fakturu.</p>';
+			return;
+		}
 		echo '<p><strong>Proforma:</strong> ' . ( $p ? esc_html( $p ) . ' <a href="' . esc_url( self::download_url( $order, 'proforma' ) ) . '">PDF</a>' : '—' ) . '</p>';
 		echo '<p><strong>Faktura:</strong> ' . ( $i ? esc_html( $i ) . ' <a href="' . esc_url( self::download_url( $order, 'invoice' ) ) . '">PDF</a>' : '—' ) . '</p>';
 		echo '<p style="display:flex;gap:6px;flex-wrap:wrap">';
@@ -644,6 +744,11 @@ class ZG_B2B_EF_Documents {
 			} elseif ( 'find' === $do ) {
 				if ( ! self::find_invoice( $order ) ) {
 					$order->add_order_note( 'Eurofaktura: faktura k proformě zatím nenalezena.' );
+				}
+			} elseif ( 'efsync' === $do ) {
+				$r = ZG_B2B_EF_Connector::refresh( $order );
+				if ( is_wp_error( $r ) ) {
+					$order->add_order_note( 'Eurofaktura.cz: doklady se nepodařilo načíst – ' . $r->get_error_message() );
 				}
 			} elseif ( 'refresh' === $do ) {
 				foreach ( array( 'proforma', 'invoice' ) as $t ) {

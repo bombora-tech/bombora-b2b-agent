@@ -987,3 +987,24 @@ msgstr "Change password"
 
 msgid "Upravit přihlašovací údaje"
 msgstr "Edit login details"
+
+msgid "Opravný daňový doklad č. %s"
+msgstr "Credit note no. %s"
+
+msgid "stornováno"
+msgstr "cancelled"
+
+msgid "Doklad byl stornován a není platný."
+msgstr "This document has been cancelled and is no longer valid."
+
+msgid "Oprava (dobropis) k faktuře."
+msgstr "Correction (credit note) to the invoice."
+
+msgid "Opravny-doklad"
+msgstr "Credit-note"
+
+msgid "Opravný doklad (PDF)"
+msgstr "Credit note (PDF)"
+
+msgid "Doklad není k dispozici."
+msgstr "This document is not available."
