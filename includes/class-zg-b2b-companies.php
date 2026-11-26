@@ -555,7 +555,13 @@ class ZG_B2B_Companies {
 		if ( $choice ) {
 			echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Fakturovat na firmu', 'zg-b2b' ) . '</h3>';
 		}
-		foreach ( self::billable( $user_id ) as $id => $c ) {
+		$billable = self::billable( $user_id );
+		echo '<div class="zg-b2b-choices" data-zg-choices>';
+		if ( $choice ) {
+			$others = count( $billable ) - 1;
+			self::choices_header( 'company', __( 'Fakturovat na jinou firmu', 'zg-b2b' ), self::plural( $others, __( '%d firma', 'zg-b2b' ), __( '%d firmy', 'zg-b2b' ), __( '%d firem', 'zg-b2b' ) ) );
+		}
+		foreach ( $billable as $id => $c ) {
 			$checked = ( $id === $current );
 			echo '<label class="zg-b2b-addr-option' . ( $checked ? ' is-selected' : '' ) . '">';
 			if ( $choice ) {
@@ -568,14 +574,32 @@ class ZG_B2B_Companies {
 			echo '<span class="zg-b2b-addr-option__detail">' . esc_html( implode( ' · ', $detail ) ) . '</span>';
 			echo '</span></label>';
 		}
-		if ( $choice ) {
-			// Ostatní firmy jsou skryté, dokud zákazník výslovně nezvolí „Vybrat jinou firmu“ (prevence omylu).
-			echo '<div class="zg-b2b-contact zg-b2b-company-switch-row"><div class="zg-b2b-contact__body"><span class="zg-b2b-contact__label">' . esc_html__( 'Firma pro fakturaci', 'zg-b2b' ) . '</span> <span>' . esc_html__( 'Fakturujeme na vybranou firmu.', 'zg-b2b' ) . '</span></div>';
-			echo '<button type="button" class="zg-b2b-sum__toggle zg-b2b-company-switch" hidden aria-expanded="false" data-open="' . esc_attr__( 'Vybrat jinou firmu', 'zg-b2b' ) . '" data-close="' . esc_attr__( 'Ponechat vybranou firmu', 'zg-b2b' ) . '">' . esc_html__( 'Vybrat jinou firmu', 'zg-b2b' ) . '</button></div>';
-		}
+		echo '</div>';
 		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
 		self::contact_line( 'billing' );
 		echo '</div>';
+	}
+
+	/** Česká množná čísla (1 / 2–4 / 5+). */
+	public static function plural( $n, $one, $few, $many ) {
+		$f = ( 1 === $n ) ? $one : ( ( $n >= 2 && $n <= 4 ) ? $few : $many );
+		return sprintf( $f, $n );
+	}
+
+	/**
+	 * Rozbalovací řádek „Jiná firma / adresa (N)“ pod zvolenou položkou (styl jako výběr dopravy).
+	 * Ostatní položky jsou skryté, dokud ho zákazník nerozbalí (prevence omylu).
+	 */
+	public static function choices_header( $icon, $label, $count ) {
+		$icons = array(
+			'company'  => '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M15 9h2a2 2 0 0 1 2 2v10"/><path d="M9 7h2M9 11h2M9 15h2"/></svg>',
+			'delivery' => '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>',
+		);
+		echo '<button type="button" class="zg-b2b-choices__more" aria-expanded="false" hidden>';
+		echo '<span class="zg-b2b-choices__icon">' . $icons[ $icon ] . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput -- statické SVG.
+		echo '<span class="zg-b2b-choices__label">' . esc_html( $label ) . ' <span class="zg-b2b-choices__count">(' . esc_html( $count ) . ')</span></span>';
+		echo '<span class="zg-b2b-choices__chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>';
+		echo '</button>';
 	}
 
 	/** Řádek „Kontaktní osoba: jméno · telefon · e-mail“ + „Změnit údaje“ (JS rozbalí pole). */
@@ -591,6 +615,7 @@ class ZG_B2B_Companies {
 			return;
 		}
 		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
+		wp_enqueue_script( 'zg-b2b-choices', ZG_B2B_URL . 'assets/js/zg-b2b-choices.js', array( 'jquery' ), ZG_B2B_VERSION, true );
 		wp_enqueue_script( 'zg-b2b-companies-checkout', ZG_B2B_URL . 'assets/js/zg-b2b-companies-checkout.js', array( 'jquery', 'wc-checkout' ), ZG_B2B_VERSION, true );
 		$data = array();
 		foreach ( self::billable( get_current_user_id() ) as $id => $c ) {

@@ -101,13 +101,20 @@ class ZG_B2B_Address_Checkout {
 		echo '<div class="zg-b2b-addr-picker" id="zg-b2b-addr-picker">';
 		echo '<h3 class="zg-b2b-addr-picker__title">' . esc_html__( 'Doručovací adresa', 'zg-b2b' ) . '</h3>';
 
+		echo '<div class="zg-b2b-choices" data-zg-choices>';
+		if ( class_exists( 'ZG_B2B_Companies' ) ) {
+			$others = count( $list ) + 1; // + fakturační / ostatní uložené (bez „Jiná adresa“ se počítá zvlášť)
+			ZG_B2B_Companies::choices_header( 'delivery', __( 'Doručit na jinou adresu', 'zg-b2b' ), ZG_B2B_Companies::plural( $others, __( '%d adresa', 'zg-b2b' ), __( '%d adresy', 'zg-b2b' ), __( '%d adres', 'zg-b2b' ) ) );
+		}
+
 		self::option( 'billing', __( 'Stejná jako fakturační adresa', 'zg-b2b' ), '', 'billing' === $choice );
 
 		foreach ( $list as $address ) {
 			self::option( $address['id'], $address['label'], ZG_B2B_Address_Book::format_inline( $address['fields'] ), $choice === $address['id'] );
 		}
 
-		self::option( 'new', __( 'Jiná adresa', 'zg-b2b' ), '', false );
+		self::option( 'new', __( 'Jiná adresa', 'zg-b2b' ), __( 'Zadat novou doručovací adresu', 'zg-b2b' ), false );
+		echo '</div>';
 
 		echo '<div class="zg-b2b-addr-picker__save" hidden>';
 		echo '<label class="zg-b2b-addr-picker__save-check zg-b2b-addr-check"><input type="checkbox" name="zg_b2b_addr_save_new" value="1" checked> <span>' . esc_html__( 'Uložit adresu do mých doručovacích adres', 'zg-b2b' ) . '</span></label>';
@@ -136,6 +143,7 @@ class ZG_B2B_Address_Checkout {
 			return;
 		}
 		wp_enqueue_style( 'zg-b2b-addresses', ZG_B2B_URL . 'assets/css/zg-b2b-addresses.css', array(), ZG_B2B_VERSION );
+		wp_enqueue_script( 'zg-b2b-choices', ZG_B2B_URL . 'assets/js/zg-b2b-choices.js', array( 'jquery' ), ZG_B2B_VERSION, true );
 		wp_enqueue_script( 'zg-b2b-addresses-checkout', ZG_B2B_URL . 'assets/js/zg-b2b-addresses-checkout.js', array( 'jquery', 'wc-checkout' ), ZG_B2B_VERSION, true );
 
 		$user_id   = get_current_user_id();

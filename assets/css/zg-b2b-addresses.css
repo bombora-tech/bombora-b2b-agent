@@ -626,43 +626,6 @@ form.checkout .zg-b2b-sum__toggle:hover {
 	visibility: hidden;
 }
 
-/* Pokladna: jen zvolená firma, ostatní po „Vybrat jinou firmu“. */
-.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option:not(.is-selected) {
-	display: none;
-}
-.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option.is-selected input[type="radio"] {
-	display: none;
-}
-.zg-b2b-company-picker.has-choice:not(.is-choosing) .zg-b2b-addr-option.is-selected {
-	cursor: default;
-}
-.zg-b2b-company-switch-row {
-	margin: 8px 0 0;
-}
-form.checkout .zg-b2b-company-switch {
-	padding: 0 !important;
-	margin: 0 !important;
-	font-size: 14px !important;
-	font-weight: 700 !important;
-	color: var(--zg-addr-teal) !important;
-	background: none !important;
-	border: 0 !important;
-	box-shadow: none !important;
-	text-decoration: underline;
-	cursor: pointer;
-}
-form.checkout .zg-b2b-company-switch[hidden] {
-	display: none !important;
-}
-
-/* Změna firmy v rámečku s pozadím (stejně jako kontaktní osoba). */
-.zg-b2b-company-switch-row {
-	margin: 10px 0 0 !important;
-}
-.zg-b2b-company-picker.is-choosing .zg-b2b-company-switch-row .zg-b2b-contact__body {
-	visibility: hidden;
-}
-
 /* Lišta pod rozbalenými poli: stav uložení + výrazné „Hotovo“. */
 .zg-b2b-done-row {
 	display: flex;
@@ -708,4 +671,83 @@ form.checkout .zg-b2b-done-btn {
 }
 form.checkout .zg-b2b-done-btn:hover {
 	background: var(--zg-addr-teal) !important;
+}
+
+/* ---------- Výběr firmy / adresy: zvolená položka + rozbalovací „Jiná … (N)“ ---------- */
+.zg-b2b-choices.is-enhanced {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: #fff;
+	border: 0.8px solid var(--zg-addr-border);
+	border-radius: 14px;
+}
+.zg-b2b-choices.is-enhanced > .zg-b2b-addr-option {
+	order: 2;
+	margin: 0;
+	border: 0;
+	border-top: 0.8px solid var(--zg-addr-border);
+	border-left: 4px solid transparent;
+	border-radius: 0;
+	box-shadow: none;
+	padding: 16px 18px;
+}
+.zg-b2b-choices.is-enhanced > .zg-b2b-addr-option.is-selected {
+	order: 0;
+	border-top: 0;
+	border-left-color: var(--zg-addr-teal);
+	background: var(--zg-addr-soft);
+	box-shadow: none;
+}
+.zg-b2b-choices.is-enhanced:not(.is-open) > .zg-b2b-addr-option:not(.is-selected) {
+	display: none;
+}
+.zg-b2b-choices.is-enhanced > .zg-b2b-addr-option:not(.is-selected):hover {
+	background: #f7fafa;
+}
+.zg-b2b-choices__more[hidden] {
+	display: none !important;
+}
+form.checkout .zg-b2b-choices .zg-b2b-choices__more {
+	order: 1;
+	display: flex !important;
+	gap: 12px;
+	align-items: center;
+	width: 100% !important;
+	height: auto !important;
+	margin: 0 !important;
+	padding: 16px 18px !important;
+	font: inherit;
+	font-size: 15px !important;
+	font-weight: 700 !important;
+	line-height: 1.3 !important;
+	text-align: left;
+	color: var(--zg-addr-text) !important;
+	background: #fff !important;
+	border: 0 !important;
+	border-top: 0.8px solid var(--zg-addr-border) !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	cursor: pointer;
+}
+form.checkout .zg-b2b-choices .zg-b2b-choices__more:hover {
+	background: #f7fafa !important;
+}
+.zg-b2b-choices__icon {
+	display: inline-flex;
+	color: var(--zg-addr-text);
+}
+.zg-b2b-choices__label {
+	flex: 1 1 auto;
+}
+.zg-b2b-choices__count {
+	font-weight: 600;
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-choices__chevron {
+	display: inline-flex;
+	transition: transform .15s;
+}
+.zg-b2b-choices.is-open .zg-b2b-choices__chevron {
+	transform: rotate(180deg);
 }

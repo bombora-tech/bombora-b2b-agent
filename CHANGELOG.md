@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.9.0] - 2026-11-26
+
+### Změněno
+- Pokladna – výběr firmy i doručovací adresy ve stylu výběru dopravy: nahoře **zvolená položka** (zvýrazněná, tyrkysový pruh vlevo), pod ní rozbalovací řádek **„Fakturovat na jinou firmu (N firem)“ / „Doručit na jinou adresu (N adres)“** s ikonou a šipkou; po výběru se seznam sbalí. Nahrazuje odkaz „Vybrat jinou firmu“.
+
 ## [1.8.3] - 2026-11-26
 
 ### Změněno

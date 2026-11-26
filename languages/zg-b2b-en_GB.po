@@ -817,3 +817,36 @@ msgstr "Invoicing company"
 
 msgid "Fakturujeme na vybranou firmu."
 msgstr "We invoice the selected company."
+
+msgid "Fakturovat na jinou firmu"
+msgstr "Invoice to another company"
+
+msgid "Doručit na jinou adresu"
+msgstr "Deliver to another address"
+
+#, php-format
+msgid "%d firma"
+msgstr "%d company"
+
+#, php-format
+msgid "%d firmy"
+msgstr "%d companies"
+
+#, php-format
+msgid "%d firem"
+msgstr "%d companies"
+
+#, php-format
+msgid "%d adresa"
+msgstr "%d address"
+
+#, php-format
+msgid "%d adresy"
+msgstr "%d addresses"
+
+#, php-format
+msgid "%d adres"
+msgstr "%d addresses"
+
+msgid "Zadat novou doručovací adresu"
+msgstr "Enter a new delivery address"
