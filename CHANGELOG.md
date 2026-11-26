@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.21.2] - 2026-11-26
+
+### Změněno
+- S&V STOCK: objednávka lihovin dostane jako dopravu **způsob zvolený v pokladně** (např. „Doručení na adresu“) za 0 Kč – poplatek zůstává v původní objednávce. Při nastavení „Přesunout do objednávky lihovin“ se přesune i s poplatkem.
+- Jednorázová úprava: u už rozdělených objednávek se řádek „Messenger – S&V STOCK“ nahradí dopravou z původní objednávky (0 Kč).
+
 ## [1.21.1] - 2026-11-26
 
 ### Opraveno

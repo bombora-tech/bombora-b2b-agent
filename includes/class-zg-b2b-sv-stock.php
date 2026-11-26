@@ -47,6 +47,7 @@ class ZG_B2B_SV_Stock {
 		add_action( 'admin_post_zg_b2b_sv', array( __CLASS__, 'admin_action' ) );
 		add_action( 'admin_post_zg_b2b_sv_upload', array( __CLASS__, 'admin_upload' ) );
 		add_filter( 'woocommerce_webhook_should_deliver', array( __CLASS__, 'block_ef_webhook' ), 20, 3 );
+		add_action( 'admin_init', array( __CLASS__, 'migrate_shipping_titles' ) );
 		// Můj účet: objednávka lihovin se zobrazuje u původní objednávky, ne jako samostatný řádek.
 		add_filter( 'woocommerce_my_account_my_orders_query', array( __CLASS__, 'hide_children' ) );
 		add_action( 'woocommerce_my_account_my_orders_column_order-number', array( __CLASS__, 'col_number' ) );
@@ -254,8 +255,14 @@ class ZG_B2B_SV_Stock {
 			$order->remove_item( $id );
 		}
 
-		// Doprava: lihoviny se doručují zdarma → žádný řádek dopravy; jen při nastavení „přesunout“ se poplatek přesune.
-		if ( 'move' === zg_b2b_opt( 'sv_shipping' ) ) {
+		// Doprava: stejný způsob jako v pokladně. Výchozí – lihoviny zdarma (0 Kč, poplatek zůstává v původní objednávce);
+		// při nastavení „přesunout“ se přesune i poplatek.
+		if ( 'move' !== zg_b2b_opt( 'sv_shipping' ) ) {
+			$s = self::first_shipping( $order );
+			if ( $s ) {
+				$child->add_item( self::free_shipping_copy( $s ) );
+			}
+		} else {
 			foreach ( $order->get_items( 'shipping' ) as $sid => $s ) {
 				$ship = new WC_Order_Item_Shipping();
 				$ship->set_method_title( $s->get_method_title() );
@@ -382,6 +389,62 @@ class ZG_B2B_SV_Stock {
 
 		self::resync_parent( $parent );
 		return $parent;
+	}
+
+	private static function first_shipping( WC_Order $order ) {
+		foreach ( $order->get_items( 'shipping' ) as $s ) {
+			return $s;
+		}
+		return null;
+	}
+
+	/** Kopie dopravy z pokladny za 0 Kč (lihoviny se doručují zdarma). */
+	private static function free_shipping_copy( WC_Order_Item_Shipping $s ) {
+		$n = new WC_Order_Item_Shipping();
+		$n->set_method_title( $s->get_method_title() );
+		$n->set_method_id( $s->get_method_id() );
+		$n->set_instance_id( $s->get_instance_id() );
+		$n->set_total( 0 );
+		$n->set_taxes( array( 'total' => array() ) );
+		return $n;
+	}
+
+	/**
+	 * Jednorázově: dřívější řádek „Messenger – S&V STOCK“ v objednávkách lihovin
+	 * nahradit dopravou zvolenou v pokladně původní objednávky (0 Kč).
+	 */
+	public static function migrate_shipping_titles() {
+		if ( get_option( 'zg_b2b_sv_ship_migrated' ) ) {
+			return;
+		}
+		update_option( 'zg_b2b_sv_ship_migrated', 1, false );
+		$ids = wc_get_orders(
+			array(
+				'limit'      => -1,
+				'return'     => 'ids',
+				'meta_query' => array( array( 'key' => '_zg_sv_parent', 'compare' => 'EXISTS' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
+			)
+		);
+		foreach ( $ids as $id ) {
+			$child  = wc_get_order( $id );
+			$parent = $child ? wc_get_order( (int) $child->get_meta( '_zg_sv_parent' ) ) : null;
+			if ( ! $child ) {
+				continue;
+			}
+			foreach ( $child->get_items( 'shipping' ) as $sid => $s ) {
+				if ( 'zg_sv_messenger' !== $s->get_method_id() ) {
+					continue;
+				}
+				$child->remove_item( $sid );
+				$src = $parent ? self::first_shipping( $parent ) : null;
+				if ( $src ) {
+					$child->add_item( self::free_shipping_copy( $src ) );
+				}
+				$child->calculate_totals( false );
+				$child->save();
+				break;
+			}
+		}
 	}
 
 	/** Číslo platné faktury, kterou k objednávce už vystavil plugin Eurofaktura.cz (jinak ''). */
@@ -1065,7 +1128,7 @@ class ZG_B2B_SV_Stock {
 				<div style="max-height:220px;overflow:auto;border:1px solid #dcdcde;padding:8px 12px;background:#fff;max-width:520px"><?php self::cat_tree( array_map( 'intval', (array) $s['sv_categories'] ) ); ?></div>
 				<p class="description">Produkty z těchto kategorií (i podkategorií) se při rozdělení přesunou do objednávky pro S&amp;V. Produkty druhého skladu, které prodává Bombora (vlastní spotřeba / dárky), sem nezařazujte.</p></td></tr>
 			<tr><th scope="row">Poplatek za dopravu</th><td><select name="zg_b2b_settings[sv_shipping]">
-				<option value="keep" <?php selected( 'keep', $s['sv_shipping'] ); ?>>Ponechat v původní objednávce (lihoviny bez dopravy – zdarma)</option>
+				<option value="keep" <?php selected( 'keep', $s['sv_shipping'] ); ?>>Ponechat v původní objednávce (lihoviny: stejná doprava za 0 Kč)</option>
 				<option value="move" <?php selected( 'move', $s['sv_shipping'] ); ?>>Přesunout do objednávky lihovin</option>
 			</select></td></tr>
 			<?php
