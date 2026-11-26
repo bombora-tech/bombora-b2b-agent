@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.1] - 2026-11-26
+
+### Opraveno
+- B2B Dashboard: detail zákazníka skončil chybou (nenačtená třída tabulky).
+
 ## [1.8.0] - 2026-11-26
 
 ### Přidáno

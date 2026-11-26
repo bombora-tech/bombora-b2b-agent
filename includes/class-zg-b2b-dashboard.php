@@ -67,6 +67,7 @@ class ZG_B2B_Dashboard {
 		if ( ! current_user_can( self::CAP ) ) {
 			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.' ) ); // phpcs:ignore WordPress.WP.I18n.MissingArgDomain
 		}
+		require_once __DIR__ . '/class-zg-b2b-dashboard-table.php';
 		echo '<div class="wrap zg-b2b-dash">';
 		self::styles();
 		$customer = isset( $_GET['customer'] ) ? absint( $_GET['customer'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification
@@ -98,7 +99,6 @@ class ZG_B2B_Dashboard {
 	}
 
 	private static function render_list() {
-		require_once __DIR__ . '/class-zg-b2b-dashboard-table.php';
 
 		echo '<h1 class="wp-heading-inline">B2B Dashboard</h1>';
 		echo '<a class="page-title-action" href="' . esc_url( admin_url( 'admin.php?page=zg-b2b' ) ) . '">Nastavení B2B</a>';
