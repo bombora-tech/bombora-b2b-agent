@@ -859,3 +859,15 @@ form.checkout .zg-b2b-addr-edit[hidden] {
 		padding: 12px 14px;
 	}
 }
+
+/* Pole doručovací adresy přesunutá pod výběr adresy. */
+.zg-b2b-shipping-inline {
+	margin: 14px 0 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+}
+.zg-b2b-shipping-inline .form-row {
+	box-sizing: border-box;
+}

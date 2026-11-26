@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.11.2] - 2026-11-26
+
+### Změněno
+- Pokladna: „Fakturační údaje firmy mění provozovatel webu – napište nám.“ (místo „velkoobchod“).
+- Pole úpravy / zadání doručovací adresy se zobrazují hned pod výběrem doručovací adresy (dřív až pod kontaktní osobou v dalším bloku).
+
 ## [1.11.1] - 2026-11-26
 
 ### Změněno

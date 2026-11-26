@@ -580,7 +580,7 @@ class ZG_B2B_Companies {
 			echo '</span></label>';
 		}
 		echo '</div>';
-		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění velkoobchod – napište nám.', 'zg-b2b' ) . '</p>';
+		echo '<p class="zg-b2b-company-picker__note">' . esc_html__( 'Fakturační údaje firmy mění provozovatel webu – napište nám.', 'zg-b2b' ) . '</p>';
 		echo '</div>';
 	}
 

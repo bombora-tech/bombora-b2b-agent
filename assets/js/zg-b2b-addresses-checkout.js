@@ -74,6 +74,20 @@
 	$done.find( 'button' ).text( cfg.done || 'OK' );
 	$( 'div.shipping_address' ).first().append( $done );
 
+	/* Pole adresy hned pod výběrem doručovací adresy (ne až pod kontaktní osobou / v dalším bloku).
+	   Obal .woocommerce-address-fields zachová správné chování výběru země (address-i18n). */
+	var $shipFields = $( 'div.shipping_address' ).first();
+	if ( $shipFields.length ) {
+		var $slot = $( '<div class="woocommerce-address-fields zg-b2b-shipping-inline"></div>' );
+		var $manage = $picker.find( '.zg-b2b-addr-picker__manage' );
+		if ( $manage.length ) {
+			$slot.insertBefore( $manage );
+		} else {
+			$slot.appendTo( $picker );
+		}
+		$slot.append( $shipFields );
+	}
+
 	function updateFields() {
 		var choice = currentChoice();
 		var saved = choice !== 'billing' && choice !== 'new';

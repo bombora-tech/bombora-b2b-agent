@@ -755,8 +755,8 @@ msgstr "The details could not be loaded. Please fill them in manually."
 
 
 # 1.6.2
-msgid "Fakturační údaje firmy mění velkoobchod – napište nám."
-msgstr "Company billing details are changed by the wholesaler – contact us."
+msgid "Fakturační údaje firmy mění provozovatel webu – napište nám."
+msgstr "Company billing details are changed by the site operator – contact us."
 
 msgid "Název pobočky"
 msgstr "Branch name"
