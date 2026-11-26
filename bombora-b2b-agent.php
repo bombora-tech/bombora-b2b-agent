@@ -3,7 +3,7 @@
  * Plugin Name:       Bombora B2B Agent
  * Plugin URI:        https://github.com/bombora-tech/bombora-b2b-agent
  * Description:       Velkoobchod vo.zgruzie.cz – ceny jen pro schválené partnery, registrace firem s ověřením ARES/VIES a ručním schválením, lihoviny a pivo s doručením pouze v ČR, platba na fakturu s proformou z Eurofaktury, více doručovacích adres (pobočky) s výběrem v pokladně.
- * Version:           1.13.1
+ * Version:           1.14.0
  * Author:            Bombora group s.r.o.
  * Author URI:        https://zgruzie.cz
  * Text Domain:       zg-b2b
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZG_B2B_VERSION', '1.13.1' );
+define( 'ZG_B2B_VERSION', '1.14.0' );
 define( 'ZG_B2B_FILE', __FILE__ );
 define( 'ZG_B2B_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZG_B2B_URL', plugin_dir_url( __FILE__ ) );
@@ -64,6 +64,7 @@ add_action( 'plugins_loaded', function () {
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-address-admin.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-companies.php';
 	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-contacts.php';
+	require_once ZG_B2B_DIR . 'includes/class-zg-b2b-account-modals.php';
 	if ( is_admin() ) {
 		require_once ZG_B2B_DIR . 'includes/class-zg-b2b-dashboard.php';
 		ZG_B2B_Dashboard::init();
@@ -82,6 +83,7 @@ add_action( 'plugins_loaded', function () {
 	ZG_B2B_Address_Admin::init();
 	ZG_B2B_Companies::init();
 	ZG_B2B_Contacts::init();
+	ZG_B2B_Account_Modals::init();
 
 	add_filter( 'woocommerce_payment_gateways', function ( $gateways ) {
 		$gateways[] = 'ZG_B2B_Gateway_Invoice';

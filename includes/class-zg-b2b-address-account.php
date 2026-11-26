@@ -119,8 +119,9 @@ class ZG_B2B_Address_Account {
 
 		self::enqueue();
 
-		// Fakturační adresa: standardní formulář WooCommerce (vč. zámků B2B).
-		if ( 'billing' === $type ) {
+		// Fakturační adresa: standardní formulář WooCommerce (vč. zámků B2B) v pop-upu nad přehledem Adres.
+		$billing_modal = class_exists( 'ZG_B2B_Account_Modals' );
+		if ( 'billing' === $type && ! $billing_modal ) {
 			woocommerce_account_edit_address( 'billing' );
 			return;
 		}
@@ -140,6 +141,10 @@ class ZG_B2B_Address_Account {
 		} else {
 			self::render_overview( $user_id );
 			self::render_modal( $user_id );
+			if ( $billing_modal ) {
+				// Přímý odkaz /…/billing/ nebo chyba při uložení → okno otevřít hned.
+				ZG_B2B_Account_Modals::render_billing_modal( 'billing' === $type );
+			}
 		}
 
 		echo '</div>';

@@ -989,3 +989,64 @@ form.checkout .zg-b2b-edit-head__close[hidden] {
 form.checkout .zg-b2b-done-btn {
 	white-space: nowrap;
 }
+
+/* Můj účet: obecné pop-upy s formuláři WooCommerce (fakturační údaje, detaily účtu). */
+.zg-b2b-gmodal.zg-b2b-gmodal form,
+.zg-b2b-gmodal.zg-b2b-gmodal .woocommerce-EditAccountForm,
+.zg-b2b-gmodal.zg-b2b-gmodal .woocommerce-address-fields {
+	margin: 0 !important;
+	padding: 0 !important;
+	background: none !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	max-width: none !important;
+}
+.zg-b2b-gmodal fieldset {
+	margin: 16px 0 0;
+	padding: 0;
+	border: 0;
+}
+.zg-b2b-gmodal fieldset legend {
+	margin: 0 0 8px;
+	font-size: 16px;
+	font-weight: 700;
+}
+.zg-b2b-gmodal form > p:last-of-type,
+.zg-b2b-gmodal .woocommerce-address-fields > p:last-child {
+	position: sticky;
+	bottom: -24px;
+	margin: 20px -24px -24px !important;
+	padding: 16px 24px !important;
+	background: #fff;
+	border-top: 0.8px solid var(--zg-addr-border);
+	border-radius: 0 0 14px 14px;
+	z-index: 2;
+}
+/* Detaily účtu: přehled. */
+.zg-b2b-account-card {
+	max-width: 640px;
+}
+.zg-b2b-kv {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+}
+.zg-b2b-kv__row {
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+	padding: 10px 0;
+	border-bottom: 0.8px solid var(--zg-addr-border);
+}
+.zg-b2b-kv__row:last-child {
+	border-bottom: 0;
+}
+.zg-b2b-kv__label {
+	color: var(--zg-addr-muted);
+}
+.zg-b2b-kv__value {
+	font-weight: 600;
+	text-align: right;
+	overflow-wrap: anywhere;
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0] - 2026-11-26
+
+### Změněno
+- Můj účet – všechny úpravy v pop-upu:
+  - Adresy → „Upravit“ u hlavní firmy otevře fakturační a kontaktní údaje (standardní formulář WooCommerce vč. zámků B2B) v pop-upu. Přímý odkaz `/…/adresa/billing/` i chyba při uložení zobrazí přehled Adres s otevřeným oknem.
+  - Detaily účtu: přehled (jméno, zobrazované jméno, e-mail, heslo) s tlačítky „Upravit údaje“ a „Změnit heslo“ – formulář WooCommerce v pop-upu; při chybě se okno znovu otevře.
+
 ## [1.13.1] - 2026-11-26
 
 ### Opraveno

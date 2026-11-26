@@ -244,7 +244,7 @@ class ZG_B2B_Companies {
 		echo '<div class="zg-b2b-addr-card zg-b2b-addr-card--billing">';
 		echo '<div class="zg-b2b-addr-card__head"><h3 class="zg-b2b-addr-card__label">' . esc_html( $primary['company'] ? $primary['company'] : __( 'Fakturační adresa', 'zg-b2b' ) );
 		echo ' <span class="zg-b2b-addr-badge">' . esc_html__( 'Hlavní', 'zg-b2b' ) . '</span></h3>';
-		echo '<a class="zg-b2b-addr-btn" href="' . esc_url( wc_get_endpoint_url( 'edit-address', 'billing' ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
+		echo '<a class="zg-b2b-addr-btn" data-zg-modal-open="zg-b2b-billing-modal" href="' . esc_url( wc_get_endpoint_url( 'edit-address', 'billing' ) ) . '">' . esc_html__( 'Upravit', 'zg-b2b' ) . '</a></div>';
 		$billing = wc_get_account_formatted_address( 'billing' );
 		echo '<address class="zg-b2b-addr-card__address">' . ( $billing ? wp_kses_post( $billing ) : esc_html__( 'Zatím nemáte nastavenou fakturační adresu.', 'zg-b2b' ) ) . '</address>';
 		if ( $extra && '' === self::cannot_delete_reason( $user_id, self::PRIMARY ) ) {

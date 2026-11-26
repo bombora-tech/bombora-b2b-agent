@@ -966,3 +966,24 @@ msgstr "Please fill in the required fields."
 
 msgid "Upravte údaje a klikněte na „Uložit adresu“. Změna se uloží do vašich doručovacích adres."
 msgstr "Edit the details and click “Save address”. The change is saved to your delivery addresses."
+
+msgid "Upravit fakturační a kontaktní údaje"
+msgstr "Edit billing and contact details"
+
+msgid "Přihlašovací údaje"
+msgstr "Login details"
+
+msgid "Upravit údaje"
+msgstr "Edit details"
+
+msgid "Jméno a příjmení"
+msgstr "Name"
+
+msgid "Zobrazované jméno"
+msgstr "Display name"
+
+msgid "Změnit heslo"
+msgstr "Change password"
+
+msgid "Upravit přihlašovací údaje"
+msgstr "Edit login details"
