@@ -31,7 +31,7 @@ function zg_b2b_defaults() {
 		'tag_name'                => 'Doručení pouze v ČR',
 		'locked_fields'           => array( 'company', 'ico', 'dic' ),
 		'hidden_account_items'    => array( 'downloads' ),
-		'ef_endpoint'             => 'https://eurofaktura.cz/rcz/WebServices/API',
+		'ef_endpoint'             => 'https://eurofaktura.cz/WebServicesCZ/API',
 		'ef_username'             => '',
 		'ef_secret'               => '',
 		'ef_token'                => '',

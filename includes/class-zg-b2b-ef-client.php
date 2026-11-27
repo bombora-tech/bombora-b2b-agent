@@ -16,8 +16,7 @@ class ZG_B2B_EF_Client {
 
 	/** Známé adresy JSON API Eurofaktury (první funkční se uloží). */
 	const ENDPOINTS = array(
-		'https://eurofaktura.cz/rcz/WebServices/API',
-		'https://eurofaktura.cz/WebServicesCZ/API',
+		'https://eurofaktura.cz/WebServicesCZ/API', // ověřeno: odpovídá JSON API (i chybou přihlášení)
 		'https://eurofaktura.cz/WebServices/API',
 	);
 
@@ -26,8 +25,8 @@ class ZG_B2B_EF_Client {
 
 	public static function credentials() {
 		$endpoint = defined( 'ZG_EF_ENDPOINT' ) ? ZG_EF_ENDPOINT : (string) zg_b2b_opt( 'ef_endpoint' );
-		if ( ! defined( 'ZG_EF_ENDPOINT' ) && 'https://eurofaktura.cz/WebServicesCZ/API' === $endpoint ) {
-			$endpoint = self::ENDPOINTS[0]; // stará výchozí hodnota z verzí < 1.23
+		if ( ! defined( 'ZG_EF_ENDPOINT' ) && 'https://eurofaktura.cz/rcz/WebServices/API' === $endpoint ) {
+			$endpoint = self::ENDPOINTS[0]; // chybná výchozí hodnota z verze 1.23.0
 		}
 		$fix = defined( 'ZG_EF_ENDPOINT' ) ? null : get_option( 'zg_b2b_ef_endpoint_fix' );
 		if ( is_array( $fix ) && isset( $fix['from'], $fix['to'] ) && $fix['from'] === $endpoint ) {

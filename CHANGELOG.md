@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.1] - 2026-11-28
+
+### Opraveno
+- Adresa Eurofaktura API vrácena na `https://eurofaktura.cz/WebServicesCZ/API` (ověřeno – odpovídá JSON API; `/rcz/WebServices/API` z 1.23.0 vrací HTTP 400). Chybná hodnota z 1.23.0 se automaticky nahradí.
+
 ## [1.23.0] - 2026-11-27
 
 ### Přidáno
@@ -8,7 +13,7 @@
 - Dohledání faktury k proformě přes přímou vazbu v Eurofaktuře (`SalesQuoteGet` → `salesInvoicesRef`); stornované faktury se nepárují.
 
 ### Opraveno
-- API klient: výchozí adresa `https://eurofaktura.cz/rcz/WebServices/API` (stará `WebServicesCZ/API` se automaticky nahradí); při 404 / ne-JSON odpovědi zkusí známé varianty adresy a funkční použije. Dodržuje limit Eurofaktury 1 požadavek / s.
+- API klient: při 404 / ne-JSON odpovědi zkusí známé varianty adresy a funkční použije. Dodržuje limit Eurofaktury 1 požadavek / s.
 - Proforma (SalesQuoteCreate) podle dokumentace API: `documentCurrency` (místo `currency`), `validUntil` (místo neexistujícího `dateDue`, výchozí 10 dní), doručovací adresa jako objekt `Address`, `type: Gross` (B2B ceny bez DPH), `methodOfPayment: BankTransfer`, jazyk dokladu podle jazyka objednávky (EN → English), `buyerVatRegistration` u plátců DPH a `apiTransactionId` (opakovaný pokus nevytvoří druhou proformu).
 
 ## [1.22.0] - 2026-11-27
