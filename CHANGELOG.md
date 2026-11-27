@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.3] - 2026-11-28
+
+### Opraveno
+- Eurofaktura API: odpověď „noDocumentsFound“ (výpis bez výsledků) se bere jako prázdný seznam, ne jako chyba (dříve to zbytečně počítalo chyby a psalo do logu).
+
 ## [1.23.2] - 2026-11-28
 
 ### Změněno

@@ -163,6 +163,10 @@ class ZG_B2B_EF_Client {
 
 		$data = isset( $json['response'] ) && is_array( $json['response'] ) ? $json['response'] : $json;
 		$err  = self::extract_error( $data );
+		// *List bez výsledků vrací Eurofaktura jako chybu „noDocumentsFound“ → prázdný seznam.
+		if ( $err && false !== stripos( $err, 'noDocumentsFound' ) ) {
+			return array();
+		}
 		if ( $err || $code >= 400 ) {
 			$msg = $err ? $err : 'HTTP ' . $code;
 			self::log( $method . ' – chyba: ' . $msg, 'error' );
