@@ -14,9 +14,27 @@ class ZG_B2B_EF_Client {
 
 	const LOG_SOURCE = 'zg-b2b-eurofaktura';
 
+	/** Známé adresy JSON API Eurofaktury (první funkční se uloží). */
+	const ENDPOINTS = array(
+		'https://eurofaktura.cz/rcz/WebServices/API',
+		'https://eurofaktura.cz/WebServicesCZ/API',
+		'https://eurofaktura.cz/WebServices/API',
+	);
+
+	/** Min. odstup požadavků v ms (limit Eurofaktury: průměrně 1 požadavek / s). */
+	const MIN_GAP_MS = 1100;
+
 	public static function credentials() {
+		$endpoint = defined( 'ZG_EF_ENDPOINT' ) ? ZG_EF_ENDPOINT : (string) zg_b2b_opt( 'ef_endpoint' );
+		if ( ! defined( 'ZG_EF_ENDPOINT' ) && 'https://eurofaktura.cz/WebServicesCZ/API' === $endpoint ) {
+			$endpoint = self::ENDPOINTS[0]; // stará výchozí hodnota z verzí < 1.23
+		}
+		$fix = defined( 'ZG_EF_ENDPOINT' ) ? null : get_option( 'zg_b2b_ef_endpoint_fix' );
+		if ( is_array( $fix ) && isset( $fix['from'], $fix['to'] ) && $fix['from'] === $endpoint ) {
+			$endpoint = $fix['to'];
+		}
 		return array(
-			'endpoint' => defined( 'ZG_EF_ENDPOINT' ) ? ZG_EF_ENDPOINT : (string) zg_b2b_opt( 'ef_endpoint' ),
+			'endpoint' => $endpoint,
 			'username' => defined( 'ZG_EF_USERNAME' ) ? ZG_EF_USERNAME : (string) zg_b2b_opt( 'ef_username' ),
 			'secret'   => defined( 'ZG_EF_SECRET' ) ? ZG_EF_SECRET : (string) zg_b2b_opt( 'ef_secret' ),
 			'token'    => defined( 'ZG_EF_TOKEN' ) ? ZG_EF_TOKEN : (string) zg_b2b_opt( 'ef_token' ),
@@ -56,6 +74,38 @@ class ZG_B2B_EF_Client {
 		delete_option( 'zg_b2b_ef_lock' );
 	}
 
+	/** Dodrží limit Eurofaktury (1 požadavek / s) – volá se uvnitř zámku. */
+	private static function throttle() {
+		$last = (float) get_option( 'zg_b2b_ef_last_call', 0 );
+		$wait = $last + self::MIN_GAP_MS / 1000 - microtime( true );
+		if ( $wait > 0 && $wait < 5 ) {
+			usleep( (int) ( $wait * 1000000 ) );
+		}
+		update_option( 'zg_b2b_ef_last_call', (string) microtime( true ), false );
+	}
+
+	/** Jeden HTTP požadavek (bez zámku). */
+	private static function post( $endpoint, array $body, $timeout ) {
+		self::throttle();
+		return wp_remote_post(
+			$endpoint,
+			array(
+				'timeout' => $timeout,
+				'headers' => array( 'Content-Type' => 'application/json', 'Accept' => 'application/json' ),
+				'body'    => wp_json_encode( $body ),
+			)
+		);
+	}
+
+	/** Odpověď vypadá jako JSON API Eurofaktury (ne 404 / HTML stránka)? */
+	private static function looks_like_api( $r ) {
+		if ( is_wp_error( $r ) ) {
+			return false;
+		}
+		$code = (int) wp_remote_retrieve_response_code( $r );
+		return 404 !== $code && 405 !== $code && is_array( json_decode( (string) wp_remote_retrieve_body( $r ), true ) );
+	}
+
 	/**
 	 * Zavolá metodu API.
 	 *
@@ -77,14 +127,23 @@ class ZG_B2B_EF_Client {
 		if ( ! self::lock() ) {
 			return new WP_Error( 'zg_ef_busy', 'Eurofaktura API je zaneprázdněné (jiný požadavek stále běží).' );
 		}
-		$r = wp_remote_post(
-			$c['endpoint'],
-			array(
-				'timeout' => $timeout,
-				'headers' => array( 'Content-Type' => 'application/json', 'Accept' => 'application/json' ),
-				'body'    => wp_json_encode( $body ),
-			)
-		);
+		$r = self::post( $c['endpoint'], $body, $timeout );
+		// Špatná adresa API (404 / HTML) → zkusit známé varianty, funkční uložit.
+		if ( ! is_wp_error( $r ) && ! self::looks_like_api( $r ) && ! defined( 'ZG_EF_ENDPOINT' ) ) {
+			foreach ( self::ENDPOINTS as $alt ) {
+				if ( $alt === $c['endpoint'] ) {
+					continue;
+				}
+				$try = self::post( $alt, $body, $timeout );
+				if ( self::looks_like_api( $try ) ) {
+					$r        = $try;
+					// Mimo nastavení (to má sanitizaci celého formuláře): platí, dokud se URL v nastavení nezmění.
+					update_option( 'zg_b2b_ef_endpoint_fix', array( 'from' => $c['endpoint'], 'to' => $alt ), false );
+					self::log( 'Adresa API nefungovala (' . $c['endpoint'] . '), používá se funkční: ' . $alt, 'warning' );
+					break;
+				}
+			}
+		}
 		self::unlock();
 
 		if ( is_wp_error( $r ) ) {

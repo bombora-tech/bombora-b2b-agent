@@ -114,48 +114,64 @@ class ZG_B2B_EF_Documents {
 		$dic     = $order->get_meta( '_' . zg_b2b_opt( 'dic_meta' ) ) ? $order->get_meta( '_' . zg_b2b_opt( 'dic_meta' ) ) : $dic;
 		$ico     = $order->get_meta( '_' . zg_b2b_opt( 'ico_meta' ) ) ? $order->get_meta( '_' . zg_b2b_opt( 'ico_meta' ) ) : $ico;
 
+		$due  = $order->get_meta( '_zg_ef_due_date' ) ? $order->get_meta( '_zg_ef_due_date' ) : gmdate( 'Y-m-d', time() + 10 * DAY_IN_SECONDS );
+		$lang = 0 === strpos( strtolower( (string) $order->get_meta( 'wpml_language' ) ), 'en' ) ? 'English' : 'Czech';
+
+		// Názvy polí podle dokumentace API (SalesQuote / SalesInvoice).
 		$doc = array(
-			'status'          => zg_b2b_opt( 'ef_quote_status' ) ? zg_b2b_opt( 'ef_quote_status' ) : 'Issued',
-			'date'            => current_time( 'Y-m-d' ),
-			'dateDue'         => $order->get_meta( '_zg_ef_due_date' ) ? $order->get_meta( '_zg_ef_due_date' ) : gmdate( 'Y-m-d', time() + 5 * DAY_IN_SECONDS ),
-			'currency'        => $currency,
-			'buyerName'       => $name,
-			'buyerStreet'     => $street,
-			'buyerPostalCode' => $order->get_billing_postcode(),
-			'buyerCity'       => $order->get_billing_city(),
-			'buyerCountry'    => $order->get_billing_country(),
-			'buyerEMail'      => $order->get_billing_email(),
-			'buyerPhone'      => $order->get_billing_phone(),
-			'orderReference'  => self::order_reference( $order ),
-			'Items'           => $items,
+			'status'           => zg_b2b_opt( 'ef_quote_status' ) ? zg_b2b_opt( 'ef_quote_status' ) : 'Issued',
+			'date'             => current_time( 'Y-m-d' ),
+			'validUntil'       => $due, // u proformy = splatnost
+			'documentCurrency' => $currency,
+			'documentLanguage' => $lang,
+			'type'             => 'Gross', // B2B: ceny bez DPH, DPH se připočte
+			'methodOfPayment'  => 'BankTransfer',
+			'buyerName'        => $name,
+			'buyerStreet'      => $street,
+			'buyerPostalCode'  => $order->get_billing_postcode(),
+			'buyerCity'        => $order->get_billing_city(),
+			'buyerCountry'     => $order->get_billing_country(),
+			'buyerEMail'       => $order->get_billing_email(),
+			'buyerPhone'       => $order->get_billing_phone(),
+			'orderReference'   => self::order_reference( $order ),
+			'Items'            => $items,
 		);
+		if ( $company ) {
+			$person = trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
+			if ( $person ) {
+				$doc['buyerName1'] = $person;
+			}
+		}
 		$dic_field = zg_b2b_opt( 'ef_field_dic' );
 		$ico_field = zg_b2b_opt( 'ef_field_ico' );
 		if ( $dic && $dic_field ) {
-			$doc[ $dic_field ] = $dic;
+			$doc[ $dic_field ]          = $dic;
+			$doc['buyerVatRegistration'] = 'Registered';
 		}
 		if ( $ico && $ico_field ) {
 			$doc[ $ico_field ] = $ico;
 		}
 		if ( $order->has_shipping_address() ) {
-			$doc['deliveryAddress'] = trim(
-				implode(
-					', ',
-					array_filter(
-						array(
-							$order->get_shipping_company(),
-							trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() ),
-							$order->get_shipping_address_1(),
-							trim( $order->get_shipping_postcode() . ' ' . $order->get_shipping_city() ),
-							$order->get_shipping_country(),
-						)
-					)
+			$doc['Address'] = array_filter(
+				array(
+					'firstAddressLine' => $order->get_shipping_company(),
+					'firstName'        => $order->get_shipping_first_name(),
+					'lastName'         => $order->get_shipping_last_name(),
+					'street'           => trim( $order->get_shipping_address_1() . ' ' . $order->get_shipping_address_2() ),
+					'postalCode'       => $order->get_shipping_postcode(),
+					'city'             => $order->get_shipping_city(),
+					'country'          => $order->get_shipping_country(),
+					'telephone'        => $order->get_shipping_phone() ? $order->get_shipping_phone() : $order->get_billing_phone(),
 				)
 			);
 		}
 
 		$key    = zg_b2b_opt( 'ef_quote_prefix' ) ? zg_b2b_opt( 'ef_quote_prefix' ) : 'SalesQuote';
-		$params = array( $key => $doc );
+		// Stejné ID transakce = Eurofaktura doklad nevytvoří podruhé (opakované pokusy).
+		$params = array(
+			'apiTransactionId' => 'vo-' . $order->get_id() . '-proforma',
+			$key               => $doc,
+		);
 		return apply_filters( 'zg_b2b_ef_quote_params', $params, $order );
 	}
 
@@ -620,6 +636,9 @@ class ZG_B2B_EF_Documents {
 	 * jediná faktura odběratele se stejnou částkou a měnou.
 	 */
 	public static function find_invoice( WC_Order $order ) {
+		if ( self::invoice_from_quote( $order ) ) {
+			return true;
+		}
 		$pnum  = $order->get_meta( '_zg_ef_proforma_number' );
 		$pdate = $order->get_meta( '_zg_ef_proforma_date' );
 		$buyer = $order->get_billing_company() ? $order->get_billing_company() : trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() );
@@ -638,7 +657,16 @@ class ZG_B2B_EF_Documents {
 		if ( is_wp_error( $result ) ) {
 			return false;
 		}
-		$list    = ZG_B2B_EF_Client::find_list( $result );
+		$list = ZG_B2B_EF_Client::find_list( $result );
+		$list = array_values(
+			array_filter(
+				$list,
+				function ( $row ) {
+					$cancelled = ZG_B2B_EF_Client::find( $row, array( 'cancelledByDocumentsRef' ) );
+					return ! $cancelled; // stornované faktury nepárovat
+				}
+			)
+		);
 		$needles = array( $pnum, self::order_reference( $order ) );
 		$match   = null;
 		$how     = '';
@@ -698,6 +726,39 @@ class ZG_B2B_EF_Documents {
 		return true;
 	}
 
+	/**
+	 * Faktura vystavená z proformy: SalesQuoteGet → salesInvoicesRef (přímá vazba
+	 * proforma → faktura v Eurofaktuře, nejspolehlivější způsob).
+	 */
+	public static function invoice_from_quote( WC_Order $order ) {
+		$pnum = $order->get_meta( '_zg_ef_proforma_number' );
+		$pid  = $order->get_meta( '_zg_ef_proforma_id' );
+		if ( ! $pnum && ! $pid ) {
+			return false;
+		}
+		$quote = ZG_B2B_EF_Client::call( self::quote_method( 'Get' ), $pid ? array( 'documentID' => $pid ) : array_filter( array( 'number' => $pnum, 'date' => $order->get_meta( '_zg_ef_proforma_date' ) ) ) );
+		if ( is_wp_error( $quote ) ) {
+			return false;
+		}
+		$refs = (string) ZG_B2B_EF_Client::find( $quote, array( 'salesInvoicesRef' ) );
+		$refs = array_filter( array_map( 'trim', explode( ',', $refs ) ) );
+		foreach ( array_reverse( $refs ) as $num ) { // poslední vystavená
+			$inv = ZG_B2B_EF_Client::call( 'SalesInvoiceGet', array( 'number' => $num ) );
+			if ( is_wp_error( $inv ) || ZG_B2B_EF_Client::find( $inv, array( 'cancelledByDocumentsRef' ) ) ) {
+				continue;
+			}
+			self::set_invoice(
+				$order,
+				(string) $num,
+				(string) ZG_B2B_EF_Client::find( $inv, array( 'date' ) ),
+				(string) ZG_B2B_EF_Client::find( $inv, array( 'documentID' ) ),
+				'vystavena z proformy ' . $pnum
+			);
+			return true;
+		}
+		return false;
+	}
+
 	/** Faktura k proformě z pluginu Eurofaktura.cz (spolehlivější než hledání přes API). */
 	public static function invoice_from_connector( WC_Order $order ) {
 		if ( ! ZG_B2B_EF_Connector::available() ) {
@@ -724,6 +785,9 @@ class ZG_B2B_EF_Documents {
 			self::ensure_pdf( $order, 'invoice' );
 		}
 
+		if ( class_exists( 'ZG_B2B_EF_Payments' ) ) {
+			ZG_B2B_EF_Payments::queue( $order->get_id() );
+		}
 		if ( 'yes' === zg_b2b_opt( 'ef_auto_paid' ) && $order->has_status( 'on-hold' ) ) {
 			// Faktura po zaplacení = platba přijata → „Zpracovává se“ (e-mail s fakturou v příloze).
 			$order->payment_complete();
@@ -757,6 +821,8 @@ class ZG_B2B_EF_Documents {
 		$p      = $order->get_meta( '_zg_ef_proforma_number' );
 		$i      = $order->get_meta( '_zg_ef_invoice_number' );
 		$is_inv = ZG_B2B_Gateway_Invoice::ID === $order->get_payment_method();
+
+		echo ZG_B2B_EF_Payments::admin_box( $order ); // phpcs:ignore WordPress.Security.EscapeOutput
 
 		if ( ZG_B2B_EF_Connector::available() ) {
 			$ef      = ZG_B2B_EF_Connector::customer_docs( $order );

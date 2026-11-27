@@ -106,6 +106,7 @@ class ZG_B2B_Settings {
 		$out['ef_field_dic']      = isset( $in['ef_field_dic'] ) ? preg_replace( '/[^A-Za-z]/', '', $in['ef_field_dic'] ) : '';
 		$out['ef_field_ico']      = isset( $in['ef_field_ico'] ) ? preg_replace( '/[^A-Za-z]/', '', $in['ef_field_ico'] ) : '';
 		$out['ef_auto_paid']      = empty( $in['ef_auto_paid'] ) ? 'no' : 'yes';
+		$out['ef_pay_status']     = empty( $in['ef_pay_status'] ) ? 'no' : 'yes';
 		// Při nouzovém vypnutí ve wp-config je přepínač neaktivní → ponechat uloženou hodnotu.
 		$out['ef_docs_module']    = defined( 'ZG_B2B_EF_DOCS_DISABLE' ) && ZG_B2B_EF_DOCS_DISABLE ? ( isset( $old['ef_docs_module'] ) ? $old['ef_docs_module'] : 'no' ) : ( empty( $in['ef_docs_module'] ) ? 'no' : 'yes' );
 		$out['ef_invoice_meta']   = isset( $in['ef_invoice_meta'] ) ? preg_replace( '/[^A-Za-z0-9_\-]/', '', $in['ef_invoice_meta'] ) : '';
@@ -359,7 +360,7 @@ class ZG_B2B_Settings {
 				Údaje API lze místo zde zadat bezpečněji do <code>wp-config.php</code>: <code>ZG_EF_ENDPOINT</code>, <code>ZG_EF_USERNAME</code>, <code>ZG_EF_SECRET</code>, <code>ZG_EF_TOKEN</code>.</p>
 				<p style="background:#fff8e5;border-left:4px solid #dba617;padding:8px 12px">Doporučení: založte pro web <strong>samostatného API uživatele</strong>. Eurofaktura nepovoluje souběžné požadavky jednoho API uživatele – sdílení s vaší stávající synchronizací skladu by vedlo k chybám.</p>
 				<table class="form-table" role="presentation">
-					<tr><th scope="row">API URL</th><td><input class="regular-text" type="url" name="zg_b2b_settings[ef_endpoint]" value="<?php echo esc_attr( $s['ef_endpoint'] ); ?>"><p class="description">Ověřte v Eurofaktuře → Nastavení → API (testovací konzole ukazuje přesnou adresu pro vaši organizaci).</p></td></tr>
+					<tr><th scope="row">API URL</th><td><input class="regular-text" type="url" name="zg_b2b_settings[ef_endpoint]" value="<?php echo esc_attr( $s['ef_endpoint'] ); ?>"><p class="description">Pro eurofaktura.cz: <code>https://eurofaktura.cz/rcz/WebServices/API</code>. Pokud adresa nefunguje (HTTP 404), plugin zkusí známé varianty a funkční uloží sám.</p></td></tr>
 					<tr><th scope="row">API uživatel</th><td><input class="regular-text" type="text" name="zg_b2b_settings[ef_username]" value="<?php echo esc_attr( $s['ef_username'] ); ?>" autocomplete="off"><?php echo defined( 'ZG_EF_USERNAME' ) ? ' <em>(přepsáno v wp-config.php)</em>' : ''; ?></td></tr>
 					<tr><th scope="row">API secret key</th><td><input class="regular-text" type="password" name="zg_b2b_settings[ef_secret]" value="" placeholder="<?php echo $s['ef_secret'] ? '•••••••• (uloženo – vyplňte jen pro změnu)' : ''; ?>" autocomplete="new-password"></td></tr>
 					<tr><th scope="row">API token organizace</th><td><input class="regular-text" type="text" name="zg_b2b_settings[ef_token]" value="<?php echo esc_attr( $s['ef_token'] ); ?>" autocomplete="off"></td></tr>
@@ -373,6 +374,9 @@ class ZG_B2B_Settings {
 						<p class="description">Faktury se dohledávají automaticky každou hodinu (u objednávek do 60 dnů), nebo ručně tlačítkem v detailu objednávky.</p></td></tr>
 					<tr><th scope="row">Faktury ze stávajícího napojení</th><td>meta klíč čísla faktury <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_meta]" value="<?php echo esc_attr( $s['ef_invoice_meta'] ); ?>"> datum <input type="text" style="width:170px" name="zg_b2b_settings[ef_invoice_date_meta]" value="<?php echo esc_attr( $s['ef_invoice_date_meta'] ); ?>">
 						<p class="description">Volitelné: pokud vaše současné API napojení ukládá číslo faktury do meta objednávky, zadejte klíč – faktura půjde stáhnout v Můj účet u všech objednávek.</p></td></tr>
+					<tr><th scope="row">Stav platby v Můj účet</th><td><label><input type="checkbox" name="zg_b2b_settings[ef_pay_status]" value="1" <?php checked( 'yes', $s['ef_pay_status'] ); ?>> Zobrazit zákazníkovi u objednávek stav úhrady faktury / proformy z Eurofaktury a souhrn neuhrazených částek</label>
+						<p class="description">Stav se načítá z Eurofaktury na pozadí (každou hodinu, jen neuhrazené doklady) – Můj účet na Eurofakturu nečeká. Platby se dál evidují a párují jen v Eurofaktuře.</p>
+						<p><?php echo wp_kses_post( ZG_B2B_EF_Payments::status_html() ); ?></p></td></tr>
 				</table>
 				</div>
 				<div class="zg-adm-card">
@@ -407,8 +411,8 @@ class ZG_B2B_Settings {
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<input type="hidden" name="action" value="zg_b2b_ef_test">
 				<?php wp_nonce_field( 'zg_b2b_ef_test' ); ?>
-				<p>Metoda <input type="text" name="zg_ef_test_method" value="SalesQuoteList" style="width:220px">
-				parametry (JSON) <input type="text" name="zg_ef_test_params" value="{}" style="width:340px">
+				<p>Metoda <input type="text" name="zg_ef_test_method" value="SalesInvoiceList" style="width:220px">
+				parametry (JSON) <input type="text" name="zg_ef_test_params" value='{"dateFrom":"<?php echo esc_attr( gmdate( 'Y-m-d', time() - 7 * DAY_IN_SECONDS ) ); ?>"}' style="width:340px">
 				<button class="button">Zavolat API</button></p>
 				<p class="description">Ověří přihlášení a ukáže surovou odpověď (užitečné pro kontrolu názvů polí). Podrobný log: WooCommerce → Stav → Logy → <code>zg-b2b-eurofaktura</code>.</p>
 			</form>

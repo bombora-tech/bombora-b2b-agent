@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.23.0] - 2026-11-27
+
+### Přidáno
+- **Stav platby v Můj účet (CZ+EN)**: nový sloupec „Platba“ u objednávek (Zaplaceno / Nezaplaceno · splatnost / Po splatnosti / Částečně uhrazeno · zbývá / Dobírka), nad seznamem souhrn „Neuhrazeno … z toho po splatnosti …“ a v detailu objednávky stav platby a zbývající částka. Stav se bere z Eurofaktury (SalesInvoiceGet / SalesQuoteGet: `documentAmount`, `amountAlreadyPaid`, `amountLeftToBePaid`, `paymentDueDate`), u plateb bránou (Comgate) z WooCommerce. Platby se dál evidují jen v Eurofaktuře.
+- Načítání na pozadí každou hodinu (jen neuhrazené doklady, max. 40 volání na běh), po změně stavu objednávky za 5 min; v detailu objednávky v adminu stav platby a tlačítko „Aktualizovat platbu“. Zapíná se v Bombora → B2B Agent → Eurofaktura („Stav platby v Můj účet“).
+- Dohledání faktury k proformě přes přímou vazbu v Eurofaktuře (`SalesQuoteGet` → `salesInvoicesRef`); stornované faktury se nepárují.
+
+### Opraveno
+- API klient: výchozí adresa `https://eurofaktura.cz/rcz/WebServices/API` (stará `WebServicesCZ/API` se automaticky nahradí); při 404 / ne-JSON odpovědi zkusí známé varianty adresy a funkční použije. Dodržuje limit Eurofaktury 1 požadavek / s.
+- Proforma (SalesQuoteCreate) podle dokumentace API: `documentCurrency` (místo `currency`), `validUntil` (místo neexistujícího `dateDue`, výchozí 10 dní), doručovací adresa jako objekt `Address`, `type: Gross` (B2B ceny bez DPH), `methodOfPayment: BankTransfer`, jazyk dokladu podle jazyka objednávky (EN → English), `buyerVatRegistration` u plátců DPH a `apiTransactionId` (opakovaný pokus nevytvoří druhou proformu).
+
 ## [1.22.0] - 2026-11-27
 
 ### Přidáno

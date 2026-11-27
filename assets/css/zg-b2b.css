@@ -308,3 +308,19 @@ a.zg-b2b-sv-sub--link:hover { text-decoration: underline !important; }
 .zg-b2b-sv-related { display: flex; align-items: center; gap: 12px; margin: 0 0 20px; padding: 14px 16px; background: var(--zg-b2b-primary-soft); border: 1px solid var(--zg-b2b-border); border-radius: var(--zg-b2b-radius); }
 .zg-b2b-sv-related > span:nth-child(2) { flex: 1; }
 @media (max-width: 640px) { .zg-b2b-sv-related { flex-wrap: wrap; } }
+
+/* Stav platby z Eurofaktury (Můj účet) */
+.zg-b2b-pay { display: inline-flex; flex-direction: column; gap: 2px; line-height: 1.3; }
+.zg-b2b-pay__label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.zg-b2b-pay__label::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: 0 0 8px; }
+.zg-b2b-pay__detail { font-size: 12px; color: var(--zg-b2b-muted); white-space: nowrap; }
+.zg-b2b-pay--paid .zg-b2b-pay__label { color: var(--zg-b2b-success); }
+.zg-b2b-pay--unpaid .zg-b2b-pay__label, .zg-b2b-pay--partial .zg-b2b-pay__label, .zg-b2b-pay--cod .zg-b2b-pay__label { color: var(--zg-b2b-warning); }
+.zg-b2b-pay--overdue .zg-b2b-pay__label, .zg-b2b-pay--overdue .zg-b2b-pay__detail { color: var(--zg-b2b-error); }
+.zg-b2b-balance { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 18px; padding: 14px 18px; border-radius: var(--zg-b2b-radius); border: 1px solid var(--zg-b2b-warning-border); background: var(--zg-b2b-warning-soft); color: var(--zg-b2b-text); font-size: 14px; }
+.zg-b2b-balance--overdue { border-color: rgba(180, 35, 24, .3); background: var(--zg-b2b-error-soft); }
+.zg-b2b-balance__amount { font-size: 18px; }
+.zg-b2b-balance__overdue { color: var(--zg-b2b-error); }
+.zg-b2b-balance__note { flex-basis: 100%; font-size: 12px; color: var(--zg-b2b-muted); }
+.zg-b2b-paystatus { margin: 0 0 1.5em; }
+.zg-b2b-paystatus__table th { width: 40%; }
