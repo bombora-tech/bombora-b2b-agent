@@ -326,3 +326,4 @@ a.zg-b2b-sv-sub--link:hover { text-decoration: underline !important; }
 .zg-b2b-paystatus__table th { width: 40%; }
 .zg-b2b-pay-sub { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--zg-b2b-border); }
 .zg-b2b-pay-sub__label { font-size: 12px; color: var(--zg-b2b-muted); }
+.zg-b2b-pay--neutral .zg-b2b-pay__label { color: var(--zg-b2b-muted); }

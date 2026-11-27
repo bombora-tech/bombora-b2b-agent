@@ -1269,3 +1269,9 @@ msgstr "Amount due"
 
 msgid "Fakturuje"
 msgstr "Invoiced by"
+
+msgid "Dle faktury S&V"
+msgstr "Per S&V invoice"
+
+msgid "splatnost viz faktura"
+msgstr "due date per invoice"

@@ -197,6 +197,21 @@ class ZG_B2B_EF_Payments {
 		return $st;
 	}
 
+	/**
+	 * Stav pro ZÁKAZNÍKA. U lihovin S&V vidí zákazník jen „Zaplaceno“ (když ho
+	 * ručně označíte); jinak neutrálně „dle faktury S&V“ – splatnost je jen
+	 * interní a o platbě zákazníka S&V se dozvídáte se zpožděním, takže se mu
+	 * nikdy neukáže „Nezaplaceno“ ani „Po splatnosti“ a nepočítá se do dluhu.
+	 */
+	public static function for_customer( WC_Order $order ) {
+		$st = self::get( $order );
+		if ( $st && 'sv' === $st['kind'] && 'paid' !== $st['state'] ) {
+			$st['state'] = 'sv_pending';
+			$st['due']   = '';
+		}
+		return $st;
+	}
+
 	/* ---------------------------------------------------------------------
 	 * Plánování
 	 * ------------------------------------------------------------------- */
@@ -284,6 +299,8 @@ class ZG_B2B_EF_Payments {
 			case 'partial':
 				/* translators: %s: amount left to pay */
 				return array( __( 'Částečně uhrazeno', 'zg-b2b' ), 'partial', sprintf( __( 'zbývá %s', 'zg-b2b' ), wp_strip_all_tags( self::money( $st['left'], $st['currency'] ) ) ) );
+			case 'sv_pending':
+				return array( __( 'Dle faktury S&V', 'zg-b2b' ), 'neutral', __( 'splatnost viz faktura', 'zg-b2b' ) );
 			case 'cod':
 				return array( __( 'Dobírka', 'zg-b2b' ), 'cod', __( 'platba při převzetí', 'zg-b2b' ) );
 			default:
@@ -312,9 +329,9 @@ class ZG_B2B_EF_Payments {
 	}
 
 	public static function col( $order ) {
-		$st    = self::get( $order );
+		$st    = self::for_customer( $order );
 		$child = class_exists( 'ZG_B2B_SV_Stock' ) ? ZG_B2B_SV_Stock::child( $order ) : null;
-		$cst   = $child ? self::get( $child ) : null;
+		$cst   = $child ? self::for_customer( $child ) : null;
 		echo $st ? self::badge( $st ) : '<span class="zg-b2b-muted">—</span>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		if ( $cst ) { // oddělená objednávka lihovin (fakturuje S&V) – stav platby pod hlavním
 			echo '<span class="zg-b2b-pay-sub"><span class="zg-b2b-pay-sub__label">' . esc_html__( 'lihoviny', 'zg-b2b' ) . ':</span> ' . self::badge( $cst ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput
@@ -333,7 +350,7 @@ class ZG_B2B_EF_Payments {
 		);
 		$sum = array();
 		foreach ( $orders as $o ) {
-			$st = self::get( $o );
+			$st = self::for_customer( $o ); // S&V lihoviny se do dluhu nepočítají
 			if ( ! $st || ! in_array( $st['state'], array( 'unpaid', 'partial', 'overdue' ), true ) || $st['left'] <= 0.009 ) {
 				continue;
 			}
@@ -378,12 +395,12 @@ class ZG_B2B_EF_Payments {
 		if ( ! $order instanceof WC_Order || is_wc_endpoint_url( 'order-received' ) ) {
 			return;
 		}
-		$st = self::get( $order );
+		$st = self::for_customer( $order );
 		if ( ! $st ) {
 			return;
 		}
 		$rows = '<tr><th>' . esc_html__( 'Stav platby', 'zg-b2b' ) . '</th><td>' . self::badge( $st ) . '</td></tr>';
-		if ( ! empty( $st['manual'] ) && 'sv' === $st['kind'] ) {
+		if ( 'sv' === $st['kind'] ) {
 			$rows .= '<tr><th>' . esc_html__( 'Fakturuje', 'zg-b2b' ) . '</th><td>S &amp; V STOCK s.r.o.</td></tr>';
 		}
 		if ( in_array( $st['state'], array( 'unpaid', 'partial', 'overdue' ), true ) ) {
@@ -405,6 +422,9 @@ class ZG_B2B_EF_Payments {
 		if ( $st ) {
 			list( $label, , $detail ) = self::describe( $st );
 			$html .= esc_html( $label . ( $detail ? ' – ' . $detail : '' ) );
+			if ( 'sv' === $st['kind'] && 'paid' !== $st['state'] ) {
+				$html .= '<br><span class="description">Interní – zákazník vidí jen „Dle faktury S&amp;V“, dokud neoznačíte Zaplaceno.</span>';
+			}
 			if ( $st['doc'] ) {
 				$html .= '<br><span class="description">' . esc_html( ( 'proforma' === $st['kind'] ? 'Proforma ' : 'Faktura ' ) . $st['doc'] . ': uhrazeno ' . wp_strip_all_tags( self::money( $st['paid'], $st['currency'] ) ) . ' z ' . wp_strip_all_tags( self::money( $st['total'], $st['currency'] ) ) ) . '</span>';
 			}

@@ -680,7 +680,7 @@ class ZG_B2B_SV_Stock {
 	/** Výchozí splatnost faktury S&V: dnes + nastavený počet dní (výchozí 10). */
 	public static function default_due() {
 		$days = (int) zg_b2b_opt( 'sv_due_days' );
-		return wp_date( 'Y-m-d', time() + max( 1, $days ? $days : 10 ) * DAY_IN_SECONDS );
+		return wp_date( 'Y-m-d', time() + max( 1, $days ? $days : 14 ) * DAY_IN_SECONDS );
 	}
 
 	/** Stav platby zákazníka u objednávky lihovin – ručně (S&V fakturuje mimo Eurofakturu Bombory). */
@@ -1208,7 +1208,7 @@ class ZG_B2B_SV_Stock {
 		$fid = 'zg-sv-upload';
 		echo '<p><label>Číslo faktury S&amp;V<br><input form="' . $fid . '" type="text" name="zg_sv_number" style="width:100%"></label></p>';
 		echo '<p><input form="' . $fid . '" type="file" name="zg_sv_pdf" accept="application/pdf"></p>';
-		echo '<p><label>Splatnost faktury S&amp;V<br><input form="' . $fid . '" type="date" name="zg_sv_due" value="' . esc_attr( self::default_due() ) . '" style="width:100%"></label><span class="description">Automaticky +' . (int) ( zg_b2b_opt( 'sv_due_days' ) ? zg_b2b_opt( 'sv_due_days' ) : 10 ) . ' dní, lze změnit.</span></p>';
+		echo '<p><label>Splatnost faktury S&amp;V<br><input form="' . $fid . '" type="date" name="zg_sv_due" value="' . esc_attr( self::default_due() ) . '" style="width:100%"></label><span class="description">Automaticky +' . (int) ( zg_b2b_opt( 'sv_due_days' ) ? zg_b2b_opt( 'sv_due_days' ) : 14 ) . ' dní, jen interně – zákazník splatnost nevidí.</span></p>';
 		echo '<p><label><input form="' . $fid . '" type="checkbox" name="zg_sv_paid" value="1"> Už zaplaceno</label></p>';
 		echo '<p><label><input form="' . $fid . '" type="checkbox" name="zg_sv_mail" value="1" checked> Poslat zákazníkovi e-mailem</label></p>';
 		echo '<p><button form="' . $fid . '" type="submit" class="button button-primary">Nahrát fakturu</button></p>';
@@ -1224,14 +1224,14 @@ class ZG_B2B_SV_Stock {
 		// Stav platby zákazníka (ručně – faktura S&V není v Eurofaktuře Bombory).
 		$pay = $order->get_meta( '_zg_ef_pay' );
 		$cur = is_array( $pay ) ? $pay['state'] : '';
-		echo '<hr><p><strong>4. Platba zákazníka (vidí v Můj účet)</strong></p>';
+		echo '<hr><p><strong>4. Platba zákazníka (interně)</strong></p>';
 		wp_nonce_field( 'zg_sv_pay', 'zg_sv_pay_nonce' );
 		echo '<p><select name="zg_sv_pay_state" style="width:100%">'
 			. '<option value=""' . selected( $cur, '', false ) . '>— nezobrazovat —</option>'
 			. '<option value="unpaid"' . selected( in_array( $cur, array( 'unpaid', 'overdue', 'partial' ), true ), true, false ) . '>Nezaplaceno</option>'
 			. '<option value="paid"' . selected( $cur, 'paid', false ) . '>Zaplaceno</option></select></p>';
 		echo '<p><label>Splatnost<br><input type="date" name="zg_sv_pay_due" value="' . esc_attr( is_array( $pay ) ? $pay['due'] : '' ) . '" style="width:100%"></label></p>';
-		echo '<p class="description">Uloží se tlačítkem „Aktualizovat“ objednávky. Po splatnosti se zákazníkovi automaticky ukáže „Po splatnosti“.</p>';
+		echo '<p class="description">Uloží se tlačítkem „Aktualizovat“ objednávky. Zákazník vidí jen „Zaplaceno“; dokud neoznačíte, vidí „Dle faktury S&amp;V“ (bez splatnosti, nepočítá se do dluhu).</p>';
 		// phpcs:enable
 	}
 
@@ -1306,7 +1306,7 @@ class ZG_B2B_SV_Stock {
 			'sv_shipping'      => 'keep',
 			'sv_email'         => '',
 			'sv_invoice_to'    => '',
-			'sv_due_days'      => '10',
+			'sv_due_days'      => '14',
 			'sv_name'          => 'S & V STOCK s.r.o.',
 			'sv_ico'           => '',
 			'sv_dic'           => '',
@@ -1341,7 +1341,7 @@ class ZG_B2B_SV_Stock {
 		}
 		$out['sv_shipping']   = isset( $in['sv_shipping'] ) && 'move' === $in['sv_shipping'] ? 'move' : 'keep';
 		$out['sv_email']      = isset( $in['sv_email'] ) && is_email( $in['sv_email'] ) ? sanitize_email( $in['sv_email'] ) : '';
-		$out['sv_due_days']   = isset( $in['sv_due_days'] ) && (int) $in['sv_due_days'] > 0 ? (string) min( 365, (int) $in['sv_due_days'] ) : '10';
+		$out['sv_due_days']   = isset( $in['sv_due_days'] ) && (int) $in['sv_due_days'] > 0 ? (string) min( 365, (int) $in['sv_due_days'] ) : '14';
 		$out['sv_invoice_to'] = isset( $in['sv_invoice_to'] ) && is_email( $in['sv_invoice_to'] ) ? sanitize_email( $in['sv_invoice_to'] ) : '';
 		foreach ( array( 'sv_name', 'sv_ico', 'sv_dic', 'sv_street', 'sv_house', 'sv_city', 'sv_zip', 'sv_contact', 'sv_phone', 'sv_ef_wh_value', 'sv_msg_customer', 'sv_msg_import', 'sv_msg_type', 'sv_msg_parcel_kg', 'sv_msg_format' ) as $k ) {
 			$out[ $k ] = isset( $in[ $k ] ) ? sanitize_text_field( $in[ $k ] ) : $d[ $k ];
@@ -1392,7 +1392,7 @@ class ZG_B2B_SV_Stock {
 			</select></td></tr>
 			<?php
 			$f( 'sv_email', 'E-mail S&V (expedice)', 'Sem odejde objednávka k vyskladnění se štítky Messenger (kopie vám).', 'email' );
-			$f( 'sv_due_days', 'Splatnost faktur S&V pro zákazníka (dny)', 'Při nahrání faktury S&amp;V se splatnost vypočte automaticky: datum nahrání + tento počet dní. Lze přepsat u konkrétní faktury.', 'text', '80px' );
+			$f( 'sv_due_days', 'Interní splatnost faktur S&V (dny)', 'Jen pro vaši kontrolu (box objednávky ukáže „Po splatnosti“). Zákazník splatnost ani „Nezaplaceno“ nevidí – řídí se fakturou S&amp;V; v Můj účet vidí jen „Zaplaceno“, až ho označíte.', 'text', '80px' );
 			$f( 'sv_invoice_to', 'Faktura pro S&V ke kontrole', 'Kam poslat PDF faktury Bombora → S&amp;V. Prázdné = ' . esc_html( zg_b2b_contact_email() ) . '.', 'email' );
 			$f( 'sv_name', 'S&V – název' );
 			$f( 'sv_ico', 'S&V – IČO', '', 'text', '180px' );

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.24.2] - 2026-11-28
+
+### Změněno
+- S&V STOCK: splatnost faktur S&V je **jen interní**, výchozí **14 dní** od nahrání. Zákazník v Můj účet u lihovin nevidí „Nezaplaceno“ ani „Po splatnosti“ – jen neutrální „Dle faktury S&V“, dokud ručně neoznačíte „Zaplaceno“; lihoviny se nepočítají do souhrnu „Neuhrazeno“. (O platbě zákazníka se dozvídáte až od S&V – zákazník tak nikdy neuvidí chybný stav.) V adminu dál vidíte splatnost a „Po splatnosti“.
+
 ## [1.24.1] - 2026-11-28
 
 ### Změněno
