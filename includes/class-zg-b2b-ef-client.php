@@ -32,12 +32,12 @@ class ZG_B2B_EF_Client {
 		if ( is_array( $fix ) && isset( $fix['from'], $fix['to'] ) && $fix['from'] === $endpoint ) {
 			$endpoint = $fix['to'];
 		}
-		return array(
+		return array_map( 'trim', array(
 			'endpoint' => $endpoint,
 			'username' => defined( 'ZG_EF_USERNAME' ) ? ZG_EF_USERNAME : (string) zg_b2b_opt( 'ef_username' ),
 			'secret'   => defined( 'ZG_EF_SECRET' ) ? ZG_EF_SECRET : (string) zg_b2b_opt( 'ef_secret' ),
 			'token'    => defined( 'ZG_EF_TOKEN' ) ? ZG_EF_TOKEN : (string) zg_b2b_opt( 'ef_token' ),
-		);
+		) );
 	}
 
 	public static function configured() {

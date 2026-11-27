@@ -429,7 +429,7 @@ class ZG_B2B_EF_Payments {
 			return '<span style="color:#787c82">● Vypnuto.</span>';
 		}
 		if ( ! ZG_B2B_EF_Client::configured() ) {
-			return '<span style="color:#b32d2e">● Chybí údaje API (uživatel, secret key, token) – stav platby se nenačítá.</span>';
+			return '<span style="color:#b32d2e">● Chybí údaje API (API username, API Password, API Web Services token) – stav platby se nenačítá.</span>';
 		}
 		$next = function_exists( 'as_next_scheduled_action' ) ? as_next_scheduled_action( self::SYNC_HOOK, array(), 'zg-b2b' ) : false;
 		return '<span style="color:#00a32a">● Zapnuto.</span>' . ( is_int( $next ) ? ' Další kontrola ' . esc_html( wp_date( 'j. n. H:i', $next ) ) . '.' : '' );

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.23.2] - 2026-11-28
+
+### Změněno
+- Nastavení Eurofaktura API: pole pojmenovaná stejně jako v Eurofaktuře – **API username**, **API Password**, **API Web Services token** – s nápovědou, kde hodnotu najít. Mezery na začátku/konci zkopírovaných údajů se ignorují.
+
 ## [1.23.1] - 2026-11-28
 
 ### Opraveno
