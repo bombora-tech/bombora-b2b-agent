@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.24.1] - 2026-11-28
+
+### Změněno
+- S&V STOCK: splatnost faktury S&V pro zákazníka se počítá **automaticky – datum nahrání + 10 dní** (nastavitelné: „Splatnost faktur S&V pro zákazníka (dny)“). Pole u nahrání je předvyplněné a lze ho přepsat; prázdné = automaticky. Bez zaškrtnutí „Už zaplaceno“ zůstane faktura neuhrazená a po splatnosti se zákazníkovi ukáže „Po splatnosti“.
+
 ## [1.24.0] - 2026-11-28
 
 ### Přidáno
