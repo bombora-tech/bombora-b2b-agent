@@ -10,6 +10,10 @@
  *
  * state: paid | partial | unpaid | overdue | online (zaplaceno bránou) | cod (dobírka, čeká)
  *
+ * Objednávky lihovin S&V: stav se z Eurofaktury NEbere (faktura v Eurofaktuře je
+ * Bombora → S&V, ne platba zákazníka). Nastavuje se ručně v boxu S&V STOCK
+ * (kind = sv, manual = true) a tady se jen zobrazuje.
+ *
  * Zdroj dokladu: faktura z pluginu Eurofaktura.cz (ZG_B2B_EF_Connector),
  * faktura / proforma z platby na fakturu (ZG_B2B_EF_Documents).
  * API: SalesInvoiceGet / SalesQuoteGet → documentAmount, amountAlreadyPaid,
@@ -308,8 +312,13 @@ class ZG_B2B_EF_Payments {
 	}
 
 	public static function col( $order ) {
-		$st = self::get( $order );
+		$st    = self::get( $order );
+		$child = class_exists( 'ZG_B2B_SV_Stock' ) ? ZG_B2B_SV_Stock::child( $order ) : null;
+		$cst   = $child ? self::get( $child ) : null;
 		echo $st ? self::badge( $st ) : '<span class="zg-b2b-muted">—</span>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		if ( $cst ) { // oddělená objednávka lihovin (fakturuje S&V) – stav platby pod hlavním
+			echo '<span class="zg-b2b-pay-sub"><span class="zg-b2b-pay-sub__label">' . esc_html__( 'lihoviny', 'zg-b2b' ) . ':</span> ' . self::badge( $cst ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		}
 	}
 
 	/** Neuhrazené částky zákazníka po měnách: [ CZK => [ left, overdue, count ] ]. */
@@ -374,6 +383,9 @@ class ZG_B2B_EF_Payments {
 			return;
 		}
 		$rows = '<tr><th>' . esc_html__( 'Stav platby', 'zg-b2b' ) . '</th><td>' . self::badge( $st ) . '</td></tr>';
+		if ( ! empty( $st['manual'] ) && 'sv' === $st['kind'] ) {
+			$rows .= '<tr><th>' . esc_html__( 'Fakturuje', 'zg-b2b' ) . '</th><td>S &amp; V STOCK s.r.o.</td></tr>';
+		}
 		if ( in_array( $st['state'], array( 'unpaid', 'partial', 'overdue' ), true ) ) {
 			$rows .= '<tr><th>' . esc_html__( 'Zbývá uhradit', 'zg-b2b' ) . '</th><td><strong>' . wp_kses_post( self::money( $st['left'], $st['currency'] ) ) . '</strong></td></tr>';
 		}

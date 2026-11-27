@@ -1266,3 +1266,6 @@ msgstr "Payment status"
 
 msgid "Zbývá uhradit"
 msgstr "Amount due"
+
+msgid "Fakturuje"
+msgstr "Invoiced by"

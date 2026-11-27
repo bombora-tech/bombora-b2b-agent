@@ -46,6 +46,7 @@ class ZG_B2B_SV_Stock {
 		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ) );
 		add_action( 'admin_post_zg_b2b_sv', array( __CLASS__, 'admin_action' ) );
 		add_action( 'admin_post_zg_b2b_sv_upload', array( __CLASS__, 'admin_upload' ) );
+		add_action( 'woocommerce_process_shop_order_meta', array( __CLASS__, 'save_payment' ), 60 );
 		add_filter( 'woocommerce_webhook_should_deliver', array( __CLASS__, 'block_ef_webhook' ), 20, 3 );
 		add_action( 'admin_init', array( __CLASS__, 'migrate_shipping_titles' ) );
 		add_action( 'admin_init', array( __CLASS__, 'migrate_child_dates' ) );
@@ -605,6 +606,123 @@ class ZG_B2B_SV_Stock {
 	 * 2. Faktura Bombora → S&V (Eurofaktura API)
 	 * ------------------------------------------------------------------- */
 
+	/** documentID partnera S&V v adresáři Eurofaktury (podle IČO, cache 30 dní). */
+	public static function ef_partner_id() {
+		$ico = preg_replace( '/\D/', '', (string) zg_b2b_opt( 'sv_ico' ) );
+		if ( ! $ico ) {
+			return '';
+		}
+		$cache = get_option( 'zg_b2b_sv_ef_partner' );
+		if ( is_array( $cache ) && $cache['ico'] === $ico && time() - (int) $cache['t'] < 30 * DAY_IN_SECONDS ) {
+			return (string) $cache['id'];
+		}
+		$res = ZG_B2B_EF_Client::call( 'PartnerList', array( 'taxNumber' => $ico ) );
+		if ( is_wp_error( $res ) ) {
+			return is_array( $cache ) ? (string) $cache['id'] : '';
+		}
+		$id = '';
+		foreach ( ZG_B2B_EF_Client::find_list( $res ) ? ZG_B2B_EF_Client::find_list( $res ) : (array) $res as $p ) {
+			if ( is_array( $p ) && ! empty( $p['documentID'] ) && isset( $p['taxID'] ) && preg_replace( '/\D/', '', (string) $p['taxID'] ) === $ico ) {
+				$id = (string) $p['documentID'];
+				break;
+			}
+		}
+		update_option( 'zg_b2b_sv_ef_partner', array( 'ico' => $ico, 'id' => $id, 't' => time() ), false );
+		if ( ! $id ) {
+			ZG_B2B_EF_Client::log( 'S&V: partner s IČO ' . $ico . ' v adresáři Eurofaktury nenalezen – faktura se vystaví s údaji z nastavení.', 'warning' );
+		}
+		return $id;
+	}
+
+	/** Poznámka na fakturu Bombora → S&V: konečný zákazník, provozovna, doručení, kontakt. */
+	public static function end_customer_note( WC_Order $order ) {
+		$parent = self::parent( $order );
+		$src    = $parent ? $parent : $order;
+		$ico    = $src->get_meta( '_' . zg_b2b_opt( 'ico_meta' ) );
+		$dic    = $src->get_meta( '_' . zg_b2b_opt( 'dic_meta' ) );
+		$cid    = $src->get_customer_id();
+		if ( $cid ) {
+			$ico = $ico ? $ico : get_user_meta( $cid, zg_b2b_opt( 'ico_meta' ), true );
+			$dic = $dic ? $dic : get_user_meta( $cid, zg_b2b_opt( 'dic_meta' ), true );
+		}
+		$billing = array_filter(
+			array(
+				$src->get_billing_company(),
+				$ico ? 'IČO ' . $ico : '',
+				$dic ? 'DIČ ' . $dic : '',
+				trim( $src->get_billing_address_1() . ' ' . $src->get_billing_address_2() ),
+				trim( $src->get_billing_postcode() . ' ' . $src->get_billing_city() ),
+			)
+		);
+		$lines   = array();
+		$lines[] = 'Konečný zákazník: ' . implode( ', ', $billing );
+		if ( $order->has_shipping_address() ) {
+			$lines[] = 'Doručení (provozovna): ' . implode(
+				', ',
+				array_filter(
+					array(
+						$order->get_shipping_company(),
+						trim( $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name() ),
+						trim( $order->get_shipping_address_1() . ' ' . $order->get_shipping_address_2() ),
+						trim( $order->get_shipping_postcode() . ' ' . $order->get_shipping_city() ),
+					)
+				)
+			);
+		}
+		$lines[] = 'Kontakt: ' . implode( ', ', array_filter( array( trim( $src->get_billing_first_name() . ' ' . $src->get_billing_last_name() ), $order->get_shipping_phone() ? $order->get_shipping_phone() : $src->get_billing_phone(), $src->get_billing_email() ) ) );
+		$lines[] = 'Objednávka e-shopu: #' . $order->get_order_number() . ( $parent ? ' (oddělena z #' . $parent->get_order_number() . ')' : '' ) . ', platba: ' . $order->get_payment_method_title();
+		if ( $order->get_customer_note() ) {
+			$lines[] = 'Poznámka zákazníka: ' . $order->get_customer_note();
+		}
+		return implode( "\n", $lines );
+	}
+
+	/** Stav platby zákazníka u objednávky lihovin – ručně (S&V fakturuje mimo Eurofakturu Bombory). */
+	public static function save_payment( $order_id ) {
+		if ( ! isset( $_POST['zg_sv_pay_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['zg_sv_pay_nonce'] ) ), 'zg_sv_pay' ) || ! current_user_can( 'edit_shop_orders' ) ) {
+			return;
+		}
+		$order = wc_get_order( $order_id );
+		if ( ! $order || ! self::is_sv_order( $order ) ) {
+			return;
+		}
+		$state = isset( $_POST['zg_sv_pay_state'] ) ? sanitize_key( wp_unslash( $_POST['zg_sv_pay_state'] ) ) : '';
+		$due   = isset( $_POST['zg_sv_pay_due'] ) ? sanitize_text_field( wp_unslash( $_POST['zg_sv_pay_due'] ) ) : '';
+		self::set_payment( $order, $state, $due );
+	}
+
+	/** Uloží ruční stav platby (stejná struktura jako stav z Eurofaktury, zobrazuje ZG_B2B_EF_Payments). */
+	public static function set_payment( WC_Order $order, $state, $due = '' ) {
+		$old = $order->get_meta( '_zg_ef_pay' );
+		if ( ! in_array( $state, array( 'unpaid', 'paid' ), true ) ) {
+			if ( $old ) {
+				$order->delete_meta_data( '_zg_ef_pay' );
+				$order->save_meta_data();
+			}
+			return;
+		}
+		$due   = preg_match( '/^\d{4}-\d{2}-\d{2}$/', $due ) ? $due : '';
+		$total = (float) $order->get_total();
+		$st    = array(
+			'state'    => $state,
+			'total'    => $total,
+			'paid'     => 'paid' === $state ? $total : 0.0,
+			'left'     => 'paid' === $state ? 0.0 : $total,
+			'currency' => $order->get_currency(),
+			'due'      => $due,
+			'paid_on'  => 'paid' === $state ? ( is_array( $old ) && 'paid' === $old['state'] && ! empty( $old['paid_on'] ) ? $old['paid_on'] : current_time( 'Y-m-d' ) ) : '',
+			'doc'      => '',
+			'kind'     => 'sv',
+			'manual'   => true,
+			'checked'  => time(),
+		);
+		if ( ! is_array( $old ) || $old['state'] !== $st['state'] || $old['due'] !== $st['due'] ) {
+			$order->add_order_note( 'S&V STOCK: stav platby zákazníka nastaven ručně na „' . ( 'paid' === $state ? 'Zaplaceno' : 'Nezaplaceno' ) . '“' . ( $due && 'unpaid' === $state ? ', splatnost ' . $due : '' ) . '.' );
+		}
+		$order->update_meta_data( '_zg_ef_pay', $st );
+		$order->save_meta_data();
+	}
+
 	public static function create_ef_invoice( WC_Order $order ) {
 		if ( $order->get_meta( '_zg_sv_ef_invoice' ) ) {
 			return new WP_Error( 'zg_sv', 'Faktura pro S&V už existuje.' );
@@ -632,24 +750,33 @@ class ZG_B2B_SV_Stock {
 			$items[] = $row;
 		}
 		$doc = array(
-			'date'     => current_time( 'Y-m-d' ),
-			'currency' => $order->get_currency(),
-			'Items'    => $items,
+			'date'             => current_time( 'Y-m-d' ),
+			'documentCurrency' => $order->get_currency(),
+			'type'             => 'Gross', // B2B: ceny bez DPH
+			'methodOfPayment'  => 'BankTransfer',
+			'paymentDueDate'   => gmdate( 'Y-m-d', time() + 14 * DAY_IN_SECONDS ),
+			'status'           => 'IssuedInvoice',
+			'orderReference'   => 'VO-' . $order->get_order_number() . '-SV',
+			'Items'            => $items,
 		);
+		// Odběratel = S&V STOCK. Pokud je v adresáři Eurofaktury (podle IČO), napojí se na partnera –
+		// Eurofaktura doplní IČO, DIČ a sídlo z adresáře.
+		$partner = self::ef_partner_id();
+		if ( $partner ) {
+			$doc['buyerDocumentID'] = $partner;
+		}
 		$doc['buyerName']       = (string) zg_b2b_opt( 'sv_name' );
 		$doc['buyerStreet']     = trim( zg_b2b_opt( 'sv_street' ) . ' ' . zg_b2b_opt( 'sv_house' ) );
 		$doc['buyerPostalCode'] = (string) zg_b2b_opt( 'sv_zip' );
 		$doc['buyerCity']       = (string) zg_b2b_opt( 'sv_city' );
 		$doc['buyerCountry']    = 'CZ';
-		$doc['dateDue']         = gmdate( 'Y-m-d', time() + 14 * DAY_IN_SECONDS );
-		$doc['status']          = 'Issued';
-		$doc['orderReference']  = 'VO-' . $order->get_order_number() . '-SV';
-		if ( zg_b2b_opt( 'ef_field_dic' ) && zg_b2b_opt( 'sv_dic' ) ) {
-			$doc[ zg_b2b_opt( 'ef_field_dic' ) ] = zg_b2b_opt( 'sv_dic' );
+		if ( zg_b2b_opt( 'sv_dic' ) ) {
+			$doc['buyerTaxNumber']       = (string) zg_b2b_opt( 'sv_dic' );
+			$doc['buyerVatRegistration'] = 'Registered';
 		}
-		if ( zg_b2b_opt( 'ef_field_ico' ) && zg_b2b_opt( 'sv_ico' ) ) {
-			$doc[ zg_b2b_opt( 'ef_field_ico' ) ] = zg_b2b_opt( 'sv_ico' );
-		}
+		// Konečný zákazník do poznámky (pro S&V a pro dohledání).
+		$doc['remarks'] = self::end_customer_note( $order );
+
 		$wf = zg_b2b_opt( 'sv_ef_wh_field' );
 		$wv = zg_b2b_opt( 'sv_ef_wh_value' );
 		if ( $wf && $wv ) {
@@ -771,6 +898,13 @@ class ZG_B2B_SV_Stock {
 		$order->update_meta_data( '_zg_sv_invoices', $list );
 		$order->save();
 		$order->add_order_note( 'S&V STOCK: nahrána faktura S&V' . ( $number ? ' č. ' . $number : '' ) . ' – zákazník ji vidí v Můj účet.' );
+		$due = isset( $_POST['zg_sv_due'] ) ? sanitize_text_field( wp_unslash( $_POST['zg_sv_due'] ) ) : '';
+		$cur = $order->get_meta( '_zg_ef_pay' );
+		if ( ! empty( $_POST['zg_sv_paid'] ) ) {
+			self::set_payment( $order, 'paid' );
+		} elseif ( ! is_array( $cur ) || 'paid' !== $cur['state'] ) {
+			self::set_payment( $order, 'unpaid', $due );
+		}
 
 		if ( ! empty( $_POST['zg_sv_mail'] ) ) {
 			zg_b2b_in_language(
@@ -1067,6 +1201,8 @@ class ZG_B2B_SV_Stock {
 		$fid = 'zg-sv-upload';
 		echo '<p><label>Číslo faktury S&amp;V<br><input form="' . $fid . '" type="text" name="zg_sv_number" style="width:100%"></label></p>';
 		echo '<p><input form="' . $fid . '" type="file" name="zg_sv_pdf" accept="application/pdf"></p>';
+		echo '<p><label>Splatnost faktury S&amp;V<br><input form="' . $fid . '" type="date" name="zg_sv_due" value="' . esc_attr( gmdate( 'Y-m-d', time() + 14 * DAY_IN_SECONDS ) ) . '" style="width:100%"></label></p>';
+		echo '<p><label><input form="' . $fid . '" type="checkbox" name="zg_sv_paid" value="1"> Už zaplaceno</label></p>';
 		echo '<p><label><input form="' . $fid . '" type="checkbox" name="zg_sv_mail" value="1" checked> Poslat zákazníkovi e-mailem</label></p>';
 		echo '<p><button form="' . $fid . '" type="submit" class="button button-primary">Nahrát fakturu</button></p>';
 		add_action(
@@ -1077,6 +1213,18 @@ class ZG_B2B_SV_Stock {
 					. wp_nonce_field( 'zg_b2b_sv_upload_' . $order->get_id(), '_wpnonce', true, false ) . '</form>';
 			}
 		);
+
+		// Stav platby zákazníka (ručně – faktura S&V není v Eurofaktuře Bombory).
+		$pay = $order->get_meta( '_zg_ef_pay' );
+		$cur = is_array( $pay ) ? $pay['state'] : '';
+		echo '<hr><p><strong>4. Platba zákazníka (vidí v Můj účet)</strong></p>';
+		wp_nonce_field( 'zg_sv_pay', 'zg_sv_pay_nonce' );
+		echo '<p><select name="zg_sv_pay_state" style="width:100%">'
+			. '<option value=""' . selected( $cur, '', false ) . '>— nezobrazovat —</option>'
+			. '<option value="unpaid"' . selected( in_array( $cur, array( 'unpaid', 'overdue', 'partial' ), true ), true, false ) . '>Nezaplaceno</option>'
+			. '<option value="paid"' . selected( $cur, 'paid', false ) . '>Zaplaceno</option></select></p>';
+		echo '<p><label>Splatnost<br><input type="date" name="zg_sv_pay_due" value="' . esc_attr( is_array( $pay ) ? $pay['due'] : '' ) . '" style="width:100%"></label></p>';
+		echo '<p class="description">Uloží se tlačítkem „Aktualizovat“ objednávky. Po splatnosti se zákazníkovi automaticky ukáže „Po splatnosti“.</p>';
 		// phpcs:enable
 	}
 

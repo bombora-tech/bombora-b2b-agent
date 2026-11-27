@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.24.0] - 2026-11-28
+
+### Přidáno
+- S&V STOCK – faktura Bombora → S&V v Eurofaktuře: odběratel se napojí na partnera **S & V STOCK** v adresáři Eurofaktury podle IČO (`buyerDocumentID`, Eurofaktura doplní IČO, DIČ a sídlo). Do poznámky faktury se zapíše **konečný zákazník** (firma, IČO, DIČ, sídlo), **doručení / provozovna**, kontakt, číslo objednávky (i původní) a poznámka zákazníka.
+- S&V STOCK – **stav platby zákazníka ručně** (box S&V STOCK → „4. Platba zákazníka“: Nezaplaceno / Zaplaceno + splatnost). Při nahrání faktury S&V se nastaví „Nezaplaceno“ se zadanou splatností (nebo „Zaplaceno“ zaškrtnutím). Zákazník v Můj účet vidí stav lihovin pod stavem hlavní objednávky; po splatnosti automaticky „Po splatnosti“. Stav z Eurofaktury se u objednávek lihovin nikdy nebere (faktura v Eurofaktuře je Bombora → S&V).
+
+### Opraveno
+- Faktura Bombora → S&V podle dokumentace API: `documentCurrency`, `paymentDueDate`, `status: IssuedInvoice`, `type: Gross`, `methodOfPayment`, DIČ v `buyerTaxNumber`.
+
 ## [1.23.3] - 2026-11-28
 
 ### Opraveno
